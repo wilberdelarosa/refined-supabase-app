@@ -1,106 +1,103 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Tribe E-commerce Design System
-   Modern, premium, minimalist aesthetic with warm earth tones
+/* Barbaro Nutrition Design System
+   Professional, strong, monochromatic fitness aesthetic
 */
 
 @layer base {
   :root {
-    /* Core palette - Warm neutrals with terracotta accent */
-    --background: 40 20% 98%;
-    --foreground: 20 20% 12%;
+    /* Monochromatic palette - Black/White/Grays */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
 
-    --card: 40 15% 100%;
-    --card-foreground: 20 20% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
 
-    --popover: 40 15% 100%;
-    --popover-foreground: 20 20% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
 
-    /* Terracotta primary */
-    --primary: 18 65% 50%;
-    --primary-foreground: 40 20% 98%;
+    /* Primary - Pure black */
+    --primary: 0 0% 9%;
+    --primary-foreground: 0 0% 98%;
 
-    /* Warm beige secondary */
-    --secondary: 35 30% 92%;
-    --secondary-foreground: 20 20% 20%;
+    /* Secondary - Light gray */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
 
-    --muted: 35 15% 94%;
-    --muted-foreground: 20 10% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Sage accent */
-    --accent: 150 20% 45%;
-    --accent-foreground: 40 20% 98%;
+    /* Accent - Slightly warm gray */
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 35 20% 88%;
-    --input: 35 20% 88%;
-    --ring: 18 65% 50%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
 
-    --radius: 0.75rem;
+    --radius: 0.25rem;
 
     /* Custom tokens */
-    --hero-gradient: linear-gradient(135deg, hsl(35 30% 92%) 0%, hsl(40 20% 98%) 50%, hsl(30 25% 95%) 100%);
-    --card-shadow: 0 4px 24px -4px hsl(20 20% 12% / 0.08);
-    --card-shadow-hover: 0 12px 40px -8px hsl(20 20% 12% / 0.15);
-    --button-shadow: 0 2px 8px hsl(18 65% 50% / 0.25);
+    --hero-overlay: linear-gradient(to right, hsl(0 0% 0% / 0.7) 0%, hsl(0 0% 0% / 0.3) 50%, transparent 100%);
+    --card-shadow: 0 1px 3px hsl(0 0% 0% / 0.1);
+    --card-shadow-hover: 0 4px 12px hsl(0 0% 0% / 0.15);
     
-    --sidebar-background: 35 30% 97%;
-    --sidebar-foreground: 20 20% 20%;
-    --sidebar-primary: 18 65% 50%;
-    --sidebar-primary-foreground: 40 20% 98%;
-    --sidebar-accent: 35 25% 93%;
-    --sidebar-accent-foreground: 20 20% 20%;
-    --sidebar-border: 35 20% 90%;
-    --sidebar-ring: 18 65% 50%;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 0 0% 9%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 95%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 91%;
+    --sidebar-ring: 0 0% 9%;
   }
 
   .dark {
-    --background: 20 15% 8%;
-    --foreground: 35 20% 95%;
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
 
-    --card: 20 15% 11%;
-    --card-foreground: 35 20% 95%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 20 15% 11%;
-    --popover-foreground: 35 20% 95%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 18 65% 55%;
-    --primary-foreground: 20 15% 8%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 9%;
 
-    --secondary: 20 12% 18%;
-    --secondary-foreground: 35 20% 95%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 20 12% 18%;
-    --muted-foreground: 35 15% 60%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 64%;
 
-    --accent: 150 25% 40%;
-    --accent-foreground: 35 20% 95%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 20 12% 20%;
-    --input: 20 12% 20%;
-    --ring: 18 65% 55%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 83%;
 
-    --hero-gradient: linear-gradient(135deg, hsl(20 15% 10%) 0%, hsl(20 15% 8%) 50%, hsl(20 12% 12%) 100%);
-    --card-shadow: 0 4px 24px -4px hsl(0 0% 0% / 0.3);
-    --card-shadow-hover: 0 12px 40px -8px hsl(0 0% 0% / 0.4);
+    --hero-overlay: linear-gradient(to right, hsl(0 0% 0% / 0.8) 0%, hsl(0 0% 0% / 0.5) 50%, transparent 100%);
     
-    --sidebar-background: 20 15% 10%;
-    --sidebar-foreground: 35 20% 95%;
-    --sidebar-primary: 18 65% 55%;
-    --sidebar-primary-foreground: 20 15% 8%;
-    --sidebar-accent: 20 12% 16%;
-    --sidebar-accent-foreground: 35 20% 95%;
-    --sidebar-border: 20 12% 18%;
-    --sidebar-ring: 18 65% 55%;
+    --sidebar-background: 0 0% 6%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 9%;
+    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 0 0% 83%;
   }
 }
 
@@ -113,22 +110,18 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 
-  h1, h2, h3 {
-    @apply font-display;
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
   }
 }
 
 @layer utilities {
-  .font-display {
-    font-family: 'Playfair Display', serif;
-  }
-  
   .font-sans {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
   }
 
-  .hero-gradient {
-    background: var(--hero-gradient);
+  .hero-overlay {
+    background: var(--hero-overlay);
   }
 
   .card-shadow {
@@ -137,10 +130,6 @@
 
   .card-shadow-hover {
     box-shadow: var(--card-shadow-hover);
-  }
-
-  .button-shadow {
-    box-shadow: var(--button-shadow);
   }
 
   .text-balance {
@@ -157,6 +146,11 @@
 
   .animate-scale-in {
     animation: scaleIn 0.4s ease-out forwards;
+  }
+
+  /* Discount badge */
+  .discount-badge {
+    @apply absolute top-3 left-3 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-sm;
   }
 }
 

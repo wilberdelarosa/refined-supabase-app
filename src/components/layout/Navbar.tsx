@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag, User, Menu, X, Search } from 'lucide-react';
+import { ShoppingCart, User, Menu, Search } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +12,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import barbaroLogo from '@/assets/barbaro-logo.png';
+
+const navLinks = [
+  { name: 'Inicio', path: '/' },
+  { name: 'Tienda', path: '/shop' },
+  { name: 'Sobre Nosotros', path: '/about' },
+];
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,28 +26,28 @@ export function Navbar() {
   const { itemCount } = useCart();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center space-x-2">
-          <span className="font-display text-2xl font-bold tracking-tight">TRIBE</span>
+        <Link to="/" className="flex items-center">
+          <img src={barbaroLogo} alt="Barbaro Nutrition" className="h-10 w-auto" />
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-8">
-          <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Inicio
-          </Link>
-          <Link to="/shop" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Tienda
-          </Link>
-          <Link to="/shop?category=featured" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-            Destacados
-          </Link>
+          {navLinks.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors uppercase tracking-wide"
+            >
+              {link.name}
+            </Link>
+          ))}
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
           <Button variant="ghost" size="icon" className="hidden md:flex">
             <Search className="h-5 w-5" />
           </Button>
@@ -53,7 +61,7 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/profile">Mi Perfil</Link>
+                  <Link to="/account">Mi Cuenta</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link to="/orders">Mis Pedidos</Link>
@@ -74,55 +82,69 @@ export function Navbar() {
 
           <Button variant="ghost" size="icon" className="relative" asChild>
             <Link to="/cart">
-              <ShoppingBag className="h-5 w-5" />
+              <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs font-medium flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
                   {itemCount}
                 </span>
               )}
             </Link>
           </Button>
 
-          {/* Mobile menu toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="md:hidden"
-            onClick={() => setIsOpen(!isOpen)}
-          >
-            {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </Button>
+          {/* Mobile Menu */}
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-full max-w-xs">
+              <div className="flex flex-col gap-6 mt-8">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    onClick={() => setIsOpen(false)}
+                    className="text-lg font-semibold uppercase tracking-wide hover:text-muted-foreground transition-colors"
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+                <div className="border-t border-border pt-6 mt-4">
+                  {user ? (
+                    <>
+                      <Link
+                        to="/account"
+                        onClick={() => setIsOpen(false)}
+                        className="block text-lg font-semibold uppercase tracking-wide mb-4"
+                      >
+                        Mi Cuenta
+                      </Link>
+                      <button
+                        onClick={() => {
+                          signOut();
+                          setIsOpen(false);
+                        }}
+                        className="text-lg font-semibold uppercase tracking-wide text-muted-foreground"
+                      >
+                        Cerrar Sesión
+                      </button>
+                    </>
+                  ) : (
+                    <Link
+                      to="/auth"
+                      onClick={() => setIsOpen(false)}
+                      className="text-lg font-semibold uppercase tracking-wide"
+                    >
+                      Iniciar Sesión
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-
-      {/* Mobile Navigation */}
-      {isOpen && (
-        <div className="md:hidden border-t border-border">
-          <nav className="container py-4 flex flex-col gap-4">
-            <Link 
-              to="/" 
-              className="text-sm font-medium py-2"
-              onClick={() => setIsOpen(false)}
-            >
-              Inicio
-            </Link>
-            <Link 
-              to="/shop" 
-              className="text-sm font-medium py-2"
-              onClick={() => setIsOpen(false)}
-            >
-              Tienda
-            </Link>
-            <Link 
-              to="/shop?category=featured" 
-              className="text-sm font-medium py-2"
-              onClick={() => setIsOpen(false)}
-            >
-              Destacados
-            </Link>
-          </nav>
-        </div>
-      )}
     </header>
   );
 }

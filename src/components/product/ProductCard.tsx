@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingCart } from 'lucide-react';
 import { Product } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
@@ -23,50 +23,65 @@ export function ProductCard({ product, className }: ProductCardProps) {
     await addToCart(product.id);
   };
 
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-DO', {
+      style: 'currency',
+      currency: 'DOP',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(price).replace('DOP', 'RD$');
+  };
+
   return (
     <Link 
       to={`/product/${product.id}`}
-      className={cn(
-        "group block",
-        className
-      )}
+      className={cn("group block", className)}
     >
-      <div className="relative aspect-[3/4] overflow-hidden rounded-lg bg-secondary mb-4">
+      <div className="relative aspect-square overflow-hidden rounded-sm bg-muted mb-4">
         {product.image_url ? (
           <img 
             src={product.image_url} 
             alt={product.name}
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         ) : (
-          <div className="h-full w-full flex items-center justify-center text-muted-foreground">
-            Sin imagen
+          <div className="h-full w-full flex items-center justify-center">
+            <svg
+              viewBox="0 0 60 100"
+              fill="currentColor"
+              className="w-16 h-24 text-muted-foreground/30"
+            >
+              <rect x="18" y="8" width="24" height="12" rx="2" />
+              <rect x="12" y="20" width="36" height="72" rx="4" />
+            </svg>
           </div>
         )}
         
         {/* Discount badge */}
         {hasDiscount && (
-          <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
+          <div className="absolute top-3 left-3 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-sm">
             -{discountPercent}%
           </div>
         )}
 
         {/* Quick add button */}
-        <div className="absolute bottom-3 left-3 right-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-          <Button 
-            onClick={handleAddToCart}
-            className="w-full button-shadow"
-            size="sm"
-          >
-            <ShoppingBag className="h-4 w-4 mr-2" />
-            Agregar
-          </Button>
-        </div>
+        {product.stock > 0 && (
+          <div className="absolute bottom-3 left-3 right-3 opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+            <Button 
+              onClick={handleAddToCart}
+              className="w-full bg-foreground text-background hover:bg-foreground/90"
+              size="sm"
+            >
+              <ShoppingCart className="h-4 w-4 mr-2" />
+              Agregar
+            </Button>
+          </div>
+        )}
 
         {/* Out of stock overlay */}
         {product.stock <= 0 && (
           <div className="absolute inset-0 bg-background/80 flex items-center justify-center">
-            <span className="text-sm font-medium">Agotado</span>
+            <span className="text-sm font-semibold uppercase tracking-wide">Agotado</span>
           </div>
         )}
       </div>
@@ -75,16 +90,16 @@ export function ProductCard({ product, className }: ProductCardProps) {
         <p className="text-xs text-muted-foreground uppercase tracking-wider">
           {product.category}
         </p>
-        <h3 className="font-medium line-clamp-1 group-hover:text-primary transition-colors">
+        <h3 className="font-semibold text-sm md:text-base line-clamp-2 group-hover:text-muted-foreground transition-colors">
           {product.name}
         </h3>
         <div className="flex items-center gap-2">
-          <span className="font-semibold">
-            ${product.price.toFixed(2)}
+          <span className="font-bold">
+            {formatPrice(product.price)}
           </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
-              ${product.original_price!.toFixed(2)}
+              {formatPrice(product.original_price!)}
             </span>
           )}
         </div>
