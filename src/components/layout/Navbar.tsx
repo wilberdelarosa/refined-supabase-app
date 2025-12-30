@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Menu, Search } from 'lucide-react';
+import { ShoppingCart, User, Menu, Search, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useCart } from '@/hooks/useCart';
+import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import {
@@ -24,6 +25,7 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { itemCount } = useCart();
+  const { isAdmin, canManageOrders } = useRoles();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -61,13 +63,27 @@ export function Navbar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
                 <DropdownMenuItem asChild>
-                  <Link to="/account">Mi Cuenta</Link>
+                  <Link to="/account" className="cursor-pointer">Mi Cuenta</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders">Mis Pedidos</Link>
+                  <Link to="/orders" className="cursor-pointer">Mis Pedidos</Link>
                 </DropdownMenuItem>
+                {canManageOrders && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin" className="cursor-pointer flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        Panel Admin
+                      </Link>
+                    </DropdownMenuItem>
+                  </>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => signOut()}>
+                <DropdownMenuItem 
+                  onClick={() => signOut()}
+                  className="cursor-pointer"
+                >
                   Cerrar Sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -80,16 +96,16 @@ export function Navbar() {
             </Button>
           )}
 
-          <Button variant="ghost" size="icon" className="relative" asChild>
-            <Link to="/cart">
+          <Link to="/cart" className="relative">
+            <Button variant="ghost" size="icon">
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
                   {itemCount}
                 </span>
               )}
-            </Link>
-          </Button>
+            </Button>
+          </Link>
 
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -120,6 +136,15 @@ export function Navbar() {
                       >
                         Mi Cuenta
                       </Link>
+                      {canManageOrders && (
+                        <Link
+                          to="/admin"
+                          onClick={() => setIsOpen(false)}
+                          className="block text-lg font-semibold uppercase tracking-wide mb-4 text-primary"
+                        >
+                          Panel Admin
+                        </Link>
+                      )}
                       <button
                         onClick={() => {
                           signOut();
