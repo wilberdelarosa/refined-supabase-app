@@ -2,3 +2,6 @@ project_id = "xuhvlomytegdbifziilf"
 
 [functions.send-order-email]
 verify_jwt = false
+
+[functions.sync-shopify-customer]
+verify_jwt = false
