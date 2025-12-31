@@ -371,6 +371,30 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_carts: {
+        Row: {
+          cart_data: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cart_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cart_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -388,6 +412,39 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wishlist: {
+        Row: {
+          created_at: string
+          id: string
+          product_handle: string
+          product_image_url: string | null
+          product_price: string | null
+          product_title: string
+          shopify_product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_handle: string
+          product_image_url?: string | null
+          product_price?: string | null
+          product_title: string
+          shopify_product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_handle?: string
+          product_image_url?: string | null
+          product_price?: string | null
+          product_title?: string
+          shopify_product_id?: string
           user_id?: string
         }
         Relationships: []
