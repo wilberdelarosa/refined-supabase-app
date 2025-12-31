@@ -59,6 +59,25 @@ serve(async (req) => {
     const searchData = await searchResponse.json();
     console.log('Search result:', JSON.stringify(searchData));
 
+    // Check if search failed due to scope permissions
+    if (searchData.errors) {
+      const errorString = JSON.stringify(searchData.errors);
+      if (errorString.includes('merchant approval') || errorString.includes('scope')) {
+        console.warn('Shopify customer scope not approved - sync skipped');
+        return new Response(
+          JSON.stringify({ 
+            success: false, 
+            action: 'scope_not_approved',
+            message: 'Shopify customer scope needs approval. Please approve read_customers and write_customers scopes in Shopify Admin > Settings > Apps'
+          }),
+          { 
+            status: 200, // Return 200 to not break signup/update flow
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
+    }
+
     let existingCustomerId = shopify_customer_id;
     
     if (searchData.customers && searchData.customers.length > 0) {
@@ -156,10 +175,27 @@ serve(async (req) => {
       console.log('Create response:', JSON.stringify(result));
 
       if (result.errors) {
+        const errorString = JSON.stringify(result.errors);
+        
+        // Check if it's a permission/scope error
+        if (errorString.includes('merchant approval') || errorString.includes('scope')) {
+          console.warn('Shopify customer scope not approved - sync skipped');
+          return new Response(
+            JSON.stringify({ 
+              success: false, 
+              action: 'scope_not_approved',
+              message: 'Shopify customer scope needs approval. Please approve read_customers and write_customers scopes in Shopify Admin > Settings > Apps'
+            }),
+            { 
+              status: 200, // Return 200 to not break the flow
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        
         // Check if it's a duplicate email error
-        if (JSON.stringify(result.errors).includes('has already been taken')) {
+        if (errorString.includes('has already been taken')) {
           console.log('Customer already exists, attempting to find and update');
-          // Return success anyway since customer exists
           return new Response(
             JSON.stringify({ 
               success: true, 
@@ -172,8 +208,9 @@ serve(async (req) => {
             }
           );
         }
+        
         console.error('Shopify create error:', result.errors);
-        throw new Error(`Shopify create error: ${JSON.stringify(result.errors)}`);
+        throw new Error(`Shopify create error: ${errorString}`);
       }
 
       return new Response(
