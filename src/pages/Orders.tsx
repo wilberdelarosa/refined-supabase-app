@@ -37,6 +37,27 @@ export default function Orders() {
   const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const handleDownloadInvoice = async (orderId: string) => {
+    try {
+      const { data: invoice, error } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('order_id', orderId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (invoice) {
+        navigate(`/orders/invoice/${invoice.id}`);
+      } else {
+        alert('La factura aún no está disponible para este pedido.');
+      }
+    } catch (error) {
+      console.error('Error fetching invoice:', error);
+      alert('Error al obtener la factura');
+    }
+  };
+
   useEffect(() => {
     if (!authLoading && !user) {
       navigate('/auth');
@@ -166,9 +187,14 @@ export default function Orders() {
                         </p>
                         
                         {(order.status === 'paid' || order.status === 'delivered') && (
-                          <Button variant="outline" size="sm" className="gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="gap-2"
+                            onClick={() => handleDownloadInvoice(order.id)}
+                          >
                             <FileText className="h-4 w-4" />
-                            Descargar Factura
+                            Ver Factura
                           </Button>
                         )}
                       </div>

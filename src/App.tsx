@@ -13,6 +13,7 @@ import Account from "./pages/Account";
 import ProfileEdit from "./pages/ProfileEdit";
 import Wishlist from "./pages/Wishlist";
 import Orders from "./pages/Orders";
+import InvoiceDetail from "./pages/InvoiceDetail";
 import Admin from "./pages/Admin";
 import AdminShopifyProducts from "./pages/admin/AdminShopifyProducts";
 import AdminInventory from "./pages/admin/AdminInventory";
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/profile/edit" element={<ProfileEdit />} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/orders/invoice/:invoiceId" element={<InvoiceDetail />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/products" element={<AdminShopifyProducts />} />
             <Route path="/admin/inventory" element={<AdminInventory />} />
