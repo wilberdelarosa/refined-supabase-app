@@ -142,6 +142,34 @@ export default function AdminOrders() {
         p_new_data: { status: newStatus, note: statusNote }
       });
 
+      // Send status change email to customer
+      // Extract email from shipping address (last line before Notes)
+      const addressLines = selectedOrder.shipping_address?.split('\n') || [];
+      const emailLine = addressLines.find(line => line.includes('@')) || '';
+      const customerName = addressLines[0] || 'Cliente';
+      
+      if (emailLine) {
+        supabase.functions.invoke('send-order-email', {
+          body: {
+            type: 'status_changed',
+            customerEmail: emailLine.trim(),
+            customerName: customerName,
+            orderId: selectedOrder.id,
+            orderTotal: selectedOrder.total,
+            orderItems: orderItems.map(item => ({
+              name: item.product_name,
+              quantity: item.quantity,
+              price: item.price
+            })),
+            oldStatus: selectedOrder.status,
+            newStatus: newStatus
+          }
+        }).then(res => {
+          if (res.error) console.error('Email error:', res.error);
+          else console.log('Status change email sent');
+        });
+      }
+
       toast({ title: 'Éxito', description: 'Estado actualizado correctamente' });
       setIsDetailOpen(false);
       fetchOrders();

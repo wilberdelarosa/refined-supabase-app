@@ -111,6 +111,26 @@ export default function TransferCheckout() {
 
       if (itemsError) throw itemsError;
 
+      // Send order confirmation email (background, don't block)
+      supabase.functions.invoke('send-order-email', {
+        body: {
+          type: 'order_created',
+          customerEmail: formData.email,
+          customerName: formData.fullName,
+          orderId: order.id,
+          orderTotal: totalPrice,
+          orderItems: items.map(item => ({
+            name: item.product.node.title,
+            quantity: item.quantity,
+            price: parseFloat(item.price.amount)
+          })),
+          shippingAddress: `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}`
+        }
+      }).then(res => {
+        if (res.error) console.error('Email error:', res.error);
+        else console.log('Order confirmation email sent');
+      });
+
       // Clear cart and redirect
       clearCart();
       
