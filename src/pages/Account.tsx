@@ -6,8 +6,9 @@ import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Package, MapPin, Settings, Shield, LogOut } from 'lucide-react';
+import { User, Package, MapPin, Settings, Shield, LogOut, Heart, Edit } from 'lucide-react';
 
 interface Profile {
   full_name: string | null;
@@ -16,6 +17,7 @@ interface Profile {
   address: string | null;
   city: string | null;
   country: string | null;
+  avatar_url: string | null;
 }
 
 export default function Account() {
@@ -66,9 +68,12 @@ export default function Account() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="h-16 w-16 rounded-full bg-muted flex items-center justify-center">
-                    <User className="h-8 w-8 text-muted-foreground" />
-                  </div>
+                  <Avatar className="h-16 w-16">
+                    <AvatarImage src={profile?.avatar_url || undefined} />
+                    <AvatarFallback>
+                      <User className="h-8 w-8" />
+                    </AvatarFallback>
+                  </Avatar>
                   <div>
                     <CardTitle className="text-xl">
                       {profile?.full_name || user.user_metadata?.full_name || 'Usuario'}
@@ -86,10 +91,18 @@ export default function Account() {
                     )}
                   </div>
                 </div>
-                <Button variant="outline" onClick={() => signOut()}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Cerrar Sesión
-                </Button>
+                <div className="flex gap-2">
+                  <Link to="/profile/edit">
+                    <Button variant="outline" size="sm">
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </Button>
+                  </Link>
+                  <Button variant="outline" size="sm" onClick={() => signOut()}>
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Salir
+                  </Button>
+                </div>
               </div>
             </CardHeader>
           </Card>
@@ -112,33 +125,53 @@ export default function Account() {
               </Card>
             </Link>
 
-            <Card className="hover:border-foreground/20 transition-colors cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <MapPin className="h-5 w-5" />
+            <Link to="/wishlist">
+              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Heart className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Favoritos</CardTitle>
+                      <CardDescription>Productos guardados</CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">Direcciones</CardTitle>
-                    <CardDescription>Gestionar direcciones de envío</CardDescription>
-                  </div>
-                </div>
-              </CardHeader>
-            </Card>
+                </CardHeader>
+              </Card>
+            </Link>
 
-            <Card className="hover:border-foreground/20 transition-colors cursor-pointer">
-              <CardHeader>
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <Settings className="h-5 w-5" />
+            <Link to="/profile/edit">
+              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <MapPin className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Direcciones</CardTitle>
+                      <CardDescription>Gestionar direcciones de envío</CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-lg">Configuración</CardTitle>
-                    <CardDescription>Preferencias de cuenta</CardDescription>
+                </CardHeader>
+              </Card>
+            </Link>
+
+            <Link to="/profile/edit">
+              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Settings className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Configuración</CardTitle>
+                      <CardDescription>Preferencias de cuenta</CardDescription>
+                    </div>
                   </div>
-                </div>
-              </CardHeader>
-            </Card>
+                </CardHeader>
+              </Card>
+            </Link>
 
             {isAdmin && (
               <Link to="/admin">
@@ -162,8 +195,14 @@ export default function Account() {
           {/* Profile Details */}
           {profile && (
             <Card className="mt-8">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Información de Perfil</CardTitle>
+                <Link to="/profile/edit">
+                  <Button variant="ghost" size="sm">
+                    <Edit className="h-4 w-4 mr-2" />
+                    Editar
+                  </Button>
+                </Link>
               </CardHeader>
               <CardContent>
                 <dl className="grid gap-4 sm:grid-cols-2">

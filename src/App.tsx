@@ -10,6 +10,8 @@ import Shop from "./pages/Shop";
 import Cart from "./pages/Cart";
 import About from "./pages/About";
 import Account from "./pages/Account";
+import ProfileEdit from "./pages/ProfileEdit";
+import Wishlist from "./pages/Wishlist";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
 import AdminProducts from "./pages/admin/AdminProducts";
@@ -20,8 +22,15 @@ import AdminInvoices from "./pages/admin/AdminInvoices";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
+import { useSavedCart } from "./hooks/useSavedCart";
 
 const queryClient = new QueryClient();
+
+// Component to handle cart sync
+function CartSync() {
+  useSavedCart();
+  return null;
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -30,6 +39,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <CartSync />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -37,6 +47,8 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/about" element={<About />} />
             <Route path="/account" element={<Account />} />
+            <Route path="/profile/edit" element={<ProfileEdit />} />
+            <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/products" element={<AdminProducts />} />
