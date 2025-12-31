@@ -6,20 +6,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { Package, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Package, ShoppingBag, ArrowRight, FileText, Clock, CheckCircle, Truck, XCircle } from 'lucide-react';
 
-interface Order {
+interface OrderWithDetails {
   id: string;
   total: number;
   status: string;
   created_at: string;
   shipping_address: string | null;
+  order_items: Array<{
+    id: string;
+    product_name: string;
+    quantity: number;
+    price: number;
+  }>;
 }
+
+const statusConfig: Record<string, { label: string; icon: React.ReactNode; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  pending: { label: 'Pendiente', icon: <Clock className="h-3 w-3" />, variant: 'secondary' },
+  paid: { label: 'Pagado', icon: <CheckCircle className="h-3 w-3" />, variant: 'default' },
+  processing: { label: 'Procesando', icon: <Package className="h-3 w-3" />, variant: 'outline' },
+  shipped: { label: 'Enviado', icon: <Truck className="h-3 w-3" />, variant: 'outline' },
+  delivered: { label: 'Entregado', icon: <CheckCircle className="h-3 w-3" />, variant: 'default' },
+  cancelled: { label: 'Cancelado', icon: <XCircle className="h-3 w-3" />, variant: 'destructive' },
+};
 
 export default function Orders() {
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,7 +48,10 @@ export default function Orders() {
 
       const { data, error } = await supabase
         .from('orders')
-        .select('*')
+        .select(`
+          *,
+          order_items (id, product_name, quantity, price)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -61,19 +79,6 @@ export default function Orders() {
   }
 
   if (!user) return null;
-
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-      pending: { label: 'Pendiente', variant: 'secondary' },
-      paid: { label: 'Pagado', variant: 'default' },
-      processing: { label: 'Procesando', variant: 'secondary' },
-      shipped: { label: 'Enviado', variant: 'default' },
-      delivered: { label: 'Entregado', variant: 'default' },
-      cancelled: { label: 'Cancelado', variant: 'destructive' },
-    };
-    const s = statusMap[status] || { label: status, variant: 'outline' as const };
-    return <Badge variant={s.variant}>{s.label}</Badge>;
-  };
 
   return (
     <Layout>
@@ -107,37 +112,78 @@ export default function Orders() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {orders.map((order) => (
-                <Card key={order.id} className="hover:border-foreground/20 transition-colors">
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 rounded-lg bg-muted">
-                          <Package className="h-5 w-5" />
+              {orders.map((order) => {
+                const status = statusConfig[order.status] || statusConfig.pending;
+                
+                return (
+                  <Card key={order.id} className="overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 rounded-lg bg-muted">
+                            <Package className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">
+                              Pedido #{order.id.slice(0, 8).toUpperCase()}
+                            </CardTitle>
+                            <CardDescription>
+                              {new Date(order.created_at).toLocaleDateString('es-DO', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                              })}
+                            </CardDescription>
+                          </div>
                         </div>
-                        <div>
-                          <CardTitle className="text-lg">
-                            Pedido #{order.id.slice(0, 8).toUpperCase()}
-                          </CardTitle>
-                          <CardDescription>
-                            {new Date(order.created_at).toLocaleDateString('es-DO', {
-                              year: 'numeric',
-                              month: 'long',
-                              day: 'numeric',
-                            })}
-                          </CardDescription>
+                        <div className="flex items-center gap-3">
+                          <Badge variant={status.variant} className="gap-1">
+                            {status.icon}
+                            {status.label}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="text-right">
-                        {getStatusBadge(order.status)}
-                        <p className="font-semibold mt-1">
-                          RD${order.total.toLocaleString('es-DO')}
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                      {/* Order items */}
+                      <div className="space-y-2 mb-4">
+                        {order.order_items.map((item) => (
+                          <div key={item.id} className="flex justify-between text-sm py-1 border-b border-border/50 last:border-0">
+                            <span className="text-muted-foreground">
+                              {item.quantity}x {item.product_name}
+                            </span>
+                            <span className="font-medium">
+                              DOP {(item.price * item.quantity).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Total and actions */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t">
+                        <p className="font-bold text-lg">
+                          Total: DOP {order.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                         </p>
+                        
+                        {(order.status === 'paid' || order.status === 'delivered') && (
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <FileText className="h-4 w-4" />
+                            Descargar Factura
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  </CardHeader>
-                </Card>
-              ))}
+
+                      {/* Shipping address */}
+                      {order.shipping_address && (
+                        <div className="text-sm text-muted-foreground pt-3 mt-3 border-t">
+                          <strong className="text-foreground">Dirección:</strong>
+                          <p className="whitespace-pre-line mt-1">{order.shipping_address}</p>
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </div>

@@ -118,6 +118,106 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_lines: {
+        Row: {
+          id: string
+          invoice_id: string
+          product_name: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          product_name: string
+          quantity: number
+          total: number
+          unit_price: number
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          product_name?: string
+          quantity?: number
+          total?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_lines_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          billing_address: string | null
+          billing_name: string | null
+          billing_rnc: string | null
+          created_at: string
+          id: string
+          invoice_number: string
+          issued_at: string
+          order_id: string
+          pdf_url: string | null
+          status: string
+          subtotal: number
+          tax_amount: number
+          tax_rate: number
+          total: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          billing_address?: string | null
+          billing_name?: string | null
+          billing_rnc?: string | null
+          created_at?: string
+          id?: string
+          invoice_number: string
+          issued_at?: string
+          order_id: string
+          pdf_url?: string | null
+          status?: string
+          subtotal: number
+          tax_amount: number
+          tax_rate?: number
+          total: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          billing_address?: string | null
+          billing_name?: string | null
+          billing_rnc?: string | null
+          created_at?: string
+          id?: string
+          invoice_number?: string
+          issued_at?: string
+          order_id?: string
+          pdf_url?: string | null
+          status?: string
+          subtotal?: number
+          tax_amount?: number
+          tax_rate?: number
+          total?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -297,6 +397,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_invoice_number: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

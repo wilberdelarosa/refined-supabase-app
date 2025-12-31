@@ -1,13 +1,12 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { useProducts } from '@/hooks/useProducts';
-import { ProductCard } from '@/components/product/ProductCard';
+import { useShopifyProducts } from '@/hooks/useShopifyProducts';
+import { ShopifyProductCard } from '@/components/shop/ShopifyProductCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function FeaturedProducts() {
-  const { featuredProducts, loading } = useProducts();
-  const displayProducts = featuredProducts.slice(0, 4);
+  const { products, loading } = useShopifyProducts(4);
 
   return (
     <section className="py-16 md:py-24 bg-muted/50">
@@ -35,23 +34,23 @@ export function FeaturedProducts() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-4">
-                <Skeleton className="aspect-square rounded-sm" />
-                <Skeleton className="h-3 w-16" />
+                <Skeleton className="aspect-square rounded-lg" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-20" />
+                <Skeleton className="h-10 w-full" />
               </div>
             ))}
           </div>
-        ) : displayProducts.length > 0 ? (
+        ) : products.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {displayProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {products.map((product) => (
+              <ShopifyProductCard key={product.node.id} product={product} />
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-card rounded-sm border border-border">
+          <div className="text-center py-16 bg-card rounded-lg border border-border">
             <p className="text-muted-foreground mb-4">
-              No hay productos destacados disponibles
+              No hay productos disponibles
             </p>
             <Button asChild>
               <Link to="/shop">Ver todos los productos</Link>
