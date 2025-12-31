@@ -142,8 +142,12 @@ export default function AdminOrders() {
         p_new_data: { status: newStatus, note: statusNote }
       });
 
+      // If status changed to "paid", create invoice automatically
+      if (newStatus === 'paid' && selectedOrder.status !== 'paid') {
+        await createInvoiceForOrder(selectedOrder, orderItems);
+      }
+
       // Send status change email to customer
-      // Extract email from shipping address (last line before Notes)
       const addressLines = selectedOrder.shipping_address?.split('\n') || [];
       const emailLine = addressLines.find(line => line.includes('@')) || '';
       const customerName = addressLines[0] || 'Cliente';
@@ -177,6 +181,62 @@ export default function AdminOrders() {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } finally {
       setUpdating(false);
+    }
+  }
+
+  async function createInvoiceForOrder(order: Order, items: OrderItem[]) {
+    try {
+      // Generate invoice number
+      const { data: invoiceNumber } = await supabase.rpc('generate_invoice_number');
+      
+      // Extract billing info from shipping address
+      const addressLines = order.shipping_address?.split('\n') || [];
+      const billingName = addressLines[0] || 'Cliente';
+      const billingAddress = addressLines.slice(1, 4).join(', ');
+
+      const subtotal = order.total / 1.18; // Reverse calculate subtotal (18% ITBIS)
+      const taxRate = 0.18;
+      const taxAmount = order.total - subtotal;
+
+      // Create invoice
+      const { data: invoice, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert({
+          invoice_number: invoiceNumber || `INV-${Date.now()}`,
+          order_id: order.id,
+          user_id: order.user_id,
+          subtotal: Math.round(subtotal * 100) / 100,
+          tax_rate: taxRate,
+          tax_amount: Math.round(taxAmount * 100) / 100,
+          total: order.total,
+          status: 'issued',
+          billing_name: billingName,
+          billing_address: billingAddress
+        })
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      // Create invoice lines
+      const invoiceLines = items.map(item => ({
+        invoice_id: invoice.id,
+        product_name: item.product_name,
+        quantity: item.quantity,
+        unit_price: item.price,
+        total: item.price * item.quantity
+      }));
+
+      const { error: linesError } = await supabase
+        .from('invoice_lines')
+        .insert(invoiceLines);
+
+      if (linesError) throw linesError;
+
+      toast({ title: 'Factura creada', description: `Factura ${invoice.invoice_number} generada automáticamente` });
+    } catch (error) {
+      console.error('Error creating invoice:', error);
+      toast({ title: 'Advertencia', description: 'No se pudo crear la factura automáticamente', variant: 'destructive' });
     }
   }
 
