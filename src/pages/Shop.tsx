@@ -1,11 +1,14 @@
 import { Layout } from '@/components/layout/Layout';
-import { useShopifyProducts } from '@/hooks/useShopifyProducts';
-import { ShopifyProductCard } from '@/components/shop/ShopifyProductCard';
+import { useNativeProducts } from '@/hooks/useNativeProducts';
+import { ProductCard } from '@/components/shop/ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Package } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export default function Shop() {
-  const { products, loading, error } = useShopifyProducts(50);
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const { products, categories, loading, error } = useNativeProducts(selectedCategory);
 
   return (
     <Layout>
@@ -14,6 +17,29 @@ export default function Shop() {
           <h1 className="font-display text-4xl font-bold">Tienda</h1>
           <p className="text-muted-foreground mt-2">Explora nuestra colección de suplementos premium</p>
         </div>
+
+        {/* Categories Filter */}
+        {categories.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            <Button
+              variant={!selectedCategory ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setSelectedCategory(undefined)}
+            >
+              Todos
+            </Button>
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                variant={selectedCategory === cat ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSelectedCategory(cat)}
+              >
+                {cat}
+              </Button>
+            ))}
+          </div>
+        )}
 
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
@@ -43,7 +69,7 @@ export default function Shop() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
             {products.map((product) => (
-              <ShopifyProductCard key={product.node.id} product={product} />
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}

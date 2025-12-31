@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,49 +10,27 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { ShoppingCart, Minus, Plus, Trash2, ExternalLink, Loader2, CreditCard, Building2 } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, Building2, Loader2, CreditCard } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 
 export function CartDrawer() {
   const [isOpen, setIsOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'shopify' | 'transfer'>('shopify');
   const { 
     items, 
     isLoading, 
     updateQuantity, 
     removeItem, 
-    createCheckout,
     getTotalItems,
     getTotalPrice
   } = useCartStore();
   
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
-  const currencyCode = items[0]?.price.currencyCode || 'DOP';
 
-  const handleCheckout = async () => {
-    if (paymentMethod === 'transfer') {
-      // Redirect to transfer checkout page
-      setIsOpen(false);
-      window.location.href = '/checkout/transferencia';
-      return;
-    }
-
-    try {
-      const checkoutUrl = await createCheckout();
-      if (checkoutUrl) {
-        window.open(checkoutUrl, '_blank');
-        setIsOpen(false);
-      }
-    } catch (error) {
-      console.error('Checkout failed:', error);
-      toast.error('Error al crear el checkout', {
-        description: 'Por favor intenta de nuevo',
-        position: 'top-center'
-      });
-    }
+  const handleCheckout = () => {
+    setIsOpen(false);
+    window.location.href = '/checkout/transferencia';
   };
 
   return (
@@ -81,6 +60,9 @@ export function CartDrawer() {
               <div className="text-center">
                 <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <p className="text-muted-foreground">Tu carrito está vacío</p>
+                <Button asChild className="mt-4">
+                  <Link to="/shop" onClick={() => setIsOpen(false)}>Ver Tienda</Link>
+                </Button>
               </div>
             </div>
           ) : (
@@ -89,24 +71,22 @@ export function CartDrawer() {
               <div className="flex-1 overflow-y-auto pr-2 min-h-0">
                 <div className="space-y-4">
                   {items.map((item) => (
-                    <div key={item.variantId} className="flex gap-3 p-2 rounded-lg border">
+                    <div key={item.product.id} className="flex gap-3 p-2 rounded-lg border">
                       <div className="w-16 h-16 bg-secondary/20 rounded-md overflow-hidden flex-shrink-0">
-                        {item.product.node.images?.edges?.[0]?.node && (
+                        {item.product.image_url && (
                           <img
-                            src={item.product.node.images.edges[0].node.url}
-                            alt={item.product.node.title}
+                            src={item.product.image_url}
+                            alt={item.product.name}
                             className="w-full h-full object-cover"
                           />
                         )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">{item.product.node.title}</h4>
-                        {item.variantTitle !== 'Default Title' && (
-                          <p className="text-xs text-muted-foreground">{item.variantTitle}</p>
-                        )}
+                        <h4 className="font-medium text-sm truncate">{item.product.name}</h4>
+                        <p className="text-xs text-muted-foreground">{item.product.category}</p>
                         <p className="font-semibold text-sm mt-1">
-                          {item.price.currencyCode} {parseFloat(item.price.amount).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                          DOP {item.product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
                       
@@ -115,7 +95,7 @@ export function CartDrawer() {
                           variant="ghost"
                           size="icon"
                           className="h-6 w-6"
-                          onClick={() => removeItem(item.variantId)}
+                          onClick={() => removeItem(item.product.id)}
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
@@ -125,7 +105,7 @@ export function CartDrawer() {
                             variant="outline"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => updateQuantity(item.variantId, item.quantity - 1)}
+                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
@@ -134,7 +114,8 @@ export function CartDrawer() {
                             variant="outline"
                             size="icon"
                             className="h-6 w-6"
-                            onClick={() => updateQuantity(item.variantId, item.quantity + 1)}
+                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                            disabled={item.quantity >= item.product.stock}
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
@@ -150,60 +131,32 @@ export function CartDrawer() {
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-semibold">Total</span>
                   <span className="text-xl font-bold">
-                    {currencyCode} {totalPrice.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                    DOP {totalPrice.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
 
                 <Separator />
 
-                {/* Payment Method Selection */}
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Método de pago</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      variant={paymentMethod === 'shopify' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setPaymentMethod('shopify')}
-                      className="justify-start"
-                    >
-                      <CreditCard className="h-4 w-4 mr-2" />
-                      Tarjeta
-                    </Button>
-                    <Button
-                      variant={paymentMethod === 'transfer' ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setPaymentMethod('transfer')}
-                      className="justify-start"
-                    >
-                      <Building2 className="h-4 w-4 mr-2" />
-                      Transferencia
-                    </Button>
-                  </div>
+                <div className="grid grid-cols-1 gap-2">
+                  <Button 
+                    onClick={handleCheckout}
+                    className="w-full" 
+                    size="lg"
+                    disabled={items.length === 0 || isLoading}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Procesando...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-4 h-4 mr-2" />
+                        Proceder al Pago
+                      </>
+                    )}
+                  </Button>
                 </div>
-                
-                <Button 
-                  onClick={handleCheckout}
-                  className="w-full" 
-                  size="lg"
-                  disabled={items.length === 0 || isLoading}
-                >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Procesando...
-                    </>
-                  ) : paymentMethod === 'shopify' ? (
-                    <>
-                      <ExternalLink className="w-4 h-4 mr-2" />
-                      Pagar con Tarjeta
-                    </>
-                  ) : (
-                    <>
-                      <Building2 className="w-4 h-4 mr-2" />
-                      Pagar por Transferencia
-                    </>
-                  )}
-                </Button>
               </div>
             </>
           )}

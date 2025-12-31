@@ -1,21 +1,21 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, ShoppingCart, Loader2 } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingCart, Loader2, Heart } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useShopifyProduct } from '@/hooks/useShopifyProducts';
-import { useCartStore, CartItem } from '@/stores/cartStore';
+import { useNativeProduct } from '@/hooks/useNativeProducts';
+import { useCartStore } from '@/stores/cartStore';
+import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { toast } from 'sonner';
 
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
-  const { product, loading, error } = useShopifyProduct(handle || '');
+  const { product, loading, error } = useNativeProduct(handle || '');
   const addItem = useCartStore(state => state.addItem);
+  const { isInWishlist, toggleWishlist } = useNativeWishlist();
   
   const [quantity, setQuantity] = useState(1);
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState(0);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   if (loading) {
     return (
@@ -40,30 +40,27 @@ export default function ProductDetail() {
     );
   }
 
-  const selectedVariant = product.variants.edges[selectedVariantIndex]?.node;
-  const images = product.images.edges;
-  const price = parseFloat(selectedVariant?.price.amount || product.priceRange.minVariantPrice.amount);
-  const currencyCode = selectedVariant?.price.currencyCode || product.priceRange.minVariantPrice.currencyCode;
-  const isAvailable = selectedVariant?.availableForSale ?? false;
+  const isAvailable = product.stock > 0;
+  const isFavorite = isInWishlist(product.id);
+  const hasDiscount = product.original_price && product.original_price > product.price;
+  const discountPercentage = hasDiscount 
+    ? Math.round(((product.original_price! - product.price) / product.original_price!) * 100)
+    : 0;
 
   const handleAddToCart = () => {
-    if (!selectedVariant) {
-      toast.error('Selecciona una variante');
+    if (!isAvailable) {
+      toast.error('Producto agotado');
       return;
     }
 
-    const cartItem: CartItem = {
-      product: { node: product },
-      variantId: selectedVariant.id,
-      variantTitle: selectedVariant.title,
-      price: selectedVariant.price,
-      quantity,
-      selectedOptions: selectedVariant.selectedOptions || []
-    };
+    if (quantity > product.stock) {
+      toast.error(`Solo hay ${product.stock} unidades disponibles`);
+      return;
+    }
 
-    addItem(cartItem);
+    addItem(product, quantity);
     toast.success('Agregado al carrito', {
-      description: `${quantity}x ${product.title}`,
+      description: `${quantity}x ${product.name}`,
       position: 'top-center'
     });
   };
@@ -79,13 +76,13 @@ export default function ProductDetail() {
         </Button>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Image Gallery */}
-          <div className="space-y-4">
+          {/* Image */}
+          <div className="relative">
             <div className="aspect-square overflow-hidden rounded-lg bg-secondary/20">
-              {images[selectedImageIndex]?.node ? (
+              {product.image_url ? (
                 <img
-                  src={images[selectedImageIndex].node.url}
-                  alt={images[selectedImageIndex].node.altText || product.title}
+                  src={product.image_url}
+                  alt={product.name}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -95,71 +92,51 @@ export default function ProductDetail() {
               )}
             </div>
             
-            {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2">
-                {images.map((img, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => setSelectedImageIndex(idx)}
-                    className={`w-20 h-20 rounded-md overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                      selectedImageIndex === idx ? 'border-primary' : 'border-transparent'
-                    }`}
-                  >
-                    <img
-                      src={img.node.url}
-                      alt={img.node.altText || `${product.title} - ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Badges */}
+            <div className="absolute top-4 left-4 flex flex-col gap-2">
+              {!isAvailable && (
+                <Badge variant="destructive" className="text-sm">Agotado</Badge>
+              )}
+              {hasDiscount && isAvailable && (
+                <Badge className="bg-green-600 text-sm">-{discountPercentage}%</Badge>
+              )}
+            </div>
           </div>
 
           {/* Product Info */}
           <div className="space-y-6">
             <div>
-              <h1 className="text-3xl font-bold mb-2">{product.title}</h1>
-              <p className="text-2xl font-bold text-primary">
-                {currencyCode} {price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-              </p>
+              <Badge variant="secondary" className="mb-2">{product.category}</Badge>
+              <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
+              
+              <div className="flex items-center gap-3">
+                <p className="text-2xl font-bold text-primary">
+                  DOP {product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                </p>
+                {hasDiscount && (
+                  <p className="text-lg text-muted-foreground line-through">
+                    DOP {product.original_price!.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                  </p>
+                )}
+              </div>
             </div>
 
-            {!isAvailable && (
-              <Badge variant="destructive">Agotado</Badge>
-            )}
-
-            {/* Variant Selection */}
-            {product.options.length > 0 && product.options[0].name !== 'Title' && (
-              <div className="space-y-4">
-                {product.options.map((option) => (
-                  <div key={option.name} className="space-y-2">
-                    <label className="text-sm font-medium">{option.name}</label>
-                    <div className="flex flex-wrap gap-2">
-                      {option.values.map((value) => {
-                        const variantIdx = product.variants.edges.findIndex(
-                          v => v.node.selectedOptions.some(
-                            o => o.name === option.name && o.value === value
-                          )
-                        );
-                        const isSelected = selectedVariantIndex === variantIdx;
-                        
-                        return (
-                          <Button
-                            key={value}
-                            variant={isSelected ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setSelectedVariantIndex(variantIdx >= 0 ? variantIdx : 0)}
-                          >
-                            {value}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            {/* Stock Status */}
+            <div className="flex items-center gap-2">
+              {isAvailable ? (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                  <span className="text-sm text-muted-foreground">
+                    {product.stock} unidades disponibles
+                  </span>
+                </>
+              ) : (
+                <>
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="text-sm text-destructive">Agotado</span>
+                </>
+              )}
+            </div>
 
             {/* Quantity Selector */}
             <div className="space-y-2">
@@ -176,23 +153,35 @@ export default function ProductDetail() {
                 <Button
                   variant="outline"
                   size="icon"
-                  onClick={() => setQuantity(quantity + 1)}
+                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  disabled={quantity >= product.stock}
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>
             </div>
 
-            {/* Add to Cart Button */}
-            <Button
-              onClick={handleAddToCart}
-              disabled={!isAvailable}
-              size="lg"
-              className="w-full"
-            >
-              <ShoppingCart className="h-5 w-5 mr-2" />
-              {isAvailable ? 'Agregar al Carrito' : 'Producto Agotado'}
-            </Button>
+            {/* Actions */}
+            <div className="flex gap-3">
+              <Button
+                onClick={handleAddToCart}
+                disabled={!isAvailable}
+                size="lg"
+                className="flex-1"
+              >
+                <ShoppingCart className="h-5 w-5 mr-2" />
+                {isAvailable ? 'Agregar al Carrito' : 'Producto Agotado'}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => toggleWishlist(product)}
+                className={isFavorite ? 'text-red-500' : ''}
+              >
+                <Heart className={`h-5 w-5 ${isFavorite ? 'fill-current' : ''}`} />
+              </Button>
+            </div>
 
             {/* Description */}
             {product.description && (
