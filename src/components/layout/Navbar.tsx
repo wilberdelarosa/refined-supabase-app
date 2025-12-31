@@ -1,8 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ShoppingCart, User, Menu, Search, Settings } from 'lucide-react';
+import { User, Menu, Search, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
-import { useCart } from '@/hooks/useCart';
 import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
@@ -13,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { CartDrawer } from '@/components/shop/CartDrawer';
 import barbaroLogo from '@/assets/barbaro-logo.png';
 
 const navLinks = [
@@ -24,7 +24,6 @@ const navLinks = [
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
-  const { itemCount } = useCart();
   const { isAdmin, canManageOrders } = useRoles();
 
   return (
@@ -96,16 +95,7 @@ export function Navbar() {
             </Button>
           )}
 
-          <Link to="/cart" className="relative">
-            <Button variant="ghost" size="icon">
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-foreground text-background text-xs font-bold flex items-center justify-center">
-                  {itemCount}
-                </span>
-              )}
-            </Button>
-          </Link>
+          <CartDrawer />
 
           {/* Mobile Menu */}
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
