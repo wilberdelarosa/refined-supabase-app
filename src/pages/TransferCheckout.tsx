@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuth } from '@/lib/auth-context';
+import { useDiscountCodes } from '@/hooks/useDiscountCodes';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { DiscountCode } from '@/types/product';
 
-// Bank account details - these should be configured by the admin
+// Bank account details
 const BANK_ACCOUNTS = [
   {
     bank: 'Banco Popular Dominicano',
@@ -34,9 +36,13 @@ const BANK_ACCOUNTS = [
 export default function TransferCheckout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice, getSubtotal, clearCart } = useCartStore();
+  const { validateCode, applyDiscount, loading: discountLoading, error: discountError, clearError } = useDiscountCodes();
+  
   const [copied, setCopied] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [discountCodeInput, setDiscountCodeInput] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<{ code: DiscountCode; amount: number } | null>(null);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -47,7 +53,6 @@ export default function TransferCheckout() {
     notes: ''
   });
 
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       toast.error('Debes iniciar sesión para realizar un pedido');
@@ -55,14 +60,30 @@ export default function TransferCheckout() {
     }
   }, [user, authLoading, navigate]);
 
-  const totalPrice = getTotalPrice();
-  const currencyCode = items[0]?.price.currencyCode || 'DOP';
+  const subtotal = getSubtotal();
+  const discountAmount = appliedDiscount?.amount || 0;
+  const totalPrice = subtotal - discountAmount;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopied(label);
     toast.success('Copiado al portapapeles');
     setTimeout(() => setCopied(null), 2000);
+  };
+
+  const handleApplyDiscount = async () => {
+    clearError();
+    const result = await validateCode(discountCodeInput, subtotal);
+    if (result) {
+      setAppliedDiscount({ code: result.code, amount: result.discountAmount });
+      toast.success(`¡Descuento aplicado! Ahorraste DOP ${result.discountAmount.toLocaleString()}`);
+    }
+  };
+
+  const handleRemoveDiscount = () => {
+    setAppliedDiscount(null);
+    setDiscountCodeInput('');
+    clearError();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,6 +109,9 @@ export default function TransferCheckout() {
         .insert({
           user_id: user.id,
           total: totalPrice,
+          subtotal: subtotal,
+          discount_code_id: appliedDiscount?.code.id || null,
+          discount_amount: discountAmount,
           status: 'pending',
           shipping_address: `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}\n${formData.email}${formData.notes ? `\nNotas: ${formData.notes}` : ''}`
         })
@@ -99,10 +123,10 @@ export default function TransferCheckout() {
       // Create order items
       const orderItems = items.map(item => ({
         order_id: order.id,
-        product_id: null, // Shopify products don't have local IDs
-        product_name: item.product.node.title,
+        product_id: item.product.id,
+        product_name: item.product.name,
         quantity: item.quantity,
-        price: parseFloat(item.price.amount)
+        price: item.product.price
       }));
 
       const { error: itemsError } = await supabase
@@ -111,39 +135,20 @@ export default function TransferCheckout() {
 
       if (itemsError) throw itemsError;
 
-      // Create Draft Order in Shopify (sync with Shopify)
-      const nameParts = formData.fullName.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+      // Apply discount usage if discount was used
+      if (appliedDiscount) {
+        await applyDiscount(appliedDiscount.code.id, order.id, discountAmount);
+      }
 
-      supabase.functions.invoke('shopify-admin', {
-        body: {
-          action: 'create_draft_order',
-          line_items: items.map(item => ({
-            title: item.product.node.title,
-            price: item.price.amount,
-            quantity: item.quantity,
-          })),
-          customer: {
-            first_name: firstName,
-            last_name: lastName,
-            email: formData.email,
-          },
-          shipping_address: {
-            first_name: firstName,
-            last_name: lastName,
-            address1: formData.address,
-            city: formData.city,
-            phone: formData.phone,
-          },
-          note: `Pedido #${order.id.slice(0, 8).toUpperCase()} - Transferencia bancaria${formData.notes ? ` | Notas: ${formData.notes}` : ''}`,
-        }
-      }).then(res => {
-        if (res.error) console.error('Shopify Draft Order error:', res.error);
-        else console.log('Draft Order created in Shopify:', res.data);
-      });
+      // Update product stock
+      for (const item of items) {
+        await supabase
+          .from('products')
+          .update({ stock: item.product.stock - item.quantity })
+          .eq('id', item.product.id);
+      }
 
-      // Send order confirmation email (background, don't block)
+      // Send order confirmation email
       supabase.functions.invoke('send-order-email', {
         body: {
           type: 'order_created',
@@ -152,15 +157,14 @@ export default function TransferCheckout() {
           orderId: order.id,
           orderTotal: totalPrice,
           orderItems: items.map(item => ({
-            name: item.product.node.title,
+            name: item.product.name,
             quantity: item.quantity,
-            price: parseFloat(item.price.amount)
+            price: item.product.price
           })),
           shippingAddress: `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}`
         }
       }).then(res => {
         if (res.error) console.error('Email error:', res.error);
-        else console.log('Order confirmation email sent');
       });
 
       // Clear cart and redirect
@@ -213,29 +217,85 @@ export default function TransferCheckout() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {items.map((item) => (
-                  <div key={item.variantId} className="flex gap-3">
+                  <div key={item.product.id} className="flex gap-3">
                     <div className="w-16 h-16 bg-secondary/20 rounded-md overflow-hidden flex-shrink-0">
-                      {item.product.node.images?.edges?.[0]?.node && (
+                      {item.product.image_url && (
                         <img
-                          src={item.product.node.images.edges[0].node.url}
-                          alt={item.product.node.title}
+                          src={item.product.image_url}
+                          alt={item.product.name}
                           className="w-full h-full object-cover"
                         />
                       )}
                     </div>
                     <div className="flex-1">
-                      <p className="font-medium text-sm">{item.product.node.title}</p>
+                      <p className="font-medium text-sm">{item.product.name}</p>
                       <p className="text-sm text-muted-foreground">Cantidad: {item.quantity}</p>
                     </div>
                     <p className="font-semibold">
-                      {currencyCode} {(parseFloat(item.price.amount) * item.quantity).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                      DOP {(item.product.price * item.quantity).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                     </p>
                   </div>
                 ))}
+                
                 <Separator />
-                <div className="flex justify-between text-lg font-bold">
-                  <span>Total</span>
-                  <span>{currencyCode} {totalPrice.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
+
+                {/* Discount Code */}
+                <div className="space-y-2">
+                  <Label>Código de descuento</Label>
+                  {appliedDiscount ? (
+                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Tag className="h-4 w-4 text-green-600" />
+                        <span className="font-medium text-green-700 dark:text-green-400">
+                          {appliedDiscount.code.code}
+                        </span>
+                        <span className="text-sm text-green-600">
+                          (-DOP {appliedDiscount.amount.toLocaleString()})
+                        </span>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={handleRemoveDiscount}>
+                        Quitar
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Input
+                        placeholder="CODIGO2024"
+                        value={discountCodeInput}
+                        onChange={(e) => setDiscountCodeInput(e.target.value.toUpperCase())}
+                        className="uppercase"
+                      />
+                      <Button 
+                        variant="outline" 
+                        onClick={handleApplyDiscount}
+                        disabled={discountLoading || !discountCodeInput}
+                      >
+                        Aplicar
+                      </Button>
+                    </div>
+                  )}
+                  {discountError && (
+                    <p className="text-sm text-destructive">{discountError}</p>
+                  )}
+                </div>
+
+                <Separator />
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>DOP {subtotal.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  {appliedDiscount && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Descuento</span>
+                      <span>-DOP {discountAmount.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between text-lg font-bold">
+                    <span>Total</span>
+                    <span>DOP {totalPrice.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>

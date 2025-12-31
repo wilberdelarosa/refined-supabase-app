@@ -3,48 +3,38 @@ import { ShoppingCart, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useCartStore, CartItem } from '@/stores/cartStore';
-import { useWishlist } from '@/hooks/useWishlist';
-import { ShopifyProduct } from '@/lib/shopify';
+import { useCartStore } from '@/stores/cartStore';
+import { useNativeWishlist } from '@/hooks/useNativeWishlist';
+import { Product } from '@/types/product';
 import { toast } from 'sonner';
 
-interface ShopifyProductCardProps {
-  product: ShopifyProduct;
+interface ProductCardProps {
+  product: Product;
 }
 
-export function ShopifyProductCard({ product }: ShopifyProductCardProps) {
+export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore(state => state.addItem);
-  const { isInWishlist, toggleWishlist } = useWishlist();
-  const { node } = product;
+  const { isInWishlist, toggleWishlist } = useNativeWishlist();
   
-  const firstVariant = node.variants.edges[0]?.node;
-  const price = parseFloat(node.priceRange.minVariantPrice.amount);
-  const currencyCode = node.priceRange.minVariantPrice.currencyCode;
-  const imageUrl = node.images.edges[0]?.node.url;
-  const isAvailable = firstVariant?.availableForSale ?? false;
-  const isFavorite = isInWishlist(node.id);
+  const isAvailable = product.stock > 0;
+  const isFavorite = isInWishlist(product.id);
+  const hasDiscount = product.original_price && product.original_price > product.price;
+  const discountPercentage = hasDiscount 
+    ? Math.round(((product.original_price! - product.price) / product.original_price!) * 100)
+    : 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (!firstVariant) {
-      toast.error('Producto no disponible');
+    if (!isAvailable) {
+      toast.error('Producto agotado');
       return;
     }
 
-    const cartItem: CartItem = {
-      product,
-      variantId: firstVariant.id,
-      variantTitle: firstVariant.title,
-      price: firstVariant.price,
-      quantity: 1,
-      selectedOptions: firstVariant.selectedOptions || []
-    };
-
-    addItem(cartItem);
+    addItem(product, 1);
     toast.success('Agregado al carrito', {
-      description: node.title,
+      description: product.name,
       position: 'top-center'
     });
   };
@@ -52,24 +42,17 @@ export function ShopifyProductCard({ product }: ShopifyProductCardProps) {
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
-    toggleWishlist({
-      shopify_product_id: node.id,
-      product_handle: node.handle,
-      product_title: node.title,
-      product_image_url: imageUrl,
-      product_price: price.toString(),
-    });
+    toggleWishlist(product);
   };
 
   return (
-    <Link to={`/producto/${node.handle}`}>
+    <Link to={`/producto/${product.id}`}>
       <Card className="group overflow-hidden transition-all hover:shadow-lg h-full">
         <div className="relative aspect-square overflow-hidden bg-secondary/20">
-          {imageUrl ? (
+          {product.image_url ? (
             <img
-              src={imageUrl}
-              alt={node.title}
+              src={product.image_url}
+              alt={product.name}
               className="h-full w-full object-cover transition-transform group-hover:scale-105"
             />
           ) : (
@@ -77,11 +60,17 @@ export function ShopifyProductCard({ product }: ShopifyProductCardProps) {
               Sin imagen
             </div>
           )}
-          {!isAvailable && (
-            <Badge variant="destructive" className="absolute top-2 left-2">
-              Agotado
-            </Badge>
-          )}
+          
+          {/* Badges */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1">
+            {!isAvailable && (
+              <Badge variant="destructive">Agotado</Badge>
+            )}
+            {hasDiscount && isAvailable && (
+              <Badge className="bg-green-600">-{discountPercentage}%</Badge>
+            )}
+          </div>
+          
           <Button
             variant="ghost"
             size="icon"
@@ -91,13 +80,24 @@ export function ShopifyProductCard({ product }: ShopifyProductCardProps) {
             <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
         </div>
+        
         <CardContent className="p-4 space-y-2">
+          <Badge variant="secondary" className="text-xs">{product.category}</Badge>
           <h3 className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
-            {node.title}
+            {product.name}
           </h3>
-          <p className="text-lg font-bold text-primary">
-            {currencyCode} {price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-          </p>
+          
+          <div className="flex items-center gap-2">
+            <p className="text-lg font-bold text-primary">
+              DOP {product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+            </p>
+            {hasDiscount && (
+              <p className="text-sm text-muted-foreground line-through">
+                DOP {product.original_price!.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+              </p>
+            )}
+          </div>
+          
           <Button
             onClick={handleAddToCart}
             disabled={!isAvailable}

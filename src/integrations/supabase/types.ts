@@ -118,6 +118,102 @@ export type Database = {
         }
         Relationships: []
       }
+      discount_codes: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          discount_type: string
+          discount_value: number
+          ends_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          max_uses_per_user: number | null
+          min_purchase_amount: number | null
+          starts_at: string | null
+          updated_at: string
+          uses_count: number | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          max_uses_per_user?: number | null
+          min_purchase_amount?: number | null
+          starts_at?: string | null
+          updated_at?: string
+          uses_count?: number | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          ends_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          max_uses_per_user?: number | null
+          min_purchase_amount?: number | null
+          starts_at?: string | null
+          updated_at?: string
+          uses_count?: number | null
+        }
+        Relationships: []
+      }
+      discount_usages: {
+        Row: {
+          discount_amount: number
+          discount_code_id: string
+          id: string
+          order_id: string | null
+          used_at: string
+          user_id: string
+        }
+        Insert: {
+          discount_amount: number
+          discount_code_id: string
+          id?: string
+          order_id?: string | null
+          used_at?: string
+          user_id: string
+        }
+        Update: {
+          discount_amount?: number
+          discount_code_id?: string
+          id?: string
+          order_id?: string | null
+          used_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discount_usages_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "discount_usages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoice_lines: {
         Row: {
           id: string
@@ -263,29 +359,46 @@ export type Database = {
       orders: {
         Row: {
           created_at: string
+          discount_amount: number | null
+          discount_code_id: string | null
           id: string
           shipping_address: string | null
           status: string
+          subtotal: number | null
           total: number
           user_id: string
         }
         Insert: {
           created_at?: string
+          discount_amount?: number | null
+          discount_code_id?: string | null
           id?: string
           shipping_address?: string | null
           status?: string
+          subtotal?: number | null
           total: number
           user_id: string
         }
         Update: {
           created_at?: string
+          discount_amount?: number | null
+          discount_code_id?: string | null
           id?: string
           shipping_address?: string | null
           status?: string
+          subtotal?: number | null
           total?: number
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_discount_code_id_fkey"
+            columns: ["discount_code_id"]
+            isOneToOne: false
+            referencedRelation: "discount_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
