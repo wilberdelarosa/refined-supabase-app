@@ -14,8 +14,9 @@ import ProfileEdit from "./pages/ProfileEdit";
 import Wishlist from "./pages/Wishlist";
 import Orders from "./pages/Orders";
 import Admin from "./pages/Admin";
-import AdminProducts from "./pages/admin/AdminProducts";
-import AdminCategories from "./pages/admin/AdminCategories";
+import AdminShopifyProducts from "./pages/admin/AdminShopifyProducts";
+import AdminInventory from "./pages/admin/AdminInventory";
+import AdminDiscounts from "./pages/admin/AdminDiscounts";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminInvoices from "./pages/admin/AdminInvoices";
@@ -51,8 +52,9 @@ const App = () => (
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/products" element={<AdminShopifyProducts />} />
+            <Route path="/admin/inventory" element={<AdminInventory />} />
+            <Route path="/admin/discounts" element={<AdminDiscounts />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/invoices" element={<AdminInvoices />} />

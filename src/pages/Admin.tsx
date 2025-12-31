@@ -51,7 +51,7 @@ export default function Admin() {
   const adminModules = [
     {
       title: 'Pedidos',
-      description: 'Gestionar pedidos y estados',
+      description: 'Gestionar pedidos locales',
       icon: ShoppingCart,
       href: '/admin/orders',
       badge: 'Nuevo',
@@ -59,17 +59,24 @@ export default function Admin() {
     },
     {
       title: 'Productos',
-      description: 'Catálogo y precios',
+      description: 'Catálogo Shopify',
       icon: Package,
       href: '/admin/products',
       visible: canManageProducts,
     },
     {
       title: 'Inventario',
-      description: 'Control de stock',
+      description: 'Control de stock Shopify',
       icon: Boxes,
       href: '/admin/inventory',
       visible: canManageProducts,
+    },
+    {
+      title: 'Descuentos',
+      description: 'Códigos y promociones',
+      icon: Settings,
+      href: '/admin/discounts',
+      visible: isAdmin,
     },
     {
       title: 'Facturas',
@@ -83,27 +90,6 @@ export default function Admin() {
       description: 'Gestión de usuarios',
       icon: Users,
       href: '/admin/users',
-      visible: isAdmin,
-    },
-    {
-      title: 'Contenido',
-      description: 'Blog y páginas',
-      icon: FileEdit,
-      href: '/admin/content',
-      visible: canManageContent,
-    },
-    {
-      title: 'Reportes',
-      description: 'Estadísticas y análisis',
-      icon: BarChart3,
-      href: '/admin/reports',
-      visible: isAdmin,
-    },
-    {
-      title: 'Configuración',
-      description: 'Ajustes del sistema',
-      icon: Settings,
-      href: '/admin/settings',
       visible: isAdmin,
     },
   ].filter(m => m.visible);
