@@ -144,6 +144,51 @@ serve(async (req) => {
         break;
       }
 
+      // Draft Orders (for bank transfer orders)
+      case 'create_draft_order': {
+        const draftOrder = {
+          line_items: params.line_items.map((item: any) => ({
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+          })),
+          customer: params.customer ? {
+            first_name: params.customer.first_name,
+            last_name: params.customer.last_name || '',
+            email: params.customer.email,
+          } : undefined,
+          shipping_address: params.shipping_address ? {
+            first_name: params.shipping_address.first_name,
+            last_name: params.shipping_address.last_name || '',
+            address1: params.shipping_address.address1,
+            city: params.shipping_address.city,
+            country: 'DO',
+            phone: params.shipping_address.phone,
+          } : undefined,
+          note: params.note || 'Pedido por transferencia bancaria',
+          tags: 'transferencia-bancaria,lovable',
+        };
+        result = await shopifyAdminRequest('/draft_orders.json', 'POST', { draft_order: draftOrder });
+        break;
+      }
+      case 'get_draft_orders': {
+        const limit = params.limit || 50;
+        const status = params.status || 'open';
+        result = await shopifyAdminRequest(`/draft_orders.json?limit=${limit}&status=${status}`);
+        break;
+      }
+      case 'complete_draft_order': {
+        // Mark draft order as completed (paid)
+        result = await shopifyAdminRequest(`/draft_orders/${params.draft_order_id}/complete.json`, 'PUT', {
+          payment_pending: false
+        });
+        break;
+      }
+      case 'cancel_draft_order': {
+        result = await shopifyAdminRequest(`/draft_orders/${params.draft_order_id}.json`, 'DELETE');
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }

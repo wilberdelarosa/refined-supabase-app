@@ -111,6 +111,38 @@ export default function TransferCheckout() {
 
       if (itemsError) throw itemsError;
 
+      // Create Draft Order in Shopify (sync with Shopify)
+      const nameParts = formData.fullName.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
+
+      supabase.functions.invoke('shopify-admin', {
+        body: {
+          action: 'create_draft_order',
+          line_items: items.map(item => ({
+            title: item.product.node.title,
+            price: item.price.amount,
+            quantity: item.quantity,
+          })),
+          customer: {
+            first_name: firstName,
+            last_name: lastName,
+            email: formData.email,
+          },
+          shipping_address: {
+            first_name: firstName,
+            last_name: lastName,
+            address1: formData.address,
+            city: formData.city,
+            phone: formData.phone,
+          },
+          note: `Pedido #${order.id.slice(0, 8).toUpperCase()} - Transferencia bancaria${formData.notes ? ` | Notas: ${formData.notes}` : ''}`,
+        }
+      }).then(res => {
+        if (res.error) console.error('Shopify Draft Order error:', res.error);
+        else console.log('Draft Order created in Shopify:', res.data);
+      });
+
       // Send order confirmation email (background, don't block)
       supabase.functions.invoke('send-order-email', {
         body: {
