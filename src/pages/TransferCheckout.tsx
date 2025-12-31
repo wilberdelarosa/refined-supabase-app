@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
@@ -33,7 +33,7 @@ const BANK_ACCOUNTS = [
 
 export default function TransferCheckout() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const [copied, setCopied] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +46,14 @@ export default function TransferCheckout() {
     city: '',
     notes: ''
   });
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error('Debes iniciar sesión para realizar un pedido');
+      navigate('/auth');
+    }
+  }, [user, authLoading, navigate]);
 
   const totalPrice = getTotalPrice();
   const currencyCode = items[0]?.price.currencyCode || 'DOP';
@@ -68,11 +76,17 @@ export default function TransferCheckout() {
     setIsSubmitting(true);
 
     try {
+      if (!user) {
+        toast.error('Debes iniciar sesión para realizar un pedido');
+        navigate('/auth');
+        return;
+      }
+
       // Create order in database
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
-          user_id: user?.id || null,
+          user_id: user.id,
           total: totalPrice,
           status: 'pending',
           shipping_address: `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}\n${formData.email}${formData.notes ? `\nNotas: ${formData.notes}` : ''}`
@@ -104,7 +118,7 @@ export default function TransferCheckout() {
         description: 'Te enviaremos un correo con los detalles'
       });
 
-      navigate('/cuenta/pedidos');
+      navigate('/orders');
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error('Error al crear el pedido', {
