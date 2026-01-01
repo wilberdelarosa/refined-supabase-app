@@ -13,7 +13,7 @@ export function FeaturedProducts() {
       <div className="container">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
-          <div>
+          <div className="animate-fade-in">
             <h2 className="text-3xl md:text-4xl font-bold mb-2">
               Productos Destacados
             </h2>
@@ -21,10 +21,10 @@ export function FeaturedProducts() {
               Los favoritos de nuestros clientes
             </p>
           </div>
-          <Button variant="ghost" className="self-start md:self-auto uppercase tracking-wide font-semibold" asChild>
+          <Button variant="ghost" className="self-start md:self-auto uppercase tracking-wide font-semibold transition-all duration-300 hover:scale-105 group animate-fade-in" asChild>
             <Link to="/shop">
               Ver todos los productos
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <ArrowRight className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
             </Link>
           </Button>
         </div>
@@ -33,7 +33,7 @@ export function FeaturedProducts() {
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-4">
+              <div key={i} className="space-y-4 animate-pulse">
                 <Skeleton className="aspect-square rounded-lg" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-20" />
@@ -48,11 +48,11 @@ export function FeaturedProducts() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16 bg-card rounded-lg border border-border">
+          <div className="text-center py-16 bg-card rounded-lg border border-border shadow-smooth animate-scale-in-smooth">
             <p className="text-muted-foreground mb-4">
               No hay productos disponibles
             </p>
-            <Button asChild>
+            <Button className="transition-all duration-300 hover:scale-105" asChild>
               <Link to="/shop">Ver todos los productos</Link>
             </Button>
           </div>

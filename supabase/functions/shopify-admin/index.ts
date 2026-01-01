@@ -6,8 +6,8 @@ const corsHeaders = {
 };
 
 const SHOPIFY_ACCESS_TOKEN = Deno.env.get('SHOPIFY_ACCESS_TOKEN');
-const SHOPIFY_STORE_DOMAIN = 'lovable-project-fc7u9.myshopify.com';
-const SHOPIFY_API_VERSION = '2025-01';
+const SHOPIFY_STORE_DOMAIN = Deno.env.get('SHOPIFY_STORE_DOMAIN') ?? 'lovable-project-fc7u9.myshopify.com';
+const SHOPIFY_API_VERSION = Deno.env.get('SHOPIFY_ADMIN_API_VERSION') ?? '2025-01';
 
 async function shopifyAdminRequest(endpoint: string, method = 'GET', body?: object) {
   const url = `https://${SHOPIFY_STORE_DOMAIN}/admin/api/${SHOPIFY_API_VERSION}${endpoint}`;
@@ -18,7 +18,7 @@ async function shopifyAdminRequest(endpoint: string, method = 'GET', body?: obje
     method,
     headers: {
       'Content-Type': 'application/json',
-      'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN || '',
+      'X-Shopify-Access-Token': SHOPIFY_ACCESS_TOKEN as string,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -43,6 +43,16 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  if (!SHOPIFY_ACCESS_TOKEN) {
+    return new Response(
+      JSON.stringify({ error: 'SHOPIFY_ACCESS_TOKEN not configured in Supabase secrets' }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
+  }
+
   try {
     const { action, ...params } = await req.json();
     console.log('Action:', action, 'Params:', JSON.stringify(params));
@@ -50,6 +60,12 @@ serve(async (req) => {
     let result;
 
     switch (action) {
+      // Diagnostics
+      case 'get_access_scopes': {
+        result = await shopifyAdminRequest('/oauth/access_scopes.json');
+        break;
+      }
+
       // Products
       case 'get_products': {
         const limit = params.limit || 50;

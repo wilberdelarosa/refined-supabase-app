@@ -124,7 +124,7 @@ export default function ProfileEdit() {
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
 
-        await supabase.functions.invoke('sync-shopify-customer', {
+        const { data: syncResult, error: syncFnError } = await supabase.functions.invoke('sync-shopify-customer', {
           body: {
             action: 'update',
             customer: {
@@ -140,7 +140,16 @@ export default function ProfileEdit() {
             }
           }
         });
-        console.log('Customer synced to Shopify');
+
+        if (syncFnError) {
+          console.error('Shopify sync function error:', syncFnError);
+        } else if (syncResult?.action === 'scope_not_approved') {
+          console.warn('Shopify customer scopes not approved:', syncResult?.message);
+        } else if (syncResult?.success) {
+          console.log('Customer synced to Shopify');
+        } else {
+          console.warn('Unexpected Shopify sync result:', syncResult);
+        }
       } catch (syncError) {
         console.error('Error syncing customer to Shopify:', syncError);
         // Don't block profile update if Shopify sync fails

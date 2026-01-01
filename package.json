@@ -8,6 +8,9 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "db:push-remote": "node scripts/db-push-remote.mjs",
+    "shopify:test-product": "node scripts/create-test-shopify-product.mjs",
+    "shopify:scopes": "node scripts/shopify-admin-scopes.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -45,6 +48,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
+    "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",

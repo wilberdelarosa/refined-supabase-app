@@ -60,6 +60,37 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Shopify setup (Storefront + Admin)
+
+This project uses two Shopify integrations:
+
+- **Storefront API (client / Vite):** used to list products and create cart checkouts.
+- **Admin API (Supabase Edge Functions):** used for admin operations (products, inventory, discounts, draft orders) and customer sync.
+
+### 1) Configure Vite env vars (Storefront)
+
+Create a local env file (recommended: `.env.local`) based on `.env.example` and set:
+
+- `VITE_SHOPIFY_STORE_DOMAIN`
+- `VITE_SHOPIFY_STOREFRONT_TOKEN`
+- (optional) `VITE_SHOPIFY_STOREFRONT_API_VERSION`
+
+### 2) Configure Supabase secrets (Admin)
+
+In your Supabase project, set secrets for Edge Functions:
+
+- `SHOPIFY_ACCESS_TOKEN` (Admin API token)
+- `SHOPIFY_STORE_DOMAIN`
+- `SHOPIFY_ADMIN_API_VERSION`
+
+### 3) Create a test product (proof of iteration)
+
+Once secrets are configured and the Edge Function `shopify-admin` is deployed, go to:
+
+- Admin → Productos Shopify → **Nuevo Producto**
+
+Fill `title`, `price` and save. The UI calls the `shopify-admin` Edge Function (`create_product`).
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

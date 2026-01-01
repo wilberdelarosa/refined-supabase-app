@@ -9,7 +9,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 md:gap-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <Link to="/" className="inline-block mb-4">
+            <Link to="/" className="inline-block mb-4 transition-transform duration-300 hover:scale-105">
               <img src={barbaroLogo} alt="Barbaro Nutrition" className="h-12 w-auto" />
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -22,22 +22,22 @@ export function Footer() {
             <h4 className="font-semibold mb-4 uppercase tracking-wide text-sm">Tienda</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/shop?category=proteinas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/shop?category=proteinas" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Proteínas
                 </Link>
               </li>
               <li>
-                <Link to="/shop?category=creatina" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/shop?category=creatina" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Creatina
                 </Link>
               </li>
               <li>
-                <Link to="/shop?category=pre-entrenos" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/shop?category=pre-entrenos" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Pre-Entrenos
                 </Link>
               </li>
               <li>
-                <Link to="/shop?category=vitaminas" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/shop?category=vitaminas" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Vitaminas
                 </Link>
               </li>
@@ -49,17 +49,17 @@ export function Footer() {
             <h4 className="font-semibold mb-4 uppercase tracking-wide text-sm">Empresa</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Sobre Nosotros
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Contacto
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   Blog
                 </Link>
               </li>
@@ -70,19 +70,19 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4 uppercase tracking-wide text-sm">Contacto</h4>
             <ul className="space-y-3">
-              <li className="flex items-start gap-2 text-sm text-muted-foreground">
-                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
-                <span>Santo Domingo, República Dominicana</span>
+              <li className="flex items-start gap-2 text-sm text-muted-foreground group">
+                <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0 transition-colors duration-300 group-hover:text-foreground" />
+                <span className="transition-colors duration-300 group-hover:text-foreground">Santo Domingo, República Dominicana</span>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Mail className="h-4 w-4 flex-shrink-0" />
-                <a href="mailto:info@barbaronutrition.com" className="hover:text-foreground transition-colors">
+                <a href="mailto:info@barbaronutrition.com" className="hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   info@barbaronutrition.com
                 </a>
               </li>
               <li className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Phone className="h-4 w-4 flex-shrink-0" />
-                <a href="tel:+18095551234" className="hover:text-foreground transition-colors">
+                <a href="tel:+18095551234" className="hover:text-foreground transition-all duration-300 hover:translate-x-1 inline-block">
                   +1 (809) 555-1234
                 </a>
               </li>

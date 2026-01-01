@@ -1,8 +1,11 @@
 // Shopify Storefront API Configuration
-export const SHOPIFY_API_VERSION = '2025-07';
-export const SHOPIFY_STORE_PERMANENT_DOMAIN = 'lovable-project-fc7u9.myshopify.com';
-export const SHOPIFY_STOREFRONT_URL = `https://${SHOPIFY_STORE_PERMANENT_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`;
-export const SHOPIFY_STOREFRONT_TOKEN = '80159a5ccb324af502972648c63bb884';
+// NOTE: Do not hardcode tokens in the client. Configure via Vite env vars.
+export const SHOPIFY_API_VERSION = import.meta.env.VITE_SHOPIFY_STOREFRONT_API_VERSION ?? '2025-07';
+export const SHOPIFY_STORE_PERMANENT_DOMAIN: string | undefined = import.meta.env.VITE_SHOPIFY_STORE_DOMAIN;
+export const SHOPIFY_STOREFRONT_TOKEN: string | undefined = import.meta.env.VITE_SHOPIFY_STOREFRONT_TOKEN;
+export const SHOPIFY_STOREFRONT_URL = SHOPIFY_STORE_PERMANENT_DOMAIN
+  ? `https://${SHOPIFY_STORE_PERMANENT_DOMAIN}/api/${SHOPIFY_API_VERSION}/graphql.json`
+  : '';
 
 export interface ShopifyProduct {
   node: {
@@ -50,6 +53,14 @@ export interface ShopifyProduct {
 
 // Storefront API helper function
 export async function storefrontApiRequest(query: string, variables: Record<string, unknown> = {}) {
+  if (!SHOPIFY_STORE_PERMANENT_DOMAIN) {
+    throw new Error('Shopify domain not configured (missing VITE_SHOPIFY_STORE_DOMAIN)');
+  }
+
+  if (!SHOPIFY_STOREFRONT_TOKEN) {
+    throw new Error('Shopify Storefront token not configured (missing VITE_SHOPIFY_STOREFRONT_TOKEN)');
+  }
+
   const response = await fetch(SHOPIFY_STOREFRONT_URL, {
     method: 'POST',
     headers: {

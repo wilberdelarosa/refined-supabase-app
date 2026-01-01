@@ -5,8 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const SHOPIFY_STORE_DOMAIN = 'lovable-project-fc7u9.myshopify.com';
-const SHOPIFY_API_VERSION = '2025-07';
+const SHOPIFY_STORE_DOMAIN = Deno.env.get('SHOPIFY_STORE_DOMAIN') ?? 'lovable-project-fc7u9.myshopify.com';
+const SHOPIFY_API_VERSION = Deno.env.get('SHOPIFY_ADMIN_API_VERSION') ?? '2025-07';
 
 interface CustomerData {
   email: string;
