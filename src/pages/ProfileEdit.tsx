@@ -118,34 +118,6 @@ export default function ProfileEdit() {
 
       if (error) throw error;
 
-      // Sync customer to Shopify
-      try {
-        const nameParts = (profile.full_name || '').trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-
-        await supabase.functions.invoke('sync-shopify-customer', {
-          body: {
-            action: 'update',
-            customer: {
-              email: profile.email || user.email || '',
-              first_name: firstName,
-              last_name: lastName,
-              phone: profile.phone || undefined,
-              address: {
-                address1: profile.address || undefined,
-                city: profile.city || undefined,
-                country: profile.country || undefined,
-              }
-            }
-          }
-        });
-        console.log('Customer synced to Shopify');
-      } catch (syncError) {
-        console.error('Error syncing customer to Shopify:', syncError);
-        // Don't block profile update if Shopify sync fails
-      }
-
       toast.success('Perfil actualizado correctamente');
       navigate('/account');
     } catch (err) {

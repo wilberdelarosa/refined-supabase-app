@@ -47,53 +47,57 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link to={`/producto/${product.id}`}>
-      <Card className="group overflow-hidden transition-all hover:shadow-lg h-full">
-        <div className="relative aspect-square overflow-hidden bg-secondary/20">
+      <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 h-full border-border/50 bg-card">
+        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-secondary/30 to-muted/30">
           {product.image_url ? (
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform group-hover:scale-105"
+              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              loading="lazy"
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
-              Sin imagen
+              <span className="text-sm">Sin imagen</span>
             </div>
           )}
           
+          {/* Overlay on hover */}
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+          
           {/* Badges */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1">
+          <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {!isAvailable && (
-              <Badge variant="destructive">Agotado</Badge>
+              <Badge variant="destructive" className="shadow-md">Agotado</Badge>
             )}
             {hasDiscount && isAvailable && (
-              <Badge className="bg-green-600">-{discountPercentage}%</Badge>
+              <Badge className="bg-green-600 text-white shadow-md">-{discountPercentage}%</Badge>
             )}
           </div>
           
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
-            className={`absolute top-2 right-2 bg-background/80 backdrop-blur-sm hover:bg-background ${isFavorite ? 'text-red-500' : ''}`}
+            className={`absolute top-3 right-3 shadow-md transition-all duration-200 ${isFavorite ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-background/90 hover:bg-background'}`}
             onClick={handleToggleWishlist}
           >
             <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
         </div>
         
-        <CardContent className="p-4 space-y-2">
-          <Badge variant="secondary" className="text-xs">{product.category}</Badge>
-          <h3 className="font-medium text-sm line-clamp-2 min-h-[2.5rem]">
+        <CardContent className="p-4 space-y-3">
+          <Badge variant="secondary" className="text-xs font-medium">{product.category}</Badge>
+          <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground">
             {product.name}
           </h3>
           
-          <div className="flex items-center gap-2">
-            <p className="text-lg font-bold text-primary">
-              DOP {product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+          <div className="flex items-baseline gap-2">
+            <p className="text-lg font-bold text-foreground">
+              RD${product.price.toLocaleString('es-DO', { minimumFractionDigits: 0 })}
             </p>
             {hasDiscount && (
               <p className="text-sm text-muted-foreground line-through">
-                DOP {product.original_price!.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                RD${product.original_price!.toLocaleString('es-DO', { minimumFractionDigits: 0 })}
               </p>
             )}
           </div>
@@ -101,11 +105,11 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             onClick={handleAddToCart}
             disabled={!isAvailable}
-            className="w-full"
+            className="w-full transition-all duration-200"
             size="sm"
           >
             <ShoppingCart className="h-4 w-4 mr-2" />
-            {isAvailable ? 'Agregar' : 'Agotado'}
+            {isAvailable ? 'Agregar al Carrito' : 'Agotado'}
           </Button>
         </CardContent>
       </Card>
