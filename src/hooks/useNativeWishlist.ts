@@ -8,7 +8,9 @@ export interface WishlistItem {
   id: string;
   user_id: string;
   product_id: string;
-  product?: Product;
+  product_name: string;
+  product_price: number | null;
+  product_image_url: string | null;
   created_at: string;
 }
 
@@ -34,11 +36,13 @@ export function useNativeWishlist() {
 
       if (error) throw error;
       
-      // Map old wishlist format to new format
       const mappedItems: WishlistItem[] = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
-        product_id: item.shopify_product_id, // Using shopify_product_id as product_id for backwards compat
+        product_id: item.shopify_product_id,
+        product_name: item.product_title,
+        product_price: item.product_price ? parseFloat(item.product_price) : null,
+        product_image_url: item.product_image_url,
         created_at: item.created_at
       }));
       
