@@ -15,18 +15,18 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore(state => state.addItem);
   const { isInWishlist, toggleWishlist } = useNativeWishlist();
-  
+
   const isAvailable = product.stock > 0;
   const isFavorite = isInWishlist(product.id);
   const hasDiscount = product.original_price && product.original_price > product.price;
-  const discountPercentage = hasDiscount 
+  const discountPercentage = hasDiscount
     ? Math.round(((product.original_price! - product.price) / product.original_price!) * 100)
     : 0;
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (!isAvailable) {
       toast.error('Producto agotado');
       return;
@@ -48,12 +48,12 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Link to={`/producto/${product.id}`}>
       <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 h-full border-border/50 bg-card">
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-secondary/30 to-muted/30">
+        <div className="relative aspect-square overflow-hidden bg-white">
           {product.image_url ? (
             <img
               src={product.image_url}
               alt={product.name}
-              className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
               loading="lazy"
             />
           ) : (
@@ -61,10 +61,10 @@ export function ProductCard({ product }: ProductCardProps) {
               <span className="text-sm">Sin imagen</span>
             </div>
           )}
-          
+
           {/* Overlay on hover */}
           <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          
+
           {/* Badges */}
           <div className="absolute top-3 left-3 flex flex-col gap-1.5">
             {!isAvailable && (
@@ -74,7 +74,7 @@ export function ProductCard({ product }: ProductCardProps) {
               <Badge className="bg-green-600 text-white shadow-md">-{discountPercentage}%</Badge>
             )}
           </div>
-          
+
           <Button
             variant="secondary"
             size="icon"
@@ -84,13 +84,13 @@ export function ProductCard({ product }: ProductCardProps) {
             <Heart className={`h-4 w-4 ${isFavorite ? 'fill-current' : ''}`} />
           </Button>
         </div>
-        
+
         <CardContent className="p-4 space-y-3">
           <Badge variant="secondary" className="text-xs font-medium">{product.category}</Badge>
           <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground">
             {product.name}
           </h3>
-          
+
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-bold text-foreground">
               RD${product.price.toLocaleString('es-DO', { minimumFractionDigits: 0 })}
@@ -101,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
               </p>
             )}
           </div>
-          
+
           <Button
             onClick={handleAddToCart}
             disabled={!isAvailable}

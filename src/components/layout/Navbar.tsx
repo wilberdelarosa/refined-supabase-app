@@ -28,10 +28,10 @@ export function Navbar() {
   const { isAdmin, canManageOrders } = useRoles();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-sm">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center">
+        <Link to="/" className="flex items-center hover-lift">
           <img src={barbaroLogo} alt="Barbaro Nutrition" className="h-10 w-auto" />
         </Link>
 
@@ -41,9 +41,10 @@ export function Navbar() {
             <Link
               key={link.path}
               to={link.path}
-              className="text-sm font-medium text-foreground/80 hover:text-foreground transition-colors uppercase tracking-wide"
+              className="text-sm font-bold text-foreground/70 hover:text-foreground transition-colors uppercase tracking-wide relative group"
             >
               {link.name}
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-foreground transition-all duration-300 group-hover:w-full"></span>
             </Link>
           ))}
         </nav>
@@ -55,22 +56,22 @@ export function Navbar() {
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="hover-lift">
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
+              <DropdownMenuContent align="end" className="w-56 shadow-premium">
                 <DropdownMenuItem asChild>
-                  <Link to="/account" className="cursor-pointer">Mi Cuenta</Link>
+                  <Link to="/account" className="cursor-pointer font-medium">Mi Cuenta</Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to="/orders" className="cursor-pointer">Mis Pedidos</Link>
+                  <Link to="/orders" className="cursor-pointer font-medium">Mis Pedidos</Link>
                 </DropdownMenuItem>
                 {canManageOrders && (
                   <>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer flex items-center gap-2">
+                      <Link to="/admin" className="cursor-pointer flex items-center gap-2 font-bold text-purple-600 dark:text-purple-400">
                         <Settings className="h-4 w-4" />
                         Panel Admin
                       </Link>
@@ -80,14 +81,14 @@ export function Navbar() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem 
                   onClick={() => signOut()}
-                  className="cursor-pointer"
+                  className="cursor-pointer font-medium text-destructive"
                 >
                   Cerrar Sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" asChild>
+            <Button variant="ghost" size="icon" asChild className="hover-lift">
               <Link to="/auth">
                 <User className="h-5 w-5" />
               </Link>

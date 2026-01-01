@@ -33,7 +33,7 @@ export function Hero() {
           <div className="flex flex-col sm:flex-row gap-4">
             <Button
               size="lg"
-              className="bg-white text-black hover:bg-gray-100 dark:bg-white dark:text-black dark:hover:bg-gray-200 font-bold uppercase tracking-wide shadow-xl hover-glow"
+              className="bg-white text-black hover:bg-gray-100 font-bold uppercase tracking-wide shadow-xl hover-glow"
               asChild
             >
               <Link to="/shop">
@@ -44,7 +44,7 @@ export function Hero() {
             <Button
               size="lg"
               variant="outline"
-              className="border-white/60 text-white hover:bg-white/10 dark:border-white/80 dark:text-white dark:hover:bg-white/20 font-bold uppercase tracking-wide backdrop-blur-sm shadow-lg hover-lift"
+              className="border border-black/10 text-black hover:bg-black/5 dark:border-white/60 dark:text-white dark:hover:bg-white/20 font-bold uppercase tracking-wide backdrop-blur-sm shadow-lg hover-lift"
               asChild
             >
               <Link to="/about">
