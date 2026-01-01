@@ -1,12 +1,16 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
-import { useShopifyProducts } from '@/hooks/useShopifyProducts';
-import { ShopifyProductCard } from '@/components/shop/ShopifyProductCard';
+import { useNativeProducts } from '@/hooks/useNativeProducts';
+import { ProductCard } from '@/components/shop/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export function FeaturedProducts() {
-  const { products, loading } = useShopifyProducts(4);
+  const { products, loading } = useNativeProducts();
+  
+  // Get only featured products or first 4
+  const featuredProducts = products.filter(p => p.featured).slice(0, 4);
+  const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 4);
 
   return (
     <section className="py-16 md:py-24 bg-muted/50">
@@ -41,10 +45,10 @@ export function FeaturedProducts() {
               </div>
             ))}
           </div>
-        ) : products.length > 0 ? (
+        ) : displayProducts.length > 0 ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {products.map((product) => (
-              <ShopifyProductCard key={product.node.id} product={product} />
+            {displayProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         ) : (

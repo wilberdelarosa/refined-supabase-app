@@ -1,6 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { useWishlist } from '@/hooks/useWishlist';
+import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { useCartStore } from '@/stores/cartStore';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 export default function Wishlist() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { items, loading, removeFromWishlist } = useWishlist();
+  const { items, loading, removeFromWishlist } = useNativeWishlist();
   const addToCart = useCartStore((state) => state.addItem);
 
   if (!user) {
@@ -46,40 +46,19 @@ export default function Wishlist() {
   }
 
   const handleAddToCart = (item: typeof items[0]) => {
-    // Create a cart item from wishlist item
-    const cartItem = {
-      product: {
-        node: {
-          id: item.shopify_product_id,
-          title: item.product_title,
-          description: '',
-          handle: item.product_handle,
-          priceRange: {
-            minVariantPrice: {
-              amount: item.product_price || '0',
-              currencyCode: 'DOP',
-            },
-          },
-          images: {
-            edges: item.product_image_url
-              ? [{ node: { url: item.product_image_url, altText: item.product_title } }]
-              : [],
-          },
-          variants: { edges: [] },
-          options: [],
-        },
-      },
-      variantId: item.shopify_product_id.replace('Product', 'ProductVariant'),
-      variantTitle: 'Default',
-      price: {
-        amount: item.product_price || '0',
-        currencyCode: 'DOP',
-      },
-      quantity: 1,
-      selectedOptions: [],
-    };
-
-    addToCart(cartItem);
+    addToCart({
+      id: item.product_id,
+      name: item.product_name,
+      price: item.product_price || 0,
+      category: '',
+      stock: 1,
+      image_url: item.product_image_url,
+      description: null,
+      original_price: null,
+      featured: false,
+      created_at: '',
+      updated_at: '',
+    });
     toast.success('Agregado al carrito');
   };
 
@@ -116,12 +95,12 @@ export default function Wishlist() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((item) => (
                 <Card key={item.id} className="overflow-hidden group">
-                  <Link to={`/product/${item.product_handle}`}>
+                  <Link to={`/product/${item.product_id}`}>
                     <div className="aspect-square bg-muted overflow-hidden">
                       {item.product_image_url ? (
                         <img
                           src={item.product_image_url}
-                          alt={item.product_title}
+                          alt={item.product_name}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform"
                         />
                       ) : (
@@ -132,14 +111,14 @@ export default function Wishlist() {
                     </div>
                   </Link>
                   <CardContent className="p-4">
-                    <Link to={`/product/${item.product_handle}`}>
+                    <Link to={`/product/${item.product_id}`}>
                       <h3 className="font-medium line-clamp-2 hover:text-primary transition-colors">
-                        {item.product_title}
+                        {item.product_name}
                       </h3>
                     </Link>
                     {item.product_price && (
                       <p className="text-lg font-bold mt-1">
-                        RD${parseFloat(item.product_price).toLocaleString()}
+                        RD${item.product_price.toLocaleString()}
                       </p>
                     )}
                     <div className="flex gap-2 mt-4">
@@ -154,7 +133,7 @@ export default function Wishlist() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => removeFromWishlist(item.shopify_product_id)}
+                        onClick={() => removeFromWishlist(item.product_id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
