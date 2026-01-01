@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Menu, Search, Settings } from 'lucide-react';
+import { User, Menu, Settings } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { CartDrawer } from '@/components/shop/CartDrawer';
+import { ThemeToggle } from '@/components/ui/theme-toggle';
 import barbaroLogo from '@/assets/barbaro-logo.png';
 
 const navLinks = [
@@ -49,9 +50,7 @@ export function Navbar() {
 
         {/* Actions */}
         <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="hidden md:flex">
-            <Search className="h-5 w-5" />
-          </Button>
+          <ThemeToggle />
 
           {user ? (
             <DropdownMenu>

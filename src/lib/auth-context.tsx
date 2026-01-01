@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     const redirectUrl = `${window.location.origin}/`;
-    const { data, error } = await supabase.auth.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -46,31 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         data: { full_name: fullName }
       }
     });
-    
-    // Sync customer to Shopify after successful signup
-    if (!error && data?.user) {
-      try {
-        // Parse name into first and last
-        const nameParts = (fullName || '').trim().split(' ');
-        const firstName = nameParts[0] || '';
-        const lastName = nameParts.slice(1).join(' ') || '';
-        
-        await supabase.functions.invoke('sync-shopify-customer', {
-          body: {
-            action: 'create',
-            customer: {
-              email,
-              first_name: firstName,
-              last_name: lastName,
-            }
-          }
-        });
-        console.log('Customer synced to Shopify');
-      } catch (syncError) {
-        console.error('Error syncing customer to Shopify:', syncError);
-        // Don't block signup if Shopify sync fails
-      }
-    }
     
     return { error: error as Error | null };
   };

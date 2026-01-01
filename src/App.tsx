@@ -15,7 +15,7 @@ import Wishlist from "./pages/Wishlist";
 import Orders from "./pages/Orders";
 import InvoiceDetail from "./pages/InvoiceDetail";
 import Admin from "./pages/Admin";
-import AdminShopifyProducts from "./pages/admin/AdminShopifyProducts";
+import AdminProducts from "./pages/admin/AdminProducts";
 import AdminInventory from "./pages/admin/AdminInventory";
 import AdminDiscounts from "./pages/admin/AdminDiscounts";
 import AdminOrders from "./pages/admin/AdminOrders";
@@ -54,7 +54,7 @@ const App = () => (
             <Route path="/orders" element={<Orders />} />
             <Route path="/orders/invoice/:invoiceId" element={<InvoiceDetail />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/products" element={<AdminShopifyProducts />} />
+            <Route path="/admin/products" element={<AdminProducts />} />
             <Route path="/admin/inventory" element={<AdminInventory />} />
             <Route path="/admin/discounts" element={<AdminDiscounts />} />
             <Route path="/admin/orders" element={<AdminOrders />} />
