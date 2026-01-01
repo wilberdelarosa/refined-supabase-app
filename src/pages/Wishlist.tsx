@@ -116,7 +116,7 @@ export default function Wishlist() {
                         {item.product_name}
                       </h3>
                     </Link>
-                    {item.product_price && (
+                    {item.product_price !== null && (
                       <p className="text-lg font-bold mt-1">
                         RD${item.product_price.toLocaleString()}
                       </p>
