@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
+import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,7 +33,7 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useShopifyAdmin, ShopifyAdminProduct } from '@/hooks/useShopifyAdmin';
+import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
 import { 
   Plus, 
@@ -41,34 +42,36 @@ import {
   Search, 
   ArrowLeft,
   Package,
-  ExternalLink,
-  Loader2
+  Loader2,
+  Upload
 } from 'lucide-react';
+import type { Product } from '@/types/product';
 
-export default function AdminShopifyProducts() {
+export default function AdminProducts() {
   const { user, loading: authLoading } = useAuth();
   const { canManageProducts, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
-  const { getProducts, createProduct, updateProduct, deleteProduct, loading: apiLoading } = useShopifyAdmin();
   
-  const [products, setProducts] = useState<ShopifyAdminProduct[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<ShopifyAdminProduct | null>(null);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
-    title: '',
-    body_html: '',
-    product_type: '',
-    vendor: 'Barbaro Nutrition',
-    tags: '',
-    status: 'active' as 'active' | 'draft' | 'archived',
+    name: '',
+    description: '',
+    category: '',
     price: '',
-    sku: '',
+    original_price: '',
+    stock: '',
+    image_url: '',
+    featured: false,
   });
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
@@ -79,16 +82,25 @@ export default function AdminShopifyProducts() {
   }, [user, authLoading, rolesLoading, canManageProducts, navigate]);
 
   useEffect(() => {
-    fetchProducts();
+    fetchData();
   }, []);
 
-  async function fetchProducts() {
+  async function fetchData() {
     setLoading(true);
     try {
-      const result = await getProducts(250);
-      setProducts(result.products || []);
+      const [productsRes, categoriesRes] = await Promise.all([
+        supabase.from('products').select('*').order('name'),
+        supabase.from('categories').select('name').eq('is_active', true)
+      ]);
+
+      if (productsRes.error) throw productsRes.error;
+      setProducts(productsRes.data || []);
+
+      if (categoriesRes.data) {
+        setCategories(categoriesRes.data.map(c => c.name));
+      }
     } catch (err) {
-      toast.error('Error al cargar productos de Shopify');
+      toast.error('Error al cargar productos');
       console.error(err);
     } finally {
       setLoading(false);
@@ -96,40 +108,69 @@ export default function AdminShopifyProducts() {
   }
 
   const filteredProducts = products.filter(p => {
-    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase());
-    const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
-    return matchesSearch && matchesStatus;
+    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
+    return matchesSearch && matchesCategory;
   });
 
   function openCreateDialog() {
     setEditingProduct(null);
     setFormData({
-      title: '',
-      body_html: '',
-      product_type: '',
-      vendor: 'Barbaro Nutrition',
-      tags: '',
-      status: 'active',
+      name: '',
+      description: '',
+      category: categories[0] || '',
       price: '',
-      sku: '',
+      original_price: '',
+      stock: '0',
+      image_url: '',
+      featured: false,
     });
     setIsDialogOpen(true);
   }
 
-  function openEditDialog(product: ShopifyAdminProduct) {
+  function openEditDialog(product: Product) {
     setEditingProduct(product);
-    const variant = product.variants[0];
     setFormData({
-      title: product.title,
-      body_html: product.body_html || '',
-      product_type: product.product_type || '',
-      vendor: product.vendor || 'Barbaro Nutrition',
-      tags: product.tags || '',
-      status: product.status,
-      price: variant?.price || '',
-      sku: variant?.sku || '',
+      name: product.name,
+      description: product.description || '',
+      category: product.category,
+      price: product.price.toString(),
+      original_price: product.original_price?.toString() || '',
+      stock: product.stock.toString(),
+      image_url: product.image_url || '',
+      featured: product.featured || false,
     });
     setIsDialogOpen(true);
+  }
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+      const filePath = `product-images/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      toast.success('Imagen subida');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(message);
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -137,40 +178,36 @@ export default function AdminShopifyProducts() {
     setSaving(true);
 
     try {
-      const productData: Record<string, unknown> = {
-        title: formData.title,
-        body_html: formData.body_html || null,
-        product_type: formData.product_type || null,
-        vendor: formData.vendor || 'Barbaro Nutrition',
-        tags: formData.tags || '',
-        status: formData.status,
+      const productData = {
+        name: formData.name,
+        description: formData.description || null,
+        category: formData.category,
+        price: parseFloat(formData.price),
+        original_price: formData.original_price ? parseFloat(formData.original_price) : null,
+        stock: parseInt(formData.stock),
+        image_url: formData.image_url || null,
+        featured: formData.featured,
       };
 
       if (editingProduct) {
-        // Update existing product
-        await updateProduct(editingProduct.id, productData as Partial<ShopifyAdminProduct>);
-        
-        // Update variant price/sku if changed
-        if (editingProduct.variants[0] && (formData.price || formData.sku)) {
-          // Note: Variant updates would need separate API call
-        }
-        
-        toast.success('Producto actualizado en Shopify');
+        const { error } = await supabase
+          .from('products')
+          .update(productData)
+          .eq('id', editingProduct.id);
+
+        if (error) throw error;
+        toast.success('Producto actualizado');
       } else {
-        // Create new product with variant
-        productData.variants = [{
-          price: formData.price || '0',
-          sku: formData.sku || '',
-          inventory_management: 'shopify',
-          inventory_policy: 'deny',
-        }];
-        
-        await createProduct(productData as Partial<ShopifyAdminProduct>);
-        toast.success('Producto creado en Shopify');
+        const { error } = await supabase
+          .from('products')
+          .insert(productData);
+
+        if (error) throw error;
+        toast.success('Producto creado');
       }
 
       setIsDialogOpen(false);
-      fetchProducts();
+      fetchData();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       toast.error(message);
@@ -179,31 +216,23 @@ export default function AdminShopifyProducts() {
     }
   }
 
-  async function handleDelete(product: ShopifyAdminProduct) {
-    if (!confirm(`¿Eliminar "${product.title}" de Shopify? Esta acción no se puede deshacer.`)) return;
+  async function handleDelete(product: Product) {
+    if (!confirm(`¿Eliminar "${product.name}"? Esta acción no se puede deshacer.`)) return;
 
     try {
-      await deleteProduct(product.id);
-      toast.success('Producto eliminado de Shopify');
-      fetchProducts();
+      const { error } = await supabase
+        .from('products')
+        .delete()
+        .eq('id', product.id);
+
+      if (error) throw error;
+      toast.success('Producto eliminado');
+      fetchData();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       toast.error(message);
     }
   }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <Badge className="bg-green-600">Activo</Badge>;
-      case 'draft':
-        return <Badge variant="secondary">Borrador</Badge>;
-      case 'archived':
-        return <Badge variant="outline">Archivado</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
 
   if (authLoading || rolesLoading || loading) {
     return (
@@ -230,19 +259,13 @@ export default function AdminShopifyProducts() {
                 </Button>
               </Link>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-display text-2xl font-bold">Productos Shopify</h1>
-                  <Badge variant="outline" className="text-xs">
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Sincronizado
-                  </Badge>
-                </div>
+                <h1 className="font-display text-2xl font-bold">Productos</h1>
                 <p className="text-muted-foreground text-sm">
-                  {products.length} productos en Shopify
+                  {products.length} productos
                 </p>
               </div>
             </div>
-            <Button onClick={openCreateDialog} disabled={apiLoading}>
+            <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
               Nuevo Producto
             </Button>
@@ -261,15 +284,15 @@ export default function AdminShopifyProducts() {
                     className="pl-10"
                   />
                 </div>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                <Select value={filterCategory} onValueChange={setFilterCategory}>
                   <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Estado" />
+                    <SelectValue placeholder="Categoría" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="active">Activos</SelectItem>
-                    <SelectItem value="draft">Borradores</SelectItem>
-                    <SelectItem value="archived">Archivados</SelectItem>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -284,10 +307,10 @@ export default function AdminShopifyProducts() {
                   <TableRow>
                     <TableHead className="w-[80px]">Imagen</TableHead>
                     <TableHead>Producto</TableHead>
-                    <TableHead>Tipo</TableHead>
+                    <TableHead>Categoría</TableHead>
                     <TableHead className="text-right">Precio</TableHead>
                     <TableHead className="text-center">Stock</TableHead>
-                    <TableHead className="text-center">Estado</TableHead>
+                    <TableHead className="text-center">Destacado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -300,73 +323,74 @@ export default function AdminShopifyProducts() {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredProducts.map((product) => {
-                      const variant = product.variants[0];
-                      const image = product.images[0];
-                      const totalStock = product.variants.reduce((sum, v) => sum + (v.inventory_quantity || 0), 0);
-                      
-                      return (
-                        <TableRow key={product.id}>
-                          <TableCell>
-                            <div className="h-12 w-12 rounded-lg bg-muted overflow-hidden">
-                              {image ? (
-                                <img 
-                                  src={image.src} 
-                                  alt={product.title}
-                                  className="h-full w-full object-cover"
-                                />
-                              ) : (
-                                <div className="h-full w-full flex items-center justify-center">
-                                  <Package className="h-6 w-6 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{product.title}</p>
-                              <p className="text-xs text-muted-foreground">
-                                SKU: {variant?.sku || 'N/A'}
+                    filteredProducts.map((product) => (
+                      <TableRow key={product.id}>
+                        <TableCell>
+                          <div className="h-12 w-12 rounded-lg bg-muted overflow-hidden">
+                            {product.image_url ? (
+                              <img 
+                                src={product.image_url} 
+                                alt={product.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <Package className="h-6 w-6 text-muted-foreground" />
+                              </div>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{product.name}</p>
+                            {product.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {product.description}
                               </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary">{product.product_type || 'Sin tipo'}</Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <p className="font-medium">
-                              DOP ${parseFloat(variant?.price || '0').toLocaleString()}
-                            </p>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant={totalStock > 10 ? 'default' : totalStock > 0 ? 'secondary' : 'destructive'}>
-                              {totalStock}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {getStatusBadge(product.status)}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => openEditDialog(product)}
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon"
-                                onClick={() => handleDelete(product)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary">{product.category}</Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div>
+                            <p className="font-medium">RD${product.price.toLocaleString()}</p>
+                            {product.original_price && (
+                              <p className="text-xs text-muted-foreground line-through">
+                                RD${product.original_price.toLocaleString()}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <Badge variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}>
+                            {product.stock}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {product.featured && <Badge>Sí</Badge>}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openEditDialog(product)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDelete(product)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
@@ -380,38 +404,112 @@ export default function AdminShopifyProducts() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editingProduct ? 'Editar Producto en Shopify' : 'Nuevo Producto en Shopify'}
+              {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
             </DialogTitle>
             <DialogDescription>
-              {editingProduct ? 'Los cambios se reflejarán en tu tienda Shopify' : 'Este producto se creará directamente en Shopify'}
+              {editingProduct ? 'Modifica los datos del producto' : 'Completa los datos del nuevo producto'}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Image Upload */}
+            <div className="space-y-2">
+              <Label>Imagen del producto</Label>
+              <div className="flex items-center gap-4">
+                <div className="h-24 w-24 rounded-lg bg-muted overflow-hidden border">
+                  {formData.image_url ? (
+                    <img 
+                      src={formData.image_url} 
+                      alt="Preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center">
+                      <Package className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <Label 
+                    htmlFor="image-upload" 
+                    className="cursor-pointer inline-flex items-center gap-2 px-4 py-2 border rounded-md hover:bg-muted transition-colors"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {uploading ? 'Subiendo...' : 'Subir imagen'}
+                  </Label>
+                  <Input
+                    id="image-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleImageUpload}
+                    disabled={uploading}
+                  />
+                  <p className="text-xs text-muted-foreground mt-1">
+                    O pega una URL de imagen
+                  </p>
+                  <Input
+                    value={formData.image_url}
+                    onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                    placeholder="https://..."
+                    className="mt-2"
+                  />
+                </div>
+              </div>
+            </div>
+
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="title">Nombre del producto *</Label>
+                <Label htmlFor="name">Nombre del producto *</Label>
                 <Input
-                  id="title"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
                 />
               </div>
 
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="body_html">Descripción</Label>
+                <Label htmlFor="description">Descripción</Label>
                 <Textarea
-                  id="body_html"
-                  value={formData.body_html}
-                  onChange={(e) => setFormData({ ...formData, body_html: e.target.value })}
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
-                  placeholder="Descripción del producto (puede incluir HTML)"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Precio (DOP) *</Label>
+                <Label htmlFor="category">Categoría *</Label>
+                <Select 
+                  value={formData.category} 
+                  onValueChange={(value) => setFormData({ ...formData, category: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona categoría" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((cat) => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="stock">Stock *</Label>
+                <Input
+                  id="stock"
+                  type="number"
+                  min="0"
+                  value={formData.stock}
+                  onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="price">Precio (RD$) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -419,72 +517,31 @@ export default function AdminShopifyProducts() {
                   step="0.01"
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  required={!editingProduct}
-                  disabled={!!editingProduct}
-                  placeholder={editingProduct ? 'Editar en variantes' : ''}
+                  required
                 />
-                {editingProduct && (
-                  <p className="text-xs text-muted-foreground">
-                    El precio se edita desde las variantes en Shopify Admin
-                  </p>
-                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="sku">SKU</Label>
+                <Label htmlFor="original_price">Precio original (opcional)</Label>
                 <Input
-                  id="sku"
-                  value={formData.sku}
-                  onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
-                  disabled={!!editingProduct}
+                  id="original_price"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.original_price}
+                  onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
+                  placeholder="Para mostrar descuento"
                 />
               </div>
+            </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="product_type">Tipo de producto</Label>
-                <Input
-                  id="product_type"
-                  value={formData.product_type}
-                  onChange={(e) => setFormData({ ...formData, product_type: e.target.value })}
-                  placeholder="ej: Proteína, Creatina, Pre-entreno"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="vendor">Proveedor</Label>
-                <Input
-                  id="vendor"
-                  value={formData.vendor}
-                  onChange={(e) => setFormData({ ...formData, vendor: e.target.value })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tags">Etiquetas</Label>
-                <Input
-                  id="tags"
-                  value={formData.tags}
-                  onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                  placeholder="proteina, whey, fitness (separadas por coma)"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status">Estado</Label>
-                <Select 
-                  value={formData.status} 
-                  onValueChange={(value: 'active' | 'draft' | 'archived') => setFormData({ ...formData, status: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Activo</SelectItem>
-                    <SelectItem value="draft">Borrador</SelectItem>
-                    <SelectItem value="archived">Archivado</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex items-center gap-2">
+              <Switch
+                id="featured"
+                checked={formData.featured}
+                onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
+              />
+              <Label htmlFor="featured">Producto destacado</Label>
             </div>
 
             <DialogFooter>
@@ -497,7 +554,7 @@ export default function AdminShopifyProducts() {
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Guardando...
                   </>
-                ) : editingProduct ? 'Actualizar en Shopify' : 'Crear en Shopify'}
+                ) : editingProduct ? 'Guardar Cambios' : 'Crear Producto'}
               </Button>
             </DialogFooter>
           </form>

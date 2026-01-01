@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
+import { supabase } from '@/integrations/supabase/client';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Table, 
@@ -32,52 +33,42 @@ import {
 } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useShopifyAdmin, ShopifyPriceRule, ShopifyDiscountCode } from '@/hooks/useShopifyAdmin';
 import { toast } from 'sonner';
 import { 
   Plus, 
   Trash2, 
   ArrowLeft,
   Percent,
-  Tag,
   Copy,
   Loader2,
-  ExternalLink
+  Pencil
 } from 'lucide-react';
+import type { Tables } from '@/integrations/supabase/types';
+
+type DiscountCode = Tables<'discount_codes'>;
 
 export default function AdminDiscounts() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
-  const { 
-    getPriceRules, 
-    createPriceRule, 
-    deletePriceRule,
-    getDiscountCodes,
-    createDiscountCode,
-    deleteDiscountCode,
-    loading: apiLoading 
-  } = useShopifyAdmin();
   
-  const [priceRules, setPriceRules] = useState<ShopifyPriceRule[]>([]);
+  const [discounts, setDiscounts] = useState<DiscountCode[]>([]);
   const [loading, setLoading] = useState(true);
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isCodeDialogOpen, setIsCodeDialogOpen] = useState(false);
-  const [selectedRule, setSelectedRule] = useState<ShopifyPriceRule | null>(null);
-  const [discountCodes, setDiscountCodes] = useState<ShopifyDiscountCode[]>([]);
-  const [newCode, setNewCode] = useState('');
+  const [editingDiscount, setEditingDiscount] = useState<DiscountCode | null>(null);
   
   const [formData, setFormData] = useState({
-    title: '',
-    value_type: 'percentage' as 'percentage' | 'fixed_amount',
-    value: '',
-    target_type: 'line_item' as 'line_item' | 'shipping_line',
-    target_selection: 'all',
-    allocation_method: 'across',
-    customer_selection: 'all',
-    once_per_customer: false,
-    usage_limit: '',
+    code: '',
+    description: '',
+    discount_type: 'percentage' as 'percentage' | 'fixed',
+    discount_value: '',
+    min_purchase_amount: '',
+    max_uses: '',
+    max_uses_per_user: '',
+    is_active: true,
+    starts_at: '',
+    ends_at: '',
   });
   const [saving, setSaving] = useState(false);
 
@@ -90,45 +81,57 @@ export default function AdminDiscounts() {
   }, [user, authLoading, rolesLoading, isAdmin, navigate]);
 
   useEffect(() => {
-    fetchPriceRules();
+    fetchDiscounts();
   }, []);
 
-  async function fetchPriceRules() {
+  async function fetchDiscounts() {
     setLoading(true);
     try {
-      const result = await getPriceRules(250);
-      setPriceRules(result.price_rules || []);
+      const { data, error } = await supabase
+        .from('discount_codes')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setDiscounts(data || []);
     } catch (err) {
-      toast.error('Error al cargar reglas de precio de Shopify');
+      toast.error('Error al cargar códigos de descuento');
       console.error(err);
     } finally {
       setLoading(false);
     }
   }
 
-  async function openCodesDialog(rule: ShopifyPriceRule) {
-    setSelectedRule(rule);
-    setNewCode('');
-    try {
-      const result = await getDiscountCodes(rule.id);
-      setDiscountCodes(result.discount_codes || []);
-      setIsCodeDialogOpen(true);
-    } catch (err) {
-      toast.error('Error al cargar códigos de descuento');
-    }
+  function openCreateDialog() {
+    setEditingDiscount(null);
+    setFormData({
+      code: '',
+      description: '',
+      discount_type: 'percentage',
+      discount_value: '',
+      min_purchase_amount: '',
+      max_uses: '',
+      max_uses_per_user: '',
+      is_active: true,
+      starts_at: '',
+      ends_at: '',
+    });
+    setIsDialogOpen(true);
   }
 
-  function openCreateDialog() {
+  function openEditDialog(discount: DiscountCode) {
+    setEditingDiscount(discount);
     setFormData({
-      title: '',
-      value_type: 'percentage',
-      value: '',
-      target_type: 'line_item',
-      target_selection: 'all',
-      allocation_method: 'across',
-      customer_selection: 'all',
-      once_per_customer: false,
-      usage_limit: '',
+      code: discount.code,
+      description: discount.description || '',
+      discount_type: discount.discount_type as 'percentage' | 'fixed',
+      discount_value: discount.discount_value.toString(),
+      min_purchase_amount: discount.min_purchase_amount?.toString() || '',
+      max_uses: discount.max_uses?.toString() || '',
+      max_uses_per_user: discount.max_uses_per_user?.toString() || '',
+      is_active: discount.is_active ?? true,
+      starts_at: discount.starts_at ? discount.starts_at.slice(0, 16) : '',
+      ends_at: discount.ends_at ? discount.ends_at.slice(0, 16) : '',
     });
     setIsDialogOpen(true);
   }
@@ -138,23 +141,39 @@ export default function AdminDiscounts() {
     setSaving(true);
 
     try {
-      const ruleData = {
-        title: formData.title,
-        value_type: formData.value_type,
-        value: formData.value_type === 'percentage' ? `-${formData.value}` : `-${formData.value}`,
-        target_type: formData.target_type,
-        target_selection: formData.target_selection,
-        allocation_method: formData.allocation_method,
-        customer_selection: formData.customer_selection,
-        once_per_customer: formData.once_per_customer,
-        usage_limit: formData.usage_limit ? parseInt(formData.usage_limit) : null,
-        starts_at: new Date().toISOString(),
+      const discountData = {
+        code: formData.code.toUpperCase(),
+        description: formData.description || null,
+        discount_type: formData.discount_type,
+        discount_value: parseFloat(formData.discount_value),
+        min_purchase_amount: formData.min_purchase_amount ? parseFloat(formData.min_purchase_amount) : null,
+        max_uses: formData.max_uses ? parseInt(formData.max_uses) : null,
+        max_uses_per_user: formData.max_uses_per_user ? parseInt(formData.max_uses_per_user) : null,
+        is_active: formData.is_active,
+        starts_at: formData.starts_at || null,
+        ends_at: formData.ends_at || null,
+        created_by: user?.id,
       };
 
-      await createPriceRule(ruleData);
-      toast.success('Regla de precio creada en Shopify');
+      if (editingDiscount) {
+        const { error } = await supabase
+          .from('discount_codes')
+          .update(discountData)
+          .eq('id', editingDiscount.id);
+
+        if (error) throw error;
+        toast.success('Código de descuento actualizado');
+      } else {
+        const { error } = await supabase
+          .from('discount_codes')
+          .insert(discountData);
+
+        if (error) throw error;
+        toast.success('Código de descuento creado');
+      }
+
       setIsDialogOpen(false);
-      fetchPriceRules();
+      fetchDiscounts();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       toast.error(message);
@@ -163,43 +182,34 @@ export default function AdminDiscounts() {
     }
   }
 
-  async function handleDeleteRule(rule: ShopifyPriceRule) {
-    if (!confirm(`¿Eliminar la regla \"${rule.title}\"? Esto también eliminará todos sus códigos de descuento.`)) return;
+  async function handleDelete(discount: DiscountCode) {
+    if (!confirm(`¿Eliminar el código "${discount.code}"?`)) return;
 
     try {
-      await deletePriceRule(rule.id);
-      toast.success('Regla eliminada de Shopify');
-      fetchPriceRules();
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
-      toast.error(message);
-    }
-  }
+      const { error } = await supabase
+        .from('discount_codes')
+        .delete()
+        .eq('id', discount.id);
 
-  async function handleCreateCode() {
-    if (!selectedRule || !newCode.trim()) return;
-
-    try {
-      await createDiscountCode(selectedRule.id, newCode.trim().toUpperCase());
-      toast.success(`Código ${newCode.toUpperCase()} creado`);
-      setNewCode('');
-      const result = await getDiscountCodes(selectedRule.id);
-      setDiscountCodes(result.discount_codes || []);
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Error desconocido';
-      toast.error(message);
-    }
-  }
-
-  async function handleDeleteCode(code: ShopifyDiscountCode) {
-    if (!selectedRule) return;
-    if (!confirm(`¿Eliminar el código \"${code.code}\"?`)) return;
-
-    try {
-      await deleteDiscountCode(selectedRule.id, code.id);
+      if (error) throw error;
       toast.success('Código eliminado');
-      const result = await getDiscountCodes(selectedRule.id);
-      setDiscountCodes(result.discount_codes || []);
+      fetchDiscounts();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast.error(message);
+    }
+  }
+
+  async function toggleActive(discount: DiscountCode) {
+    try {
+      const { error } = await supabase
+        .from('discount_codes')
+        .update({ is_active: !discount.is_active })
+        .eq('id', discount.id);
+
+      if (error) throw error;
+      toast.success(discount.is_active ? 'Código desactivado' : 'Código activado');
+      fetchDiscounts();
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       toast.error(message);
@@ -236,84 +246,93 @@ export default function AdminDiscounts() {
                 </Button>
               </Link>
               <div>
-                <div className="flex items-center gap-2">
-                  <h1 className="font-display text-2xl font-bold">Descuentos</h1>
-                  <Badge variant="outline" className="text-xs">
-                    <ExternalLink className="h-3 w-3 mr-1" />
-                    Shopify
-                  </Badge>
-                </div>
+                <h1 className="font-display text-2xl font-bold">Códigos de Descuento</h1>
                 <p className="text-muted-foreground text-sm">
-                  {priceRules.length} reglas de precio
+                  {discounts.length} códigos
                 </p>
               </div>
             </div>
-            <Button onClick={openCreateDialog} disabled={apiLoading}>
+            <Button onClick={openCreateDialog}>
               <Plus className="h-4 w-4 mr-2" />
-              Nueva Regla
+              Nuevo Código
             </Button>
           </div>
 
-          {/* Price Rules Table */}
+          {/* Discounts Table */}
           <Card>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Nombre</TableHead>
+                    <TableHead>Código</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Valor</TableHead>
-                    <TableHead className="text-center">Límite</TableHead>
-                    <TableHead>Válido desde</TableHead>
+                    <TableHead className="text-center">Usos</TableHead>
+                    <TableHead className="text-center">Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {priceRules.length === 0 ? (
+                  {discounts.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={6} className="text-center py-12">
                         <Percent className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No hay reglas de descuento</p>
+                        <p className="text-muted-foreground">No hay códigos de descuento</p>
                       </TableCell>
                     </TableRow>
                   ) : (
-                    priceRules.map((rule) => (
-                      <TableRow key={rule.id}>
+                    discounts.map((discount) => (
+                      <TableRow key={discount.id}>
                         <TableCell>
-                          <p className="font-medium">{rule.title}</p>
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-medium">{discount.code}</span>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6"
+                              onClick={() => copyCode(discount.code)}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          {discount.description && (
+                            <p className="text-xs text-muted-foreground">{discount.description}</p>
+                          )}
                         </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
-                            {rule.value_type === 'percentage' ? 'Porcentaje' : 'Monto fijo'}
+                            {discount.discount_type === 'percentage' ? 'Porcentaje' : 'Monto fijo'}
                           </Badge>
                         </TableCell>
                         <TableCell>
                           <span className="font-medium text-green-600">
-                            {rule.value_type === 'percentage' 
-                              ? `${Math.abs(parseFloat(rule.value))}%` 
-                              : `DOP $${Math.abs(parseFloat(rule.value))}`}
+                            {discount.discount_type === 'percentage' 
+                              ? `${discount.discount_value}%` 
+                              : `RD$${discount.discount_value.toLocaleString()}`}
                           </span>
                         </TableCell>
                         <TableCell className="text-center">
-                          {rule.usage_limit || '∞'}
+                          {discount.uses_count || 0} / {discount.max_uses || '∞'}
                         </TableCell>
-                        <TableCell>
-                          {new Date(rule.starts_at).toLocaleDateString('es-DO')}
+                        <TableCell className="text-center">
+                          <Switch
+                            checked={discount.is_active ?? false}
+                            onCheckedChange={() => toggleActive(discount)}
+                          />
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">
                             <Button 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => openCodesDialog(rule)}
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openEditDialog(discount)}
                             >
-                              <Tag className="h-4 w-4 mr-1" />
-                              Códigos
+                              <Pencil className="h-4 w-4" />
                             </Button>
                             <Button 
                               variant="ghost" 
                               size="icon"
-                              onClick={() => handleDeleteRule(rule)}
+                              onClick={() => handleDelete(discount)}
                             >
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
@@ -329,79 +348,140 @@ export default function AdminDiscounts() {
         </div>
       </div>
 
-      {/* Create Price Rule Dialog */}
+      {/* Create/Edit Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>Nueva Regla de Precio</DialogTitle>
+            <DialogTitle>
+              {editingDiscount ? 'Editar Código' : 'Nuevo Código de Descuento'}
+            </DialogTitle>
             <DialogDescription>
-              Crea una regla de descuento en Shopify
+              {editingDiscount ? 'Modifica los datos del código' : 'Crea un nuevo código de descuento'}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Nombre de la regla *</Label>
+              <Label htmlFor="code">Código *</Label>
               <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder="ej: Black Friday 2024"
+                id="code"
+                value={formData.code}
+                onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
+                placeholder="VERANO2024"
+                className="uppercase"
                 required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción</Label>
+              <Input
+                id="description"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Descuento de verano"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="value_type">Tipo de descuento</Label>
+                <Label htmlFor="discount_type">Tipo de descuento</Label>
                 <Select 
-                  value={formData.value_type} 
-                  onValueChange={(value: 'percentage' | 'fixed_amount') => setFormData({ ...formData, value_type: value })}
+                  value={formData.discount_type} 
+                  onValueChange={(value: 'percentage' | 'fixed') => setFormData({ ...formData, discount_type: value })}
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Porcentaje</SelectItem>
-                    <SelectItem value="fixed_amount">Monto fijo</SelectItem>
+                    <SelectItem value="fixed">Monto fijo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="value">Valor *</Label>
+                <Label htmlFor="discount_value">Valor *</Label>
                 <Input
-                  id="value"
+                  id="discount_value"
                   type="number"
                   min="0"
                   step="0.01"
-                  value={formData.value}
-                  onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                  placeholder={formData.value_type === 'percentage' ? '10' : '500'}
+                  value={formData.discount_value}
+                  onChange={(e) => setFormData({ ...formData, discount_value: e.target.value })}
+                  placeholder={formData.discount_type === 'percentage' ? '10' : '500'}
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="usage_limit">Límite de uso (opcional)</Label>
+              <Label htmlFor="min_purchase_amount">Compra mínima (RD$)</Label>
               <Input
-                id="usage_limit"
+                id="min_purchase_amount"
                 type="number"
                 min="0"
-                value={formData.usage_limit}
-                onChange={(e) => setFormData({ ...formData, usage_limit: e.target.value })}
-                placeholder="Sin límite"
+                value={formData.min_purchase_amount}
+                onChange={(e) => setFormData({ ...formData, min_purchase_amount: e.target.value })}
+                placeholder="Sin mínimo"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="max_uses">Usos máximos</Label>
+                <Input
+                  id="max_uses"
+                  type="number"
+                  min="0"
+                  value={formData.max_uses}
+                  onChange={(e) => setFormData({ ...formData, max_uses: e.target.value })}
+                  placeholder="Ilimitado"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="max_uses_per_user">Por usuario</Label>
+                <Input
+                  id="max_uses_per_user"
+                  type="number"
+                  min="0"
+                  value={formData.max_uses_per_user}
+                  onChange={(e) => setFormData({ ...formData, max_uses_per_user: e.target.value })}
+                  placeholder="Ilimitado"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="starts_at">Válido desde</Label>
+                <Input
+                  id="starts_at"
+                  type="datetime-local"
+                  value={formData.starts_at}
+                  onChange={(e) => setFormData({ ...formData, starts_at: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="ends_at">Válido hasta</Label>
+                <Input
+                  id="ends_at"
+                  type="datetime-local"
+                  value={formData.ends_at}
+                  onChange={(e) => setFormData({ ...formData, ends_at: e.target.value })}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2">
               <Switch
-                id="once_per_customer"
-                checked={formData.once_per_customer}
-                onCheckedChange={(checked) => setFormData({ ...formData, once_per_customer: checked })}
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
               />
-              <Label htmlFor="once_per_customer">Una vez por cliente</Label>
+              <Label htmlFor="is_active">Código activo</Label>
             </div>
 
             <DialogFooter>
@@ -412,81 +492,12 @@ export default function AdminDiscounts() {
                 {saving ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Creando...
+                    Guardando...
                   </>
-                ) : 'Crear Regla'}
+                ) : editingDiscount ? 'Guardar Cambios' : 'Crear Código'}
               </Button>
             </DialogFooter>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Discount Codes Dialog */}
-      <Dialog open={isCodeDialogOpen} onOpenChange={setIsCodeDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Códigos de Descuento</DialogTitle>
-            <DialogDescription>
-              Regla: {selectedRule?.title}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Create new code */}
-            <div className="flex gap-2">
-              <Input
-                value={newCode}
-                onChange={(e) => setNewCode(e.target.value.toUpperCase())}
-                placeholder="CODIGO2024"
-                className="uppercase"
-              />
-              <Button onClick={handleCreateCode} disabled={!newCode.trim() || apiLoading}>
-                <Plus className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Existing codes */}
-            <div className="border rounded-lg divide-y max-h-[300px] overflow-y-auto">
-              {discountCodes.length === 0 ? (
-                <div className="p-4 text-center text-muted-foreground">
-                  No hay códigos creados
-                </div>
-              ) : (
-                discountCodes.map((code) => (
-                  <div key={code.id} className="flex items-center justify-between p-3">
-                    <div>
-                      <p className="font-mono font-medium">{code.code}</p>
-                      <p className="text-xs text-muted-foreground">
-                        Usos: {code.usage_count}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => copyCode(code.code)}
-                      >
-                        <Copy className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon"
-                        onClick={() => handleDeleteCode(code)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCodeDialogOpen(false)}>
-              Cerrar
-            </Button>
-          </DialogFooter>
         </DialogContent>
       </Dialog>
     </Layout>

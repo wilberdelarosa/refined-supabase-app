@@ -30,7 +30,7 @@ export function useSavedCart() {
         // Combine items, preferring saved quantities for duplicates
         const mergedItems = [...savedItems];
         currentItems.forEach(localItem => {
-          const exists = mergedItems.find(i => i.variantId === localItem.variantId);
+          const exists = mergedItems.find(i => i.product.id === localItem.product.id);
           if (!exists) {
             mergedItems.push(localItem);
           }
