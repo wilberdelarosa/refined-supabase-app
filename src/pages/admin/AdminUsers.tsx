@@ -156,8 +156,9 @@ export default function AdminUsers() {
       toast({ title: 'Éxito', description: 'Roles actualizados correctamente' });
       setIsDialogOpen(false);
       fetchUsers();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }

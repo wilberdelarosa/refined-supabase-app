@@ -96,16 +96,16 @@ export default function Wishlist() {
               {items.map((item) => (
                 <Card key={item.id} className="overflow-hidden group">
                   <Link to={`/product/${item.product_id}`}>
-                    <div className="aspect-square bg-muted overflow-hidden">
+                    <div className="aspect-square bg-white overflow-hidden rounded-lg">
                       {item.product_image_url ? (
                         <img
                           src={item.product_image_url}
                           alt={item.product_name}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          className="w-full h-full object-contain p-4"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Heart className="h-12 w-12 text-muted-foreground" />
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          Sin imagen
                         </div>
                       )}
                     </div>

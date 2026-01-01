@@ -177,8 +177,9 @@ export default function AdminOrders() {
       toast({ title: 'Éxito', description: 'Estado actualizado correctamente' });
       setIsDetailOpen(false);
       fetchOrders();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setUpdating(false);
     }
@@ -248,8 +249,18 @@ export default function AdminOrders() {
 
   const getStatusBadge = (status: string) => {
     const s = ORDER_STATUSES.find(st => st.value === status);
+    const colors = {
+      'pending': 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
+      'paid': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      'processing': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      'packed': 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
+      'shipped': 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+      'delivered': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+      'cancelled': 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+      'refunded': 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
+    };
     return (
-      <Badge variant={s?.color as any || 'secondary'}>
+      <Badge variant="outline" className={`${colors[status as keyof typeof colors] || 'bg-muted'} font-semibold border`}>
         {s?.label || status}
       </Badge>
     );
@@ -270,40 +281,44 @@ export default function AdminOrders() {
   return (
     <Layout>
       <div className="container py-8">
-        <div className="max-w-6xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto">
+          {/* Enhanced Header */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex items-center gap-4 mb-4">
               <Link to="/admin">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="hover-lift">
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <div>
-                <h1 className="font-display text-2xl font-bold">Pedidos</h1>
-                <p className="text-muted-foreground text-sm">
-                  {orders.length} pedidos en total
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                  <ShoppingCart className="h-7 w-7" />
+                  Gestión de Pedidos
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  {orders.length} {orders.length === 1 ? 'pedido' : 'pedidos'} en total
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
+          {/* Enhanced Filters Card */}
+          <Card className="mb-6 shadow-premium border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 to-transparent"></div>
+            <CardContent className="pt-6 relative">
+              <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar por ID..."
+                    placeholder="Buscar por ID de pedido..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border-0 bg-background/50"
                   />
                 </div>
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Estado" />
+                  <SelectTrigger className="w-full md:w-[220px] border-0 bg-background/50">
+                    <SelectValue placeholder="Filtrar por estado" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todos los estados</SelectItem>
@@ -316,62 +331,95 @@ export default function AdminOrders() {
             </CardContent>
           </Card>
 
-          {/* Orders Table */}
-          <Card>
+          {/* Enhanced Orders Table */}
+          <Card className="shadow-premium border-0 overflow-hidden">
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>ID Pedido</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredOrders.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12">
-                        <ShoppingBag className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No hay pedidos</p>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="font-bold">ID Pedido</TableHead>
+                      <TableHead className="font-bold">Fecha & Hora</TableHead>
+                      <TableHead className="font-bold">Estado</TableHead>
+                      <TableHead className="text-right font-bold">Total</TableHead>
+                      <TableHead className="text-center font-bold">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <TableRow key={order.id}>
-                        <TableCell>
-                          <span className="font-mono text-sm">
-                            #{order.id.slice(0, 8).toUpperCase()}
-                          </span>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(order.created_at).toLocaleDateString('es-DO', {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          })}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(order.status)}</TableCell>
-                        <TableCell className="text-right font-medium">
-                          RD${order.total.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => openOrderDetail(order)}
-                          >
-                            <Eye className="h-4 w-4" />
-                          </Button>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredOrders.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-16">
+                          <div className="flex flex-col items-center gap-4 animate-fade-in">
+                            <div className="p-4 rounded-full bg-muted">
+                              <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-lg mb-1">No hay pedidos</p>
+                              <p className="text-muted-foreground text-sm">
+                                {search || filterStatus !== 'all' 
+                                  ? 'No se encontraron resultados con los filtros actuales'
+                                  : 'Aún no hay pedidos registrados'}
+                              </p>
+                            </div>
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      filteredOrders.map((order, index) => (
+                        <TableRow 
+                          key={order.id} 
+                          className="hover:bg-muted/30 transition-colors animate-fade-in group"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          <TableCell>
+                            <span className="font-mono text-sm font-bold bg-muted px-2.5 py-1.5 rounded-md">
+                              #{order.id.slice(0, 8).toUpperCase()}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-col">
+                              <span className="font-medium">
+                                {new Date(order.created_at).toLocaleDateString('es-DO', {
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {new Date(order.created_at).toLocaleTimeString('es-DO', {
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(order.status)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="font-bold text-lg">
+                              RD${order.total.toLocaleString('es-DO', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                              })}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => openOrderDetail(order)}
+                              className="hover-lift hover:bg-foreground/10"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </div>

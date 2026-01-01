@@ -225,8 +225,9 @@ export default function AdminProducts() {
 
       setIsDialogOpen(false);
       fetchProducts();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -264,43 +265,49 @@ export default function AdminProducts() {
     <Layout>
       <div className="container py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <Link to="/admin">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="font-display text-2xl font-bold">Productos</h1>
-                <p className="text-muted-foreground text-sm">
-                  {products.length} productos en total
-                </p>
+          {/* Enhanced Header */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+              <div className="flex items-center gap-4 flex-1">
+                <Link to="/admin">
+                  <Button variant="ghost" size="icon" className="hover-lift">
+                    <ArrowLeft className="h-5 w-5" />
+                  </Button>
+                </Link>
+                <div className="flex-1">
+                  <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                    <Package className="h-7 w-7" />
+                    Gestión de Productos
+                  </h1>
+                  <p className="text-muted-foreground text-sm mt-1">
+                    {products.length} {products.length === 1 ? 'producto' : 'productos'} en total
+                  </p>
+                </div>
               </div>
+              <Button onClick={openCreateDialog} className="shadow-premium hover-glow w-full md:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Producto
+              </Button>
             </div>
-            <Button onClick={openCreateDialog}>
-              <Plus className="h-4 w-4 mr-2" />
-              Nuevo Producto
-            </Button>
           </div>
 
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
+          {/* Enhanced Filters Card */}
+          <Card className="mb-6 shadow-premium border-0 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 to-transparent"></div>
+            <CardContent className="pt-6 relative">
+              <div className="flex flex-col md:flex-row gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar productos..."
+                    placeholder="Buscar productos por nombre..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 border-0 bg-background/50"
                   />
                 </div>
                 <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-full sm:w-[200px]">
-                    <SelectValue placeholder="Categoría" />
+                  <SelectTrigger className="w-full md:w-[220px] border-0 bg-background/50">
+                    <SelectValue placeholder="Filtrar por categoría" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas las categorías</SelectItem>
@@ -313,99 +320,146 @@ export default function AdminProducts() {
             </CardContent>
           </Card>
 
-          {/* Products Table */}
-          <Card>
+          {/* Enhanced Products Table */}
+          <Card className="shadow-premium border-0 overflow-hidden">
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[80px]">Imagen</TableHead>
-                    <TableHead>Producto</TableHead>
-                    <TableHead>Categoría</TableHead>
-                    <TableHead className="text-right">Precio</TableHead>
-                    <TableHead className="text-center">Stock</TableHead>
-                    <TableHead className="text-center">Destacado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredProducts.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-12">
-                        <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No se encontraron productos</p>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted/50 hover:bg-muted/50">
+                      <TableHead className="w-[80px] font-bold">Imagen</TableHead>
+                      <TableHead className="font-bold">Producto</TableHead>
+                      <TableHead className="font-bold">Categoría</TableHead>
+                      <TableHead className="text-right font-bold">Precio</TableHead>
+                      <TableHead className="text-center font-bold">Stock</TableHead>
+                      <TableHead className="text-center font-bold">Destacado</TableHead>
+                      <TableHead className="text-center font-bold">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredProducts.map((product) => (
-                      <TableRow key={product.id}>
-                        <TableCell>
-                          <div className="h-12 w-12 rounded-lg bg-muted overflow-hidden">
-                            {product.image_url ? (
-                              <img 
-                                src={product.image_url} 
-                                alt={product.name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              <div className="h-full w-full flex items-center justify-center">
-                                <Package className="h-6 w-6 text-muted-foreground" />
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{product.name}</p>
-                            <p className="text-sm text-muted-foreground truncate max-w-[200px]">
-                              {product.description}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="secondary">{product.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div>
-                            <p className="font-medium">RD${product.price.toLocaleString()}</p>
-                            {product.original_price && (
-                              <p className="text-sm text-muted-foreground line-through">
-                                RD${product.original_price.toLocaleString()}
+                  </TableHeader>
+                  <TableBody>
+                    {filteredProducts.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-16">
+                          <div className="flex flex-col items-center gap-4 animate-fade-in">
+                            <div className="p-4 rounded-full bg-muted">
+                              <Package className="h-12 w-12 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-lg mb-1">No hay productos</p>
+                              <p className="text-muted-foreground text-sm">
+                                {search || filterCategory !== 'all' 
+                                  ? 'No se encontraron resultados con los filtros actuales'
+                                  : 'Crea tu primer producto para empezar'}
                               </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge variant={product.stock > 10 ? 'default' : product.stock > 0 ? 'secondary' : 'destructive'}>
-                            {product.stock}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          {product.featured && <Badge>Sí</Badge>}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => openEditDialog(product)}
-                            >
-                              <Pencil className="h-4 w-4" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon"
-                              onClick={() => handleDelete(product)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            </div>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                    ) : (
+                      filteredProducts.map((product, index) => (
+                        <TableRow 
+                          key={product.id}
+                          className="hover:bg-muted/30 transition-colors animate-fade-in group"
+                          style={{ animationDelay: `${index * 0.05}s` }}
+                        >
+                          <TableCell>
+                            <div className="h-16 w-16 rounded-xl bg-muted overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
+                              {product.image_url ? (
+                                <img 
+                                  src={product.image_url} 
+                                  alt={product.name}
+                                  className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center bg-gradient-card">
+                                  <Package className="h-7 w-7 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="max-w-[250px]">
+                              <p className="font-bold text-base mb-1">{product.name}</p>
+                              {product.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                  {product.description}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge 
+                              variant="outline" 
+                              className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 px-3 py-1"
+                            >
+                              {product.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div>
+                              <p className="font-bold text-lg">
+                                RD${product.price.toLocaleString('es-DO', {
+                                  minimumFractionDigits: 2,
+                                  maximumFractionDigits: 2
+                                })}
+                              </p>
+                              {product.original_price && (
+                                <p className="text-sm text-muted-foreground line-through">
+                                  RD${product.original_price.toLocaleString('es-DO')}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge 
+                              variant="outline"
+                              className={
+                                product.stock > 10 
+                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+                                  : product.stock > 0 
+                                    ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
+                                    : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
+                              }
+                            >
+                              {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {product.featured && (
+                              <Badge 
+                                variant="outline"
+                                className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 animate-pulse-subtle"
+                              >
+                                ⭐ Destacado
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => openEditDialog(product)}
+                                className="hover-lift hover:bg-blue-500/10"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => handleDelete(product)}
+                                className="hover-lift hover:bg-destructive/10"
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             </CardContent>
           </Card>
         </div>

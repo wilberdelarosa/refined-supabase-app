@@ -163,8 +163,9 @@ export default function AdminCategories() {
 
       setIsDialogOpen(false);
       fetchCategories();
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }

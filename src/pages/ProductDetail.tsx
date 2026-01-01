@@ -14,7 +14,7 @@ export default function ProductDetail() {
   const { product, loading, error } = useNativeProduct(handle || '');
   const addItem = useCartStore(state => state.addItem);
   const { isInWishlist, toggleWishlist } = useNativeWishlist();
-  
+
   const [quantity, setQuantity] = useState(1);
 
   if (loading) {
@@ -43,7 +43,7 @@ export default function ProductDetail() {
   const isAvailable = product.stock > 0;
   const isFavorite = isInWishlist(product.id);
   const hasDiscount = product.original_price && product.original_price > product.price;
-  const discountPercentage = hasDiscount 
+  const discountPercentage = hasDiscount
     ? Math.round(((product.original_price! - product.price) / product.original_price!) * 100)
     : 0;
 
@@ -78,12 +78,12 @@ export default function ProductDetail() {
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Image */}
           <div className="relative">
-            <div className="aspect-square overflow-hidden rounded-lg bg-secondary/20">
+            <div className="aspect-square overflow-hidden rounded-lg bg-white">
               {product.image_url ? (
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-contain p-8"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
@@ -91,7 +91,7 @@ export default function ProductDetail() {
                 </div>
               )}
             </div>
-            
+
             {/* Badges */}
             <div className="absolute top-4 left-4 flex flex-col gap-2">
               {!isAvailable && (
@@ -108,7 +108,7 @@ export default function ProductDetail() {
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
               <h1 className="text-3xl font-bold mb-2">{product.name}</h1>
-              
+
               <div className="flex items-center gap-3">
                 <p className="text-2xl font-bold text-primary">
                   DOP {product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
@@ -172,7 +172,7 @@ export default function ProductDetail() {
                 <ShoppingCart className="h-5 w-5 mr-2" />
                 {isAvailable ? 'Agregar al Carrito' : 'Producto Agotado'}
               </Button>
-              
+
               <Button
                 variant="outline"
                 size="lg"
