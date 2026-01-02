@@ -1,6 +1,7 @@
 import { Product } from '@/hooks/useProducts';
 import { ProductCard } from './ProductCard';
 import { Skeleton } from '@/components/ui/skeleton';
+import { StaggerContainer, StaggerItem } from '@/components/animations/ScrollAnimations';
 
 interface ProductGridProps {
   products: Product[];
@@ -32,10 +33,12 @@ export function ProductGrid({ products, loading }: ProductGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+    <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.05}>
       {products.map((product) => (
-        <ProductCard key={product.id} product={product} />
+        <StaggerItem key={product.id}>
+          <ProductCard product={product} />
+        </StaggerItem>
       ))}
-    </div>
+    </StaggerContainer>
   );
 }

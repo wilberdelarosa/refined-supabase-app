@@ -28,21 +28,40 @@ export function ProductCard({ product }: ProductCardProps) {
     e.stopPropagation();
 
     if (!isAvailable) {
-      toast.error('Producto agotado');
+      toast.error('Producto agotado', {
+        description: 'Este producto no está disponible actualmente'
+      });
       return;
     }
 
     addItem(product, 1);
-    toast.success('Agregado al carrito', {
+    toast.success('¡Agregado al carrito!', {
       description: product.name,
-      position: 'top-center'
+      duration: 2500,
+      action: {
+        label: 'Ver carrito',
+        onClick: () => window.location.href = '/cart'
+      }
     });
   };
 
   const handleToggleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    const wasInWishlist = isFavorite;
     toggleWishlist(product);
+
+    if (wasInWishlist) {
+      toast('Removido de favoritos', {
+        description: product.name,
+        duration: 2000
+      });
+    } else {
+      toast.success('Agregado a favoritos', {
+        description: product.name,
+        duration: 2000
+      });
+    }
   };
 
   return (

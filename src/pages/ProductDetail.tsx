@@ -8,6 +8,7 @@ import { useNativeProduct } from '@/hooks/useNativeProducts';
 import { useCartStore } from '@/stores/cartStore';
 import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { toast } from 'sonner';
+import { FadeInLeft, FadeInRight, FadeInUp } from '@/components/animations/ScrollAnimations';
 
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
@@ -68,15 +69,18 @@ export default function ProductDetail() {
   return (
     <Layout>
       <div className="container py-8">
-        <Button variant="ghost" asChild className="mb-6">
-          <Link to="/shop">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Volver a la tienda
-          </Link>
-        </Button>
+        <FadeInUp>
+          <Button variant="ghost" asChild className="mb-6">
+            <Link to="/shop">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver a la tienda
+            </Link>
+          </Button>
+        </FadeInUp>
 
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Image */}
+          <FadeInLeft>
           <div className="relative">
             <div className="aspect-square overflow-hidden rounded-lg bg-white">
               {product.image_url ? (
@@ -102,8 +106,10 @@ export default function ProductDetail() {
               )}
             </div>
           </div>
+          </FadeInLeft>
 
           {/* Product Info */}
+          <FadeInRight>
           <div className="space-y-6">
             <div>
               <Badge variant="secondary" className="mb-2">{product.category}</Badge>
@@ -193,6 +199,7 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
+          </FadeInRight>
         </div>
       </div>
     </Layout>

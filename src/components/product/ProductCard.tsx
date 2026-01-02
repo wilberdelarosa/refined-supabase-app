@@ -4,6 +4,7 @@ import { Product } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface ProductCardProps {
   product: Product;
@@ -37,12 +38,18 @@ export function ProductCard({ product, className }: ProductCardProps) {
       to={`/product/${product.id}`}
       className={cn("group block", className)}
     >
+      <motion.div
+        whileHover={{ y: -8 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+      >
       <div className="relative aspect-square overflow-hidden rounded-xl bg-white mb-4 shadow-md group-hover:shadow-xl transition-all duration-300">
         {product.image_url ? (
-          <img
+          <motion.img
+            whileHover={{ scale: 1.1 }}
+            transition={{ duration: 0.4 }}
             src={product.image_url}
             alt={product.name}
-            className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
+            className="h-full w-full object-contain p-4"
           />
         ) : (
           <div className="h-full w-full flex items-center justify-center bg-gradient-card">
@@ -95,6 +102,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
           </div>
         )}
       </div>
+      </motion.div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">

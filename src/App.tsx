@@ -4,10 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
+import { LoadingSplash } from "@/components/LoadingSplash";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Shop from "./pages/Shop";
-import Cart from "./pages/Cart";
 import About from "./pages/About";
 import Account from "./pages/Account";
 import ProfileEdit from "./pages/ProfileEdit";
@@ -41,6 +41,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
+        <LoadingSplash />
         <Toaster />
         <Sonner />
         <BrowserRouter>
@@ -49,7 +50,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/shop" element={<Shop />} />
-            <Route path="/cart" element={<Cart />} />
+            <Route path="/cart" element={<Shop />} /> {/* Redirect to shop, use CartDrawer */}
             <Route path="/about" element={<About />} />
             <Route path="/account" element={<Account />} />
             <Route path="/profile/edit" element={<ProfileEdit />} />

@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/animations/ScrollAnimations';
 
 const categories = [
   {
@@ -31,15 +32,18 @@ export function Categories() {
   return (
     <section className="py-16 md:py-24">
       <div className="container">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-          Categorías
-        </h2>
-        <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-          Explora nuestra selección de suplementos de las mejores marcas del mundo
-        </p>
+        <FadeInUp>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
+            Categorías
+          </h2>
+          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+            Explora nuestra selección de suplementos de las mejores marcas del mundo
+          </p>
+        </FadeInUp>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+        <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {categories.map((category) => (
+            <StaggerItem key={category.slug}>
             <Link
               key={category.slug}
               to={`/shop?category=${category.slug}`}
@@ -67,8 +71,9 @@ export function Categories() {
                 {category.subtitle}
               </p>
             </Link>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

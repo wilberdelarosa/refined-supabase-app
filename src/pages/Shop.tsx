@@ -5,6 +5,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Package } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/animations/ScrollAnimations';
 
 export default function Shop() {
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
@@ -13,32 +14,36 @@ export default function Shop() {
   return (
     <Layout>
       <div className="container py-12">
-        <div className="mb-8">
-          <h1 className="font-display text-4xl font-bold">Tienda</h1>
-          <p className="text-muted-foreground mt-2">Explora nuestra colección de suplementos premium</p>
-        </div>
+        <FadeInUp>
+          <div className="mb-8">
+            <h1 className="font-display text-4xl font-bold">Tienda</h1>
+            <p className="text-muted-foreground mt-2">Explora nuestra colección de suplementos premium</p>
+          </div>
+        </FadeInUp>
 
         {/* Categories Filter */}
         {categories.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            <Button
-              variant={!selectedCategory ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setSelectedCategory(undefined)}
-            >
-              Todos
-            </Button>
-            {categories.map((cat) => (
+          <FadeInUp delay={0.1}>
+            <div className="flex flex-wrap gap-2 mb-8">
               <Button
-                key={cat}
-                variant={selectedCategory === cat ? 'default' : 'outline'}
+                variant={!selectedCategory ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setSelectedCategory(cat)}
+                onClick={() => setSelectedCategory(undefined)}
               >
-                {cat}
+                Todos
               </Button>
-            ))}
-          </div>
+              {categories.map((cat) => (
+                <Button
+                  key={cat}
+                  variant={selectedCategory === cat ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </Button>
+              ))}
+            </div>
+          </FadeInUp>
         )}
 
         {loading ? (
@@ -67,11 +72,13 @@ export default function Shop() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <StaggerContainer className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6" staggerDelay={0.05}>
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <StaggerItem key={product.id}>
+                <ProductCard product={product} />
+              </StaggerItem>
             ))}
-          </div>
+          </StaggerContainer>
         )}
       </div>
     </Layout>

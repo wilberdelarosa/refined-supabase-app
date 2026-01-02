@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/animations/ScrollAnimations';
 
 const testimonials = [
   {
@@ -28,15 +29,17 @@ export function Testimonials() {
   return (
     <section className="py-16 md:py-24">
       <div className="container">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
-          Testimonios
-        </h2>
+        <FadeInUp>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">
+            Testimonios
+          </h2>
+        </FadeInUp>
 
-        <div className="grid md:grid-cols-3 gap-6 md:gap-8">
+        <StaggerContainer className="grid md:grid-cols-3 gap-6 md:gap-8">
           {testimonials.map((testimonial) => (
-            <div
-              key={testimonial.id}
-              className="bg-card border border-border rounded-sm p-6 md:p-8"
+            <StaggerItem key={testimonial.id}>
+              <div
+                className="bg-card border border-border rounded-sm p-6 md:p-8"
             >
               {/* Stars */}
               <div className="flex gap-1 mb-4">
@@ -55,9 +58,10 @@ export function Testimonials() {
                 <p className="font-semibold">{testimonial.name}</p>
                 <p className="text-sm text-muted-foreground">{testimonial.role}</p>
               </div>
-            </div>
+              </div>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );
