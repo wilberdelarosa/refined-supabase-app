@@ -34,7 +34,20 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Search, ArrowLeft, Eye, ShoppingBag } from 'lucide-react';
+import {
+  Search,
+  ArrowLeft,
+  Eye,
+  ShoppingBag,
+  ShoppingCart,
+  FileText,
+  Download,
+  User,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw
+} from 'lucide-react';
 
 interface Order {
   id: string;
@@ -52,6 +65,25 @@ interface OrderItem {
   price: number;
 }
 
+interface Invoice {
+  id: string;
+  invoice_number: string;
+  order_id: string;
+  issued_at: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
+  total: number;
+  status: string;
+  billing_name: string | null;
+  billing_address: string | null;
+}
+
+interface UserProfile {
+  full_name: string | null;
+  email: string | null;
+}
+
 const ORDER_STATUSES = [
   { value: 'pending', label: 'Pendiente', color: 'secondary' },
   { value: 'paid', label: 'Pagado', color: 'default' },
@@ -62,6 +94,19 @@ const ORDER_STATUSES = [
   { value: 'cancelled', label: 'Cancelado', color: 'destructive' },
   { value: 'refunded', label: 'Reembolsado', color: 'destructive' },
 ] as const;
+
+const parseCustomerInfo = (shipping: string | null | undefined) => {
+  if (!shipping) return { name: 'Cliente', address: '', city: '', phone: '', email: '', notes: '' };
+  const lines = shipping.split('\n').map(l => l.trim()).filter(Boolean);
+  return {
+    name: lines[0] || 'Cliente',
+    address: lines[1] || '',
+    city: lines[2] || '',
+    phone: lines[3] || '',
+    email: lines.find(l => l.includes('@')) || lines[4] || '',
+    notes: lines.find(l => l.toLowerCase().startsWith('notas')) || ''
+  };
+};
 
 export default function AdminOrders() {
   const { user, loading: authLoading } = useAuth();
@@ -75,6 +120,10 @@ export default function AdminOrders() {
   
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [invoiceLoading, setInvoiceLoading] = useState(false);
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [newStatus, setNewStatus] = useState('');
   const [statusNote, setStatusNote] = useState('');
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -111,13 +160,31 @@ export default function AdminOrders() {
     setSelectedOrder(order);
     setNewStatus(order.status);
     setStatusNote('');
+    setUserProfile(null);
+    setInvoice(null);
+    setInvoiceLoading(true);
     
-    const { data } = await supabase
-      .from('order_items')
-      .select('*')
-      .eq('order_id', order.id);
+    const [{ data: items }, { data: invoiceData }, { data: profileData }] = await Promise.all([
+      supabase
+        .from('order_items')
+        .select('*')
+        .eq('order_id', order.id),
+      supabase
+        .from('invoices')
+        .select('*')
+        .eq('order_id', order.id)
+        .maybeSingle(),
+      supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('user_id', order.user_id)
+        .maybeSingle()
+    ]);
     
-    setOrderItems(data || []);
+    setOrderItems(items || []);
+    setUserProfile(profileData || null);
+    setInvoice(invoiceData || null);
+    setInvoiceLoading(false);
     setIsDetailOpen(true);
   }
 
@@ -185,21 +252,29 @@ export default function AdminOrders() {
     }
   }
 
-  async function createInvoiceForOrder(order: Order, items: OrderItem[]) {
+  async function createInvoiceForOrder(order: Order, items: OrderItem[]): Promise<Invoice | null> {
     try {
-      // Generate invoice number
+      const { data: existing } = await supabase
+        .from('invoices')
+        .select('*')
+        .eq('order_id', order.id)
+        .maybeSingle();
+
+      if (existing) {
+        setInvoice(existing);
+        return existing;
+      }
+
       const { data: invoiceNumber } = await supabase.rpc('generate_invoice_number');
       
-      // Extract billing info from shipping address
       const addressLines = order.shipping_address?.split('\n') || [];
       const billingName = addressLines[0] || 'Cliente';
       const billingAddress = addressLines.slice(1, 4).join(', ');
 
-      const subtotal = order.total / 1.18; // Reverse calculate subtotal (18% ITBIS)
+      const subtotal = order.total / 1.18;
       const taxRate = 0.18;
       const taxAmount = order.total - subtotal;
 
-      // Create invoice
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
@@ -219,7 +294,6 @@ export default function AdminOrders() {
 
       if (invoiceError) throw invoiceError;
 
-      // Create invoice lines
       const invoiceLines = items.map(item => ({
         invoice_id: invoice.id,
         product_name: item.product_name,
@@ -234,11 +308,21 @@ export default function AdminOrders() {
 
       if (linesError) throw linesError;
 
+      setInvoice(invoice);
       toast({ title: 'Factura creada', description: `Factura ${invoice.invoice_number} generada automáticamente` });
+      return invoice as Invoice;
     } catch (error) {
       console.error('Error creating invoice:', error);
       toast({ title: 'Advertencia', description: 'No se pudo crear la factura automáticamente', variant: 'destructive' });
+      return null;
     }
+  }
+
+  async function handleGenerateInvoice() {
+    if (!selectedOrder) return;
+    setCreatingInvoice(true);
+    await createInvoiceForOrder(selectedOrder, orderItems);
+    setCreatingInvoice(false);
   }
 
   const filteredOrders = orders.filter(o => {
@@ -246,6 +330,8 @@ export default function AdminOrders() {
     const matchesStatus = filterStatus === 'all' || o.status === filterStatus;
     return matchesSearch && matchesStatus;
   });
+
+  const customerInfo = parseCustomerInfo(selectedOrder?.shipping_address);
 
   const getStatusBadge = (status: string) => {
     const s = ORDER_STATUSES.find(st => st.value === status);
@@ -427,7 +513,7 @@ export default function AdminOrders() {
 
       {/* Order Detail Dialog */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-3xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>
               Pedido #{selectedOrder?.id.slice(0, 8).toUpperCase()}
@@ -445,6 +531,107 @@ export default function AdminOrders() {
 
           {selectedOrder && (
             <div className="space-y-6">
+              {/* Customer + Invoice summary */}
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="p-4 rounded-lg border bg-muted/40 space-y-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <div className="p-2 rounded-md bg-foreground text-background">
+                      <User className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">Usuario del pedido</p>
+                      <p className="font-bold text-lg leading-tight truncate">
+                        {userProfile?.full_name || customerInfo.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">ID: {selectedOrder.user_id.slice(0, 8)}</p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 text-sm text-muted-foreground">
+                    {(userProfile?.email || customerInfo.email) && (
+                      <div className="flex items-center gap-2 text-foreground/80 break-all">
+                        <Mail className="h-4 w-4" />
+                        <span>{userProfile?.email || customerInfo.email}</span>
+                      </div>
+                    )}
+                    {customerInfo.phone && (
+                      <div className="flex items-center gap-2">
+                        <Phone className="h-4 w-4" />
+                        <span>{customerInfo.phone}</span>
+                      </div>
+                    )}
+                    {(customerInfo.address || customerInfo.city) && (
+                      <div className="flex items-start gap-2">
+                        <MapPin className="h-4 w-4 mt-0.5" />
+                        <span className="whitespace-pre-line">{[customerInfo.address, customerInfo.city].filter(Boolean).join('\n')}</span>
+                      </div>
+                    )}
+                    {customerInfo.notes && (
+                      <p className="text-xs italic text-foreground/70">{customerInfo.notes}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-lg border bg-muted/40 space-y-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">Estado & total</p>
+                      <div className="flex items-center gap-2">
+                        {getStatusBadge(selectedOrder.status)}
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(selectedOrder.created_at).toLocaleString('es-DO', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-bold">
+                        RD${selectedOrder.total.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </p>
+                    </div>
+                    <div className="text-right space-y-1">
+                      <p className="text-xs font-semibold text-muted-foreground uppercase">Pedido</p>
+                      <p className="font-mono text-sm bg-muted px-2 py-1 rounded">#{selectedOrder.id.slice(0, 10).toUpperCase()}</p>
+                    </div>
+                  </div>
+
+                  <div className="p-3 rounded-md bg-background border flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        <div>
+                          <p className="text-xs text-muted-foreground uppercase">Factura</p>
+                          <p className="font-semibold">
+                            {invoice ? invoice.invoice_number : invoiceLoading ? 'Buscando factura...' : 'No generada'}
+                          </p>
+                        </div>
+                      </div>
+                      {invoiceLoading && <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {invoice ? (
+                        <>
+                          <Button variant="outline" size="sm" className="hover:bg-primary/10" asChild>
+                            <Link to={`/orders/invoice/${invoice.id}`} target="_blank" rel="noreferrer">
+                              <Eye className="h-4 w-4 mr-2" /> Ver / Descargar
+                            </Link>
+                          </Button>
+                          <Button variant="secondary" size="sm" className="hover:opacity-90" onClick={() => window.open(`/orders/invoice/${invoice.id}`, '_blank')}>
+                            <Download className="h-4 w-4 mr-2" /> PDF rápido
+                          </Button>
+                        </>
+                      ) : (
+                        <Button onClick={handleGenerateInvoice} size="sm" disabled={creatingInvoice || invoiceLoading || orderItems.length === 0}>
+                          {creatingInvoice ? 'Generando...' : 'Generar factura' }
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Order Items */}
               <div>
                 <h4 className="font-medium mb-3">Productos</h4>

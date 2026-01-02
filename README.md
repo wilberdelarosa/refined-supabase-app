@@ -60,6 +60,10 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
+## Architecture
+
+- Ver la guía de arquitectura hexagonal y clean en [docs/architecture.md](docs/architecture.md) para límites de dominio, capas, diagramas y roadmap de migración.
+
 ## How can I deploy this project?
 
 Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.

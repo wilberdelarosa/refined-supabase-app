@@ -5,7 +5,7 @@ import { useRoles } from '@/hooks/useRoles';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { 
   Table, 
@@ -41,7 +41,6 @@ import {
   Trash2, 
   Search, 
   ArrowLeft,
-  Upload,
   Package
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -69,11 +68,16 @@ export default function AdminProducts() {
   const { user, loading: authLoading } = useAuth();
   const { canManageProducts, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
+  const PAGE_SIZE = 15;
   
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [tableLoading, setTableLoading] = useState(false);
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [filterCategory, setFilterCategory] = useState('all');
   
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -90,6 +94,7 @@ export default function AdminProducts() {
   });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [lastEditedId, setLastEditedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
@@ -100,23 +105,56 @@ export default function AdminProducts() {
   }, [user, authLoading, rolesLoading, canManageProducts, navigate]);
 
   useEffect(() => {
-    fetchProducts();
+    const timeout = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, filterCategory]);
+
+  useEffect(() => {
+    fetchProducts(page);
+  }, [debouncedSearch, filterCategory, page]);
+
+  useEffect(() => {
     fetchCategories();
   }, []);
 
-  async function fetchProducts() {
-    setLoading(true);
-    const { data, error } = await supabase
+  async function fetchProducts(targetPage = page) {
+    if (targetPage === 1 && products.length === 0) {
+      setLoading(true);
+    }
+    setTableLoading(true);
+
+    const from = (targetPage - 1) * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
+
+    let query = supabase
       .from('products')
-      .select('*')
-      .order('created_at', { ascending: false });
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
+
+    if (debouncedSearch.trim()) {
+      query = query.ilike('name', `%${debouncedSearch.trim()}%`);
+    }
+
+    if (filterCategory !== 'all') {
+      query = query.eq('category', filterCategory);
+    }
+
+    const { data, error, count } = await query;
     
     if (error) {
       toast({ title: 'Error', description: 'No se pudieron cargar los productos', variant: 'destructive' });
     } else {
       setProducts(data || []);
+      setTotal(count || 0);
     }
+
     setLoading(false);
+    setTableLoading(false);
   }
 
   async function fetchCategories() {
@@ -128,11 +166,7 @@ export default function AdminProducts() {
     if (data) setCategories(data);
   }
 
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || p.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = products;
 
   function openCreateDialog() {
     setEditingProduct(null);
@@ -207,24 +241,31 @@ export default function AdminProducts() {
       };
 
       if (editingProduct) {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
           .update(productData)
-          .eq('id', editingProduct.id);
+          .eq('id', editingProduct.id)
+          .select()
+          .maybeSingle();
         
         if (error) throw error;
+        setLastEditedId(data?.id || editingProduct.id);
         toast({ title: 'Éxito', description: 'Producto actualizado correctamente' });
       } else {
-        const { error } = await supabase
+        const { data, error } = await supabase
           .from('products')
-          .insert([productData]);
+          .insert([productData])
+          .select()
+          .maybeSingle();
         
         if (error) throw error;
+        setLastEditedId(data?.id || null);
+        setPage(1);
         toast({ title: 'Éxito', description: 'Producto creado correctamente' });
       }
 
       setIsDialogOpen(false);
-      fetchProducts();
+      await fetchProducts(editingProduct ? page : 1);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Error desconocido';
       toast({ title: 'Error', description: message, variant: 'destructive' });
@@ -249,7 +290,22 @@ export default function AdminProducts() {
     }
   }
 
-  if (authLoading || rolesLoading || loading) {
+  const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const showInitialLoader = authLoading || rolesLoading || (loading && products.length === 0);
+
+  useEffect(() => {
+    if (!lastEditedId) return;
+    const row = document.getElementById(`product-${lastEditedId}`);
+    if (!row) return;
+    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    row.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+    const timeout = setTimeout(() => {
+      row.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+    }, 1200);
+    return () => clearTimeout(timeout);
+  }, [lastEditedId, products]);
+
+  if (showInitialLoader) {
     return (
       <Layout>
         <div className="container py-12">
@@ -280,7 +336,7 @@ export default function AdminProducts() {
                     Gestión de Productos
                   </h1>
                   <p className="text-muted-foreground text-sm mt-1">
-                    {products.length} {products.length === 1 ? 'producto' : 'productos'} en total
+                    {(total || products.length)} {(total || products.length) === 1 ? 'producto' : 'productos'} en total
                   </p>
                 </div>
               </div>
@@ -337,7 +393,16 @@ export default function AdminProducts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProducts.length === 0 ? (
+                    {tableLoading && products.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-12">
+                          <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground"></div>
+                            <p>Cargando productos...</p>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ) : filteredProducts.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-16">
                           <div className="flex flex-col items-center gap-4 animate-fade-in">
@@ -359,6 +424,7 @@ export default function AdminProducts() {
                       filteredProducts.map((product, index) => (
                         <TableRow 
                           key={product.id}
+                          id={`product-${product.id}`}
                           className="hover:bg-muted/30 transition-colors animate-fade-in group"
                           style={{ animationDelay: `${index * 0.05}s` }}
                         >
@@ -459,6 +525,36 @@ export default function AdminProducts() {
                     )}
                   </TableBody>
                 </Table>
+              </div>
+
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-6 py-4 border-t">
+                <p className="text-sm text-muted-foreground">
+                  Página {page} de {pageCount} • Mostrando {products.length} / {total || products.length}
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page === 1 || tableLoading}
+                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= pageCount || tableLoading}
+                    onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+                  >
+                    Siguiente
+                  </Button>
+                  {tableLoading && (
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-foreground"></div>
+                      <span>Actualizando</span>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>

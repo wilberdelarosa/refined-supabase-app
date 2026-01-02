@@ -2,16 +2,20 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/lib/auth-context';
+import { useRoles } from '@/hooks/useRoles';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, Download, Building2, FileText } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Download, Building2, FileText, MapPin, Mail, Phone, User } from 'lucide-react';
+import logo from '@/assets/barbaro-logo.png';
 
 interface Invoice {
   id: string;
   invoice_number: string;
   order_id: string;
+  user_id: string;
   issued_at: string;
   subtotal: number;
   tax_rate: number;
@@ -30,16 +34,36 @@ interface InvoiceLine {
   total: number;
 }
 
+interface OrderInfo {
+  shipping_address: string | null;
+  user_id: string;
+}
+
+const parseCustomerInfo = (shipping: string | null | undefined) => {
+  if (!shipping) return { name: 'Cliente', address: '', city: '', phone: '', email: '', notes: '' };
+  const lines = shipping.split('\n').map(l => l.trim()).filter(Boolean);
+  return {
+    name: lines[0] || 'Cliente',
+    address: lines[1] || '',
+    city: lines[2] || '',
+    phone: lines[3] || '',
+    email: lines.find(l => l.includes('@')) || lines[4] || '',
+    notes: lines.find(l => l.toLowerCase().startsWith('notas')) || ''
+  };
+};
+
 export default function InvoiceDetail() {
   const { invoiceId } = useParams<{ invoiceId: string }>();
   const { user, loading: authLoading } = useAuth();
+  const { canManageOrders, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [lines, setLines] = useState<InvoiceLine[]>([]);
+  const [orderInfo, setOrderInfo] = useState<OrderInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!authLoading && !user) {
+    if (!authLoading && !rolesLoading && !user) {
       navigate('/auth');
       return;
     }
@@ -58,8 +82,7 @@ export default function InvoiceDetail() {
         return;
       }
 
-      // Verify user owns this invoice
-      if (invoiceData.user_id !== user.id) {
+      if (invoiceData.user_id !== user.id && !canManageOrders) {
         navigate('/orders');
         return;
       }
@@ -69,15 +92,22 @@ export default function InvoiceDetail() {
         .select('*')
         .eq('invoice_id', invoiceId);
 
+      const { data: orderData } = await supabase
+        .from('orders')
+        .select('shipping_address, user_id')
+        .eq('id', invoiceData.order_id)
+        .maybeSingle();
+
       setInvoice(invoiceData);
       setLines(linesData || []);
+      setOrderInfo(orderData || null);
       setLoading(false);
     }
 
-    if (user) {
+    if (user && !rolesLoading) {
       fetchInvoice();
     }
-  }, [invoiceId, user, authLoading, navigate]);
+  }, [invoiceId, user, authLoading, navigate, canManageOrders, rolesLoading]);
 
   const handlePrint = () => {
     window.print();
@@ -97,10 +127,12 @@ export default function InvoiceDetail() {
 
   if (!invoice) return null;
 
+  const customer = parseCustomerInfo(orderInfo?.shipping_address || invoice.billing_address);
+  const issuedDate = invoice.issued_at ? new Date(invoice.issued_at) : new Date();
+
   return (
     <Layout>
       <div className="container py-8 print:py-0">
-        {/* Back button - hidden on print */}
         <div className="print:hidden mb-6 flex items-center justify-between">
           <Button variant="ghost" asChild>
             <Link to="/orders">
@@ -114,17 +146,17 @@ export default function InvoiceDetail() {
           </Button>
         </div>
 
-        <Card className="max-w-3xl mx-auto print:shadow-none print:border-0">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 print:bg-gray-100">
-                  <FileText className="h-6 w-6 text-primary print:text-gray-800" />
-                </div>
+        <Card className="max-w-4xl mx-auto print:shadow-none print:border-0 print:max-w-full">
+          <CardHeader className="border-b bg-gradient-to-r from-foreground/5 via-background to-background relative overflow-hidden">
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(0,0,0,0.05),transparent_25%)]" />
+            <div className="flex items-center justify-between gap-4 relative">
+              <div className="flex items-center gap-4">
+                <img src={logo} alt="Barbaro Nutrition" className="h-12 w-auto rounded-md bg-background p-2 border print:border-gray-300" />
                 <div>
-                  <CardTitle className="text-xl">Factura {invoice.invoice_number}</CardTitle>
-                  <p className="text-sm text-muted-foreground">
-                    Emitida el {new Date(invoice.issued_at).toLocaleDateString('es-DO', {
+                  <CardTitle className="text-2xl">Factura {invoice.invoice_number}</CardTitle>
+                  <p className="text-sm text-muted-foreground flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Emitida el {issuedDate.toLocaleDateString('es-DO', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -132,41 +164,78 @@ export default function InvoiceDetail() {
                   </p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="font-bold text-lg">Barbaro Nutrition</p>
-                <p className="text-sm text-muted-foreground">RNC: 1-31-12345-6</p>
+              <div className="text-right flex flex-col items-end gap-2">
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-700 border-emerald-500/20 capitalize">
+                  {invoice.status}
+                </Badge>
+                <div className="text-sm text-muted-foreground">
+                  <p>Pedido #{invoice.order_id.slice(0, 8).toUpperCase()}</p>
+                  <p>RNC: 1-31-12345-6</p>
+                </div>
               </div>
             </div>
           </CardHeader>
           
           <CardContent className="pt-6 space-y-6">
-            {/* Billing Info */}
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">FACTURADO A</h3>
-                <p className="font-medium">{invoice.billing_name || 'Cliente'}</p>
-                <p className="text-sm text-muted-foreground whitespace-pre-line">
-                  {invoice.billing_address || 'Sin dirección'}
-                </p>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-lg border bg-muted/40 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md bg-foreground text-background">
+                    <User className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Facturado a</p>
+                    <p className="font-semibold text-lg">{customer.name}</p>
+                    <p className="text-xs text-muted-foreground">Cliente ID: {invoice.user_id.slice(0, 8)}</p>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  {customer.email && (
+                    <div className="flex items-center gap-2 text-foreground/80">
+                      <Mail className="h-4 w-4" />
+                      <span>{customer.email}</span>
+                    </div>
+                  )}
+                  {customer.phone && (
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-4 w-4" />
+                      <span>{customer.phone}</span>
+                    </div>
+                  )}
+                  {(customer.address || customer.city) && (
+                    <div className="flex items-start gap-2">
+                      <MapPin className="h-4 w-4 mt-0.5" />
+                      <span className="whitespace-pre-line">{[customer.address, customer.city].filter(Boolean).join('\n')}</span>
+                    </div>
+                  )}
+                  {customer.notes && (
+                    <p className="text-xs italic text-foreground/70">{customer.notes}</p>
+                  )}
+                </div>
               </div>
-              <div className="text-right md:text-left">
-                <h3 className="font-semibold text-sm text-muted-foreground mb-2">DETALLES</h3>
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Pedido:</span>{' '}
-                  <span className="font-mono">#{invoice.order_id.slice(0, 8).toUpperCase()}</span>
-                </p>
-                <p className="text-sm">
-                  <span className="text-muted-foreground">Estado:</span>{' '}
-                  <span className="font-medium capitalize">{invoice.status}</span>
-                </p>
+
+              <div className="p-4 rounded-lg border bg-muted/40 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-md bg-primary/10 text-primary">
+                    <Building2 className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground uppercase font-semibold">Emisor</p>
+                    <p className="font-semibold">Barbaro Nutrition</p>
+                    <p className="text-sm text-muted-foreground">info@barbaronutrition.com</p>
+                  </div>
+                </div>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p>RNC: 1-31-12345-6</p>
+                  <p>Dirección: Santo Domingo, República Dominicana</p>
+                </div>
               </div>
             </div>
 
             <Separator />
 
-            {/* Invoice Lines */}
             <div>
-              <h3 className="font-semibold text-sm text-muted-foreground mb-4">DETALLE DE PRODUCTOS</h3>
+              <h3 className="font-semibold text-sm text-muted-foreground mb-4">Detalle de productos</h3>
               <div className="border rounded-lg overflow-hidden">
                 <table className="w-full">
                   <thead className="bg-muted/50">
@@ -195,9 +264,8 @@ export default function InvoiceDetail() {
               </div>
             </div>
 
-            {/* Totals */}
             <div className="flex justify-end">
-              <div className="w-full max-w-xs space-y-2">
+              <div className="w-full max-w-xs space-y-2 p-4 rounded-lg bg-muted/30 border">
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>DOP {invoice.subtotal.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
@@ -214,7 +282,6 @@ export default function InvoiceDetail() {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="pt-6 border-t text-center text-sm text-muted-foreground">
               <p>Gracias por tu compra en Barbaro Nutrition</p>
               <p>Para cualquier consulta, contáctanos a info@barbaronutrition.com</p>
