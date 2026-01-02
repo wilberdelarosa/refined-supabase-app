@@ -29,23 +29,16 @@ import {
   Truck
 } from 'lucide-react';
 
-// Bank account details
-const BANK_ACCOUNTS = [
-  {
-    bank: 'Banco Popular Dominicano',
-    accountType: 'Cuenta Corriente',
-    accountNumber: '123-456789-0',
-    holder: 'Barbaro Nutrition SRL',
-    rnc: '1-31-12345-6'
-  },
-  {
-    bank: 'Banreservas',
-    accountType: 'Cuenta de Ahorros',
-    accountNumber: '987-654321-0',
-    holder: 'Barbaro Nutrition SRL',
-    rnc: '1-31-12345-6'
-  }
-];
+interface PaymentMethod {
+  id: string;
+  name: string;
+  bank_name: string | null;
+  account_type: string | null;
+  account_number: string | null;
+  account_holder: string | null;
+  rnc: string | null;
+  instructions: string | null;
+}
 
 interface OrderItem {
   id: string;
@@ -83,6 +76,7 @@ export default function OrderConfirmation() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [order, setOrder] = useState<Order | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -99,8 +93,19 @@ export default function OrderConfirmation() {
     }
     if (orderId && user) {
       fetchOrder();
+      fetchPaymentMethods();
     }
   }, [orderId, user, authLoading, navigate]);
+
+  async function fetchPaymentMethods() {
+    const { data } = await supabase
+      .from('payment_methods')
+      .select('*')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true });
+    
+    if (data) setPaymentMethods(data);
+  }
 
   async function fetchOrder() {
     setLoading(true);
@@ -349,36 +354,42 @@ export default function OrderConfirmation() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {BANK_ACCOUNTS.map((account, idx) => (
-                    <div key={idx} className="p-4 bg-muted/50 rounded-xl space-y-2">
-                      <p className="font-semibold">{account.bank}</p>
+                  {paymentMethods.map((method) => (
+                    <div key={method.id} className="p-4 bg-muted/50 rounded-xl space-y-2">
+                      <p className="font-semibold">{method.bank_name || method.name}</p>
                       <div className="grid gap-1 text-sm">
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Tipo:</span>
-                          <span>{account.accountType}</span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Número:</span>
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono">{account.accountNumber}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={() => copyToClipboard(account.accountNumber, `acc-${idx}`)}
-                            >
-                              {copied === `acc-${idx}` ? (
-                                <Check className="h-3 w-3 text-green-500" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
+                        {method.account_type && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Tipo:</span>
+                            <span>{method.account_type}</span>
                           </div>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-muted-foreground">Titular:</span>
-                          <span>{account.holder}</span>
-                        </div>
+                        )}
+                        {method.account_number && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Número:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono">{method.account_number}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => copyToClipboard(method.account_number!, `acc-${method.id}`)}
+                              >
+                                {copied === `acc-${method.id}` ? (
+                                  <Check className="h-3 w-3 text-green-500" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        {method.account_holder && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Titular:</span>
+                            <span>{method.account_holder}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))}
