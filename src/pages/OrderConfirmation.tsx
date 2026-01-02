@@ -194,7 +194,7 @@ export default function OrderConfirmation() {
           order_id: order.id,
           amount: order.total,
           payment_method: 'transfer',
-          status: 'pending_verification',
+          status: 'pending',
           proof_url: publicUrl,
           reference_number: referenceNumber || null,
           notes: notes || null
