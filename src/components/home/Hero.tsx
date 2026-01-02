@@ -45,7 +45,7 @@ export function Hero() {
             <Button
               size="lg"
               variant="outline"
-              className="border border-black/10 text-black hover:bg-black/5 dark:border-white/60 dark:text-white dark:hover:bg-white/20 font-bold uppercase tracking-wide backdrop-blur-sm shadow-lg hover-lift text-sm sm:text-base h-11 sm:h-12"
+              className="border-2 border-white/80 bg-white/10 text-white hover:bg-transparent hover:border-white hover:text-white active:scale-95 dark:border-white/80 dark:text-white dark:hover:bg-transparent dark:hover:border-white font-bold uppercase tracking-wide shadow-lg hover-lift text-sm sm:text-base h-11 sm:h-12 transition-all duration-300 backdrop-blur-sm"
               asChild
             >
               <Link to="/about">
