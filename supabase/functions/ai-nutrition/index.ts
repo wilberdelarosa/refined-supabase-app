@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { productName, productCategory } = await req.json();
+    const { productName, productCategory, productDescription } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -19,33 +19,59 @@ serve(async (req) => {
     }
 
     console.log(`AI Nutrition lookup for: ${productName} (${productCategory})`);
+    console.log(`Description: ${productDescription || 'None provided'}`);
 
-    const systemPrompt = `Eres un experto en nutrición deportiva y suplementos. 
-Tu tarea es proporcionar información nutricional precisa para suplementos deportivos.
+    const systemPrompt = `Eres un experto en nutrición deportiva y suplementos con conocimiento profundo de marcas como Optimum Nutrition, MuscleTech, MusclePharm, BSN, Dymatize, MyProtein, Universal Nutrition, y otras marcas populares.
+
+Tu tarea es proporcionar información nutricional PRECISA y ESPECÍFICA para el suplemento indicado, basándote en:
+1. El nombre exacto del producto
+2. La marca (si se menciona)
+3. La descripción del producto
+4. La categoría
+
+BUSCA en tu conocimiento la información real del producto. Si conoces la marca y el producto específico, proporciona los valores reales. Si no, proporciona valores típicos realistas para ese tipo de producto.
+
 Responde SIEMPRE en formato JSON válido con esta estructura exacta:
 {
-  "serving_size": "tamaño de porción (ej: '30g', '1 scoop', '2 cápsulas')",
-  "servings_per_container": número entero aproximado,
+  "serving_size": "tamaño de porción exacto (ej: '30g (1 scoop)', '2 cápsulas', '5g')",
+  "servings_per_container": número entero basado en el tamaño típico del producto,
   "nutrition_facts": {
-    "calories": "valor kcal",
-    "protein": "valor g",
-    "carbohydrates": "valor g",
-    "fat": "valor g",
-    "fiber": "valor g (si aplica)",
-    "sodium": "valor mg (si aplica)",
-    "other": [{"name": "nombre", "value": "valor"}]
+    "calories": "valor en kcal (solo número)",
+    "protein": "valor en g (solo número)",
+    "carbohydrates": "valor en g (solo número)",
+    "fat": "valor en g (solo número)",
+    "fiber": "valor en g si aplica (solo número)",
+    "sodium": "valor en mg si aplica (solo número)",
+    "sugar": "valor en g si aplica (solo número)",
+    "saturated_fat": "valor en g si aplica (solo número)",
+    "cholesterol": "valor en mg si aplica (solo número)",
+    "other": [
+      {"name": "nombre del nutriente adicional", "value": "valor con unidad"}
+    ]
   },
-  "ingredients": "lista de ingredientes principales separados por coma",
-  "allergens": ["array", "de", "alérgenos", "comunes"],
-  "suggestions": "consejos de uso breves"
+  "ingredients": "lista completa de ingredientes principales del producto real, separados por coma",
+  "allergens": ["array", "de", "alérgenos", "específicos", "del", "producto"],
+  "suggestions": "modo de uso recomendado específico para este producto",
+  "brand_info": "información breve sobre la marca o producto si es conocido"
 }
 
-Si no tienes información exacta, proporciona valores típicos para ese tipo de producto.
+IMPORTANTE:
+- Para PROTEÍNAS: típicamente 20-30g proteína por porción, bajo en carbohidratos
+- Para CREATINA: 3-5g por porción, sin calorías significativas
+- Para PRE-WORKOUT: cafeína, beta-alanina, citrulina son comunes
+- Para BCAA/EAA: aminoácidos esenciales, bajo en calorías
+- Para VITAMINAS: lista las vitaminas y minerales específicos
+- Para GAINERS: alto en calorías y carbohidratos
+
 NO incluyas texto adicional, solo el JSON.`;
 
-    const userPrompt = `Proporciona la información nutricional típica para este suplemento:
+    const userPrompt = `Busca y proporciona la información nutricional ESPECÍFICA para este suplemento deportivo:
+
 Producto: ${productName}
 Categoría: ${productCategory || 'Suplemento deportivo'}
+${productDescription ? `Descripción: ${productDescription}` : ''}
+
+Si conoces este producto específico, proporciona sus valores reales. Si no, proporciona valores típicos precisos para este tipo de suplemento.
 
 Responde solo con el JSON, sin explicaciones adicionales.`;
 
@@ -103,6 +129,15 @@ Responde solo con el JSON, sin explicaciones adicionales.`;
         jsonStr = jsonStr.replace(/^```\s*/, '').replace(/\s*```$/, '');
       }
       nutritionData = JSON.parse(jsonStr);
+      
+      // Ensure nutrition_facts values are strings
+      if (nutritionData.nutrition_facts) {
+        for (const key of Object.keys(nutritionData.nutrition_facts)) {
+          if (key !== 'other' && nutritionData.nutrition_facts[key] !== undefined) {
+            nutritionData.nutrition_facts[key] = String(nutritionData.nutrition_facts[key]);
+          }
+        }
+      }
     } catch (parseError) {
       console.error("JSON parse error:", parseError, "Raw:", aiResponse);
       // Return a default structure if parsing fails
@@ -111,13 +146,14 @@ Responde solo con el JSON, sin explicaciones adicionales.`;
         servings_per_container: 30,
         nutrition_facts: {
           calories: "120",
-          protein: "24g",
-          carbohydrates: "3g",
-          fat: "1g"
+          protein: "24",
+          carbohydrates: "3",
+          fat: "1",
+          sodium: "50"
         },
         ingredients: "Proteína de suero de leche, saborizantes naturales",
         allergens: ["Lácteos"],
-        suggestions: "Tomar después del entrenamiento"
+        suggestions: "Tomar después del entrenamiento mezclado con agua o leche"
       };
     }
 
