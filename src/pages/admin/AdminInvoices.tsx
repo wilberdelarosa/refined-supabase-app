@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FileText, Package, Clock, CheckCircle, Truck, XCircle, Download, Eye, MoreHorizontal } from 'lucide-react';
+import { FileText, Package, Clock, CheckCircle, Truck, XCircle, Download, Eye, MoreHorizontal, ArrowLeft } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -49,7 +49,7 @@ export default function AdminInvoices() {
   useEffect(() => {
     async function fetchInvoices() {
       if (!user || !canManageOrders) return;
-      
+
       try {
         const { data, error } = await supabase
           .from('invoices')
@@ -81,10 +81,10 @@ export default function AdminInvoices() {
 
       if (error) throw error;
 
-      setInvoices(invoices.map(inv => 
+      setInvoices(invoices.map(inv =>
         inv.id === invoiceId ? { ...inv, status: 'cancelled' } : inv
       ));
-      
+
       toast.success('Factura anulada');
     } catch (error) {
       console.error('Error cancelling invoice:', error);
@@ -108,109 +108,121 @@ export default function AdminInvoices() {
   return (
     <Layout>
       <div className="container py-12">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="font-display text-3xl font-bold">Facturas</h1>
-            <p className="text-muted-foreground">Gestión de facturas del sistema</p>
+        <div className="max-w-7xl mx-auto">
+          {/* Enhanced Header */}
+          <div className="mb-6 md:mb-8">
+            <div className="flex items-center gap-4 mb-4">
+              <Link to="/admin">
+                <Button variant="ghost" size="icon" className="hover-lift">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <div className="flex-1">
+                <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
+                  <FileText className="h-7 w-7" />
+                  Gestión de Facturas
+                </h1>
+                <p className="text-muted-foreground text-sm mt-1">
+                  {invoices.length} {invoices.length === 1 ? 'factura' : 'facturas'} en total
+                </p>
+              </div>
+            </div>
           </div>
-          <Button asChild variant="outline">
-            <Link to="/admin">← Volver al Panel</Link>
-          </Button>
-        </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Todas las Facturas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-12 w-full" />
-                ))}
-              </div>
-            ) : invoices.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">No hay facturas registradas</p>
-              </div>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Número</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead>Pedido</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead className="text-right">Total</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoices.map((invoice) => {
-                    const status = statusConfig[invoice.status] || statusConfig.issued;
-                    
-                    return (
-                      <TableRow key={invoice.id}>
-                        <TableCell className="font-mono font-medium">
-                          {invoice.invoice_number}
-                        </TableCell>
-                        <TableCell>
-                          {new Date(invoice.issued_at).toLocaleDateString('es-DO')}
-                        </TableCell>
-                        <TableCell>
-                          <Link to={`/admin/orders`} className="text-primary hover:underline">
-                            #{invoice.order_id.slice(0, 8).toUpperCase()}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          {invoice.billing_name || 'Sin nombre'}
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          DOP {invoice.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={status.variant}>
-                            {status.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="h-4 w-4 mr-2" />
-                                Ver Detalle
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="h-4 w-4 mr-2" />
-                                Descargar PDF
-                              </DropdownMenuItem>
-                              {invoice.status !== 'cancelled' && (
-                                <DropdownMenuItem 
-                                  className="text-destructive"
-                                  onClick={() => handleCancelInvoice(invoice.id)}
-                                >
-                                  <XCircle className="h-4 w-4 mr-2" />
-                                  Anular Factura
+          <Card>
+            <CardHeader>
+              <CardTitle>Todas las Facturas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="space-y-4">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-12 w-full" />
+                  ))}
+                </div>
+              ) : invoices.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground">No hay facturas registradas</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Número</TableHead>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Pedido</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead className="text-right">Total</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {invoices.map((invoice) => {
+                      const status = statusConfig[invoice.status] || statusConfig.issued;
+
+                      return (
+                        <TableRow key={invoice.id}>
+                          <TableCell className="font-mono font-medium">
+                            {invoice.invoice_number}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(invoice.issued_at).toLocaleDateString('es-DO')}
+                          </TableCell>
+                          <TableCell>
+                            <Link to={`/admin/orders`} className="text-primary hover:underline">
+                              #{invoice.order_id.slice(0, 8).toUpperCase()}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            {invoice.billing_name || 'Sin nombre'}
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            DOP {invoice.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={status.variant}>
+                              {status.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Ver Detalle
                                 </DropdownMenuItem>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+                                <DropdownMenuItem>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Descargar PDF
+                                </DropdownMenuItem>
+                                {invoice.status !== 'cancelled' && (
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleCancelInvoice(invoice.id)}
+                                  >
+                                    <XCircle className="h-4 w-4 mr-2" />
+                                    Anular Factura
+                                  </DropdownMenuItem>
+                                )}
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </Layout>
   );
