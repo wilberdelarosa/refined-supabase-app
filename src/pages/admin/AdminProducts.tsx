@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import {
   Dialog,
@@ -35,11 +35,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { 
-  Plus, 
-  Pencil, 
-  Trash2, 
-  Search, 
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  Search,
   ArrowLeft,
   Package,
   Beaker
@@ -71,7 +71,7 @@ export default function AdminProducts() {
   const { canManageProducts, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
   const PAGE_SIZE = 15;
-  
+
   const [products, setProducts] = useState<Product[]>([]);
   const productsCountRef = useRef(0);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -82,7 +82,7 @@ export default function AdminProducts() {
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [filterCategory, setFilterCategory] = useState('all');
-  
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [formData, setFormData] = useState({
@@ -150,7 +150,7 @@ export default function AdminProducts() {
     }
 
     const { data, error, count } = await query;
-    
+
     if (error) {
       toast({ title: 'Error', description: 'No se pudieron cargar los productos', variant: 'destructive' });
     } else {
@@ -171,7 +171,7 @@ export default function AdminProducts() {
       .from('categories')
       .select('id, name, slug')
       .order('name');
-    
+
     if (data) setCategories(data);
   }
 
@@ -212,16 +212,16 @@ export default function AdminProducts() {
   async function uploadImage(file: File): Promise<string | null> {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
-    
+
     const { error } = await supabase.storage
       .from('products')
       .upload(fileName, file);
-    
+
     if (error) {
       console.error('Upload error:', error);
       return null;
     }
-    
+
     const { data } = supabase.storage.from('products').getPublicUrl(fileName);
     return data.publicUrl;
   }
@@ -232,7 +232,7 @@ export default function AdminProducts() {
 
     try {
       let imageUrl = formData.image_url;
-      
+
       if (imageFile) {
         const uploadedUrl = await uploadImage(imageFile);
         if (uploadedUrl) imageUrl = uploadedUrl;
@@ -256,7 +256,7 @@ export default function AdminProducts() {
           .eq('id', editingProduct.id)
           .select()
           .maybeSingle();
-        
+
         if (error) throw error;
         setLastEditedId(data?.id || editingProduct.id);
         toast({ title: 'Éxito', description: 'Producto actualizado correctamente' });
@@ -266,7 +266,7 @@ export default function AdminProducts() {
           .insert([productData])
           .select()
           .maybeSingle();
-        
+
         if (error) throw error;
         setLastEditedId(data?.id || null);
         setPage(1);
@@ -290,7 +290,7 @@ export default function AdminProducts() {
       .from('products')
       .delete()
       .eq('id', product.id);
-    
+
     if (error) {
       toast({ title: 'Error', description: 'No se pudo eliminar el producto', variant: 'destructive' });
     } else {
@@ -402,96 +402,73 @@ export default function AdminProducts() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {tableLoading && products.length === 0 ? (
+                    {tableLoading ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center py-12">
-                          <div className="flex items-center justify-center gap-3 text-muted-foreground">
-                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground"></div>
-                            <p>Cargando productos...</p>
-                          </div>
+                          <Package className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+                          <p className="text-sm text-muted-foreground mt-2">Cargando productos...</p>
                         </TableCell>
                       </TableRow>
-                    ) : filteredProducts.length === 0 ? (
+                    ) : products.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-16">
-                          <div className="flex flex-col items-center gap-4 animate-fade-in">
-                            <div className="p-4 rounded-full bg-muted">
-                              <Package className="h-12 w-12 text-muted-foreground" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-lg mb-1">No hay productos</p>
-                              <p className="text-muted-foreground text-sm">
-                                {search || filterCategory !== 'all' 
-                                  ? 'No se encontraron resultados con los filtros actuales'
-                                  : 'Crea tu primer producto para empezar'}
-                              </p>
-                            </div>
-                          </div>
+                        <TableCell colSpan={7} className="text-center py-12">
+                          <Package className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
+                          <p className="text-muted-foreground mt-4 font-medium">Ningún producto encontrado</p>
                         </TableCell>
                       </TableRow>
                     ) : (
-                      filteredProducts.map((product, index) => (
-                        <TableRow 
+                      products.map((product) => (
+                        <TableRow
                           key={product.id}
-                          id={`product-${product.id}`}
-                          className="hover:bg-muted/30 transition-colors animate-fade-in group"
-                          style={{ animationDelay: `${index * 0.05}s` }}
+                          className={
+                            lastEditedId === product.id
+                              ? 'bg-primary/5 dark:bg-primary/10 border-l-2 border-l-primary animate-fade-in'
+                              : ''
+                          }
                         >
-                          <TableCell>
-                            <div className="h-16 w-16 rounded-xl bg-muted overflow-hidden shadow-md group-hover:shadow-lg transition-shadow">
-                              {product.image_url ? (
-                                <img 
-                                  src={product.image_url} 
-                                  alt={product.name}
-                                  className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="h-full w-full flex items-center justify-center bg-gradient-card">
-                                  <Package className="h-7 w-7 text-muted-foreground" />
-                                </div>
-                              )}
-                            </div>
+                          <TableCell className="text-center">
+                            {product.image_url ? (
+                              <img
+                                src={product.image_url}
+                                alt={product.name}
+                                className="w-12 h-12 object-cover rounded-md mx-auto border shadow-sm"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 bg-muted rounded-md mx-auto flex items-center justify-center">
+                                <Package className="h-5 w-5 text-muted-foreground" />
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell>
-                            <div className="max-w-[250px]">
-                              <p className="font-bold text-base mb-1">{product.name}</p>
+                            <div className="space-y-1">
+                              <p className="font-medium">{product.name}</p>
                               {product.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-2">
+                                <p className="text-xs text-muted-foreground line-clamp-1">
                                   {product.description}
                                 </p>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge 
-                              variant="outline" 
-                              className="bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20 px-3 py-1"
-                            >
+                            <Badge variant="outline" className="bg-primary/5">
                               {product.category}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
-                            <div>
-                              <p className="font-bold text-lg">
-                                RD${product.price.toLocaleString('es-DO', {
-                                  minimumFractionDigits: 2,
-                                  maximumFractionDigits: 2
-                                })}
-                              </p>
-                              {product.original_price && (
-                                <p className="text-sm text-muted-foreground line-through">
-                                  RD${product.original_price.toLocaleString('es-DO')}
-                                </p>
-                              )}
-                            </div>
+                          <TableCell className="text-right font-semibold">
+                            ${product.price.toFixed(2)}
+                            {product.original_price && product.original_price > product.price && (
+                              <div className="text-xs text-muted-foreground line-through">
+                                ${product.original_price.toFixed(2)}
+                              </div>
+                            )}
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge 
+                            <Badge
                               variant="outline"
                               className={
-                                product.stock > 10 
+                                product.stock > 10
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                                  : product.stock > 0 
+                                  : product.stock > 0
                                     ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
                                     : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
                               }
@@ -501,7 +478,7 @@ export default function AdminProducts() {
                           </TableCell>
                           <TableCell className="text-center">
                             {product.featured && (
-                              <Badge 
+                              <Badge
                                 variant="outline"
                                 className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 animate-pulse-subtle"
                               >
@@ -511,31 +488,31 @@ export default function AdminProducts() {
                           </TableCell>
                           <TableCell className="text-center">
                             <div className="flex items-center justify-center gap-1">
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 onClick={() => {
                                   setNutritionProduct(product);
                                   setNutritionDialogOpen(true);
                                 }}
-                                className="hover-lift hover:bg-green-500/10"
+                                className="hover-lift hover:bg-green-500/10 h-9 w-9"
                                 title="Info Nutricional"
                               >
                                 <Beaker className="h-4 w-4 text-green-600" />
                               </Button>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 onClick={() => openEditDialog(product)}
-                                className="hover-lift hover:bg-blue-500/10"
+                                className="hover-lift hover:bg-blue-500/10 h-9 w-9"
                               >
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="icon"
                                 onClick={() => handleDelete(product)}
-                                className="hover-lift hover:bg-destructive/10"
+                                className="hover-lift hover:bg-destructive/10 h-9 w-9"
                               >
                                 <Trash2 className="h-4 w-4 text-destructive" />
                               </Button>
@@ -643,8 +620,8 @@ export default function AdminProducts() {
 
               <div className="space-y-2">
                 <Label htmlFor="category">Categoría *</Label>
-                <Select 
-                  value={formData.category} 
+                <Select
+                  value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
                   <SelectTrigger>
@@ -675,7 +652,7 @@ export default function AdminProducts() {
                 <div className="flex gap-4">
                   {(formData.image_url || imageFile) && (
                     <div className="h-20 w-20 rounded-lg bg-muted overflow-hidden flex-shrink-0">
-                      <img 
+                      <img
                         src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
                         alt="Preview"
                         className="h-full w-full object-cover"
@@ -732,7 +709,7 @@ export default function AdminProducts() {
           productId={nutritionProduct.id}
           productName={nutritionProduct.name}
           productCategory={nutritionProduct.category}
-          onSaved={() => {}}
+          onSaved={() => { }}
         />
       )}
     </Layout>
