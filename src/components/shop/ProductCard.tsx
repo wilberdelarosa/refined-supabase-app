@@ -40,7 +40,10 @@ export function ProductCard({ product }: ProductCardProps) {
       duration: 2500,
       action: {
         label: 'Ver carrito',
-        onClick: () => window.location.href = '/cart'
+        onClick: () => {
+          // Trigger custom event to open cart drawer
+          window.dispatchEvent(new Event('openCartDrawer'));
+        }
       }
     });
   };

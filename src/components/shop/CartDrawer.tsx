@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,17 +16,24 @@ import { Separator } from "@/components/ui/separator";
 
 export function CartDrawer() {
   const [isOpen, setIsOpen] = useState(false);
-  const { 
-    items, 
-    isLoading, 
-    updateQuantity, 
-    removeItem, 
+  const {
+    items,
+    isLoading,
+    updateQuantity,
+    removeItem,
     getTotalItems,
     getTotalPrice
   } = useCartStore();
-  
+
   const totalItems = getTotalItems();
   const totalPrice = getTotalPrice();
+
+  // Listen for custom event to open cart drawer
+  useEffect(() => {
+    const handleOpenCart = () => setIsOpen(true);
+    window.addEventListener('openCartDrawer', handleOpenCart);
+    return () => window.removeEventListener('openCartDrawer', handleOpenCart);
+  }, []);
 
   const handleCheckout = () => {
     setIsOpen(false);
@@ -45,7 +52,7 @@ export function CartDrawer() {
           )}
         </Button>
       </SheetTrigger>
-      
+
       <SheetContent className="w-full sm:max-w-lg flex flex-col h-full">
         <SheetHeader className="flex-shrink-0">
           <SheetTitle>Tu Carrito</SheetTitle>
@@ -53,7 +60,7 @@ export function CartDrawer() {
             {totalItems === 0 ? "Tu carrito está vacío" : `${totalItems} producto${totalItems !== 1 ? 's' : ''} en tu carrito`}
           </SheetDescription>
         </SheetHeader>
-        
+
         <div className="flex flex-col flex-1 pt-6 min-h-0">
           {items.length === 0 ? (
             <div className="flex-1 flex items-center justify-center">
@@ -81,7 +88,7 @@ export function CartDrawer() {
                           />
                         )}
                       </div>
-                      
+
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-sm truncate">{item.product.name}</h4>
                         <p className="text-xs text-muted-foreground">{item.product.category}</p>
@@ -89,7 +96,7 @@ export function CartDrawer() {
                           DOP {item.product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                         </p>
                       </div>
-                      
+
                       <div className="flex flex-col items-end gap-2 flex-shrink-0">
                         <Button
                           variant="ghost"
@@ -99,7 +106,7 @@ export function CartDrawer() {
                         >
                           <Trash2 className="h-3 w-3" />
                         </Button>
-                        
+
                         <div className="flex items-center gap-1">
                           <Button
                             variant="outline"
@@ -125,7 +132,7 @@ export function CartDrawer() {
                   ))}
                 </div>
               </div>
-              
+
               {/* Fixed checkout section */}
               <div className="flex-shrink-0 space-y-4 pt-4 border-t bg-background">
                 <div className="flex justify-between items-center">
@@ -138,9 +145,9 @@ export function CartDrawer() {
                 <Separator />
 
                 <div className="grid grid-cols-1 gap-2">
-                  <Button 
+                  <Button
                     onClick={handleCheckout}
-                    className="w-full" 
+                    className="w-full"
                     size="lg"
                     disabled={items.length === 0 || isLoading}
                   >
