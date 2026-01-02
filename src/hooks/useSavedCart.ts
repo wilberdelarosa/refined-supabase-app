@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/integrations/supabase/client';
 import { useCartStore, CartItem } from '@/stores/cartStore';
+import type { Json } from '@/integrations/supabase/types';
 
 export function useSavedCart() {
   const { user } = useAuth();
@@ -23,8 +24,8 @@ export function useSavedCart() {
       if (error) throw error;
 
       if (data?.cart_data && Array.isArray(data.cart_data) && data.cart_data.length > 0) {
-        // Merge saved cart with current local cart
-        const savedItems = Array.isArray(data.cart_data) ? (data.cart_data as CartItem[]) : [];
+        // Merge saved cart with current local cart - cast through unknown first
+        const savedItems = data.cart_data as unknown as CartItem[];
         const currentItems = useCartStore.getState().items;
         
         // Combine items, preferring saved quantities for duplicates
@@ -50,15 +51,13 @@ export function useSavedCart() {
     if (!user || !initialLoadDone.current) return;
 
     try {
-      const payload = {
-        user_id: user.id,
-        cart_data: items,
-        updated_at: new Date().toISOString(),
-      };
-
       const { error } = await supabase
         .from('saved_carts')
-        .upsert(payload, {
+        .upsert({
+          user_id: user.id,
+          cart_data: items as unknown as Json,
+          updated_at: new Date().toISOString(),
+        }, {
           onConflict: 'user_id',
         });
 
