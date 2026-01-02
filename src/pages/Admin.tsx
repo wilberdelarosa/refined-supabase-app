@@ -14,7 +14,9 @@ import {
   Settings,
   Boxes,
   FileEdit,
-  Shield
+  Shield,
+  CreditCard,
+  Tags
 } from 'lucide-react';
 
 export default function Admin() {
@@ -70,6 +72,20 @@ export default function Admin() {
       icon: Boxes,
       href: '/admin/inventory',
       visible: canManageProducts,
+    },
+    {
+      title: 'Categorías',
+      description: 'Organizar productos',
+      icon: Tags,
+      href: '/admin/categories',
+      visible: canManageProducts,
+    },
+    {
+      title: 'Métodos de Pago',
+      description: 'Cuentas bancarias',
+      icon: CreditCard,
+      href: '/admin/payment-methods',
+      visible: isAdmin,
     },
     {
       title: 'Descuentos',

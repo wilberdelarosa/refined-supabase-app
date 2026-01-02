@@ -22,6 +22,7 @@ import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminCategories from "./pages/admin/AdminCategories";
+import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
@@ -66,6 +67,7 @@ const App = () => (
             <Route path="/checkout/transferencia" element={<TransferCheckout />} />
             <Route path="/order/:orderId" element={<OrderConfirmation />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
+            <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
