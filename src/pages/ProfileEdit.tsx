@@ -71,20 +71,27 @@ export default function ProfileEdit() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La imagen no debe superar 5MB');
+      return;
+    }
+
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const fileName = `${Date.now()}.${fileExt}`;
+      // Use user.id as folder name for RLS policy compliance
+      const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
-        .from('products')
+        .from('avatars')
         .upload(filePath, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from('products')
+        .from('avatars')
         .getPublicUrl(filePath);
 
       setProfile(prev => ({ ...prev, avatar_url: publicUrl }));
