@@ -46,7 +46,12 @@ import {
   Mail,
   MapPin,
   Phone,
-  RefreshCw
+  RefreshCw,
+  CreditCard,
+  CheckCircle,
+  XCircle,
+  ExternalLink,
+  ImageIcon
 } from 'lucide-react';
 
 interface Order {
@@ -88,8 +93,23 @@ interface UserProfile {
   email: string | null;
 }
 
+interface OrderPayment {
+  id: string;
+  order_id: string;
+  amount: number;
+  payment_method: string;
+  status: string;
+  proof_url: string | null;
+  reference_number: string | null;
+  notes: string | null;
+  created_at: string;
+  verified_at: string | null;
+  verified_by: string | null;
+}
+
 const ORDER_STATUSES = [
-  { value: 'pending', label: 'Pendiente', color: 'secondary' },
+  { value: 'pending', label: 'Pendiente de Pago', color: 'secondary' },
+  { value: 'payment_pending', label: 'Comprobante Enviado', color: 'warning' },
   { value: 'paid', label: 'Pagado', color: 'default' },
   { value: 'processing', label: 'Procesando', color: 'secondary' },
   { value: 'packed', label: 'Empacado', color: 'secondary' },
@@ -124,6 +144,7 @@ export default function AdminOrders() {
   
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
+  const [orderPayments, setOrderPayments] = useState<OrderPayment[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [invoiceLoading, setInvoiceLoading] = useState(false);
@@ -132,6 +153,8 @@ export default function AdminOrders() {
   const [statusNote, setStatusNote] = useState('');
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [verifyingPayment, setVerifyingPayment] = useState(false);
+  const [selectedProofUrl, setSelectedProofUrl] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
@@ -184,9 +207,10 @@ export default function AdminOrders() {
     setStatusNote('');
     setUserProfile(null);
     setInvoice(null);
+    setOrderPayments([]);
     setInvoiceLoading(true);
     
-    const [{ data: items }, { data: invoiceData }, { data: profileData }] = await Promise.all([
+    const [{ data: items }, { data: invoiceData }, { data: profileData }, { data: paymentsData }] = await Promise.all([
       supabase
         .from('order_items')
         .select('*')
@@ -200,14 +224,79 @@ export default function AdminOrders() {
         .from('profiles')
         .select('full_name, email')
         .eq('user_id', order.user_id)
-        .maybeSingle()
+        .maybeSingle(),
+      supabase
+        .from('order_payments')
+        .select('*')
+        .eq('order_id', order.id)
+        .order('created_at', { ascending: false })
     ]);
     
     setOrderItems(items || []);
     setUserProfile(profileData || null);
     setInvoice(invoiceData || null);
+    setOrderPayments(paymentsData || []);
     setInvoiceLoading(false);
     setIsDetailOpen(true);
+  }
+
+  async function verifyPayment(payment: OrderPayment, approved: boolean) {
+    if (!selectedOrder) return;
+    
+    setVerifyingPayment(true);
+    try {
+      const newPaymentStatus = approved ? 'verified' : 'rejected';
+      
+      // Update payment record
+      const { error: paymentError } = await supabase
+        .from('order_payments')
+        .update({
+          status: newPaymentStatus,
+          verified_at: new Date().toISOString(),
+          verified_by: user?.id
+        })
+        .eq('id', payment.id);
+
+      if (paymentError) throw paymentError;
+
+      // Update order status
+      const newOrderStatus = approved ? 'paid' : 'pending';
+      const { error: orderError } = await supabase
+        .from('orders')
+        .update({ status: newOrderStatus })
+        .eq('id', selectedOrder.id);
+
+      if (orderError) throw orderError;
+
+      // Log audit
+      await supabase.rpc('log_audit', {
+        p_action: approved ? 'VERIFY_PAYMENT' : 'REJECT_PAYMENT',
+        p_table_name: 'order_payments',
+        p_record_id: payment.id,
+        p_old_data: { status: payment.status },
+        p_new_data: { status: newPaymentStatus, order_status: newOrderStatus }
+      });
+
+      // If approved, create invoice
+      if (approved) {
+        await createInvoiceForOrder(selectedOrder, orderItems);
+      }
+
+      toast({ 
+        title: approved ? 'Pago Verificado' : 'Pago Rechazado', 
+        description: approved 
+          ? 'El pago ha sido verificado y el pedido está listo para procesar' 
+          : 'El pago ha sido rechazado. El cliente deberá enviar otro comprobante.'
+      });
+
+      setIsDetailOpen(false);
+      fetchOrders();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Error desconocido';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    } finally {
+      setVerifyingPayment(false);
+    }
   }
 
   async function updateOrderStatus() {
@@ -359,6 +448,7 @@ export default function AdminOrders() {
     const s = ORDER_STATUSES.find(st => st.value === status);
     const colors = {
       'pending': 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
+      'payment_pending': 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20',
       'paid': 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
       'processing': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
       'packed': 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
@@ -370,6 +460,20 @@ export default function AdminOrders() {
     return (
       <Badge variant="outline" className={`${colors[status as keyof typeof colors] || 'bg-muted'} font-semibold border`}>
         {s?.label || status}
+      </Badge>
+    );
+  };
+
+  const getPaymentStatusBadge = (status: string) => {
+    const config: Record<string, { label: string; color: string }> = {
+      'pending': { label: 'Pendiente de Verificación', color: 'bg-orange-500/10 text-orange-600 border-orange-500/20' },
+      'verified': { label: 'Verificado', color: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20' },
+      'rejected': { label: 'Rechazado', color: 'bg-red-500/10 text-red-600 border-red-500/20' },
+    };
+    const c = config[status] || { label: status, color: 'bg-muted' };
+    return (
+      <Badge variant="outline" className={`${c.color} font-semibold border`}>
+        {c.label}
       </Badge>
     );
   };
@@ -690,6 +794,119 @@ export default function AdminOrders() {
                 </div>
               </div>
 
+              {/* Payment Verification Section */}
+              {orderPayments.length > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="font-medium mb-3 flex items-center gap-2">
+                    <CreditCard className="h-4 w-4" />
+                    Comprobantes de Pago
+                  </h4>
+                  <div className="space-y-4">
+                    {orderPayments.map((payment) => (
+                      <div key={payment.id} className="p-4 border rounded-lg bg-muted/30 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-3">
+                            {getPaymentStatusBadge(payment.status)}
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(payment.created_at).toLocaleString('es-DO', {
+                                day: 'numeric',
+                                month: 'short',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                          <span className="font-bold">
+                            RD${payment.amount.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
+
+                        <div className="grid gap-2 text-sm">
+                          {payment.reference_number && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Referencia:</span>
+                              <span className="font-mono">{payment.reference_number}</span>
+                            </div>
+                          )}
+                          {payment.notes && (
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Notas:</span>
+                              <span>{payment.notes}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Proof Image */}
+                        {payment.proof_url && (
+                          <div className="space-y-2">
+                            <p className="text-xs font-semibold text-muted-foreground uppercase">Comprobante adjunto</p>
+                            <div className="relative group">
+                              <img 
+                                src={payment.proof_url} 
+                                alt="Comprobante de pago"
+                                className="w-full max-h-60 object-contain rounded-lg border bg-white cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => setSelectedProofUrl(payment.proof_url)}
+                              />
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => window.open(payment.proof_url!, '_blank')}
+                              >
+                                <ExternalLink className="h-4 w-4 mr-1" />
+                                Ver original
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Verification Actions */}
+                        {payment.status === 'pending' && (
+                          <div className="flex flex-wrap gap-2 pt-2 border-t">
+                            <Button
+                              size="sm"
+                              className="flex-1 bg-emerald-600 hover:bg-emerald-700"
+                              onClick={() => verifyPayment(payment, true)}
+                              disabled={verifyingPayment}
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Aprobar Pago
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="destructive"
+                              className="flex-1"
+                              onClick={() => verifyPayment(payment, false)}
+                              disabled={verifyingPayment}
+                            >
+                              <XCircle className="h-4 w-4 mr-2" />
+                              Rechazar Pago
+                            </Button>
+                          </div>
+                        )}
+
+                        {payment.verified_at && (
+                          <div className="text-xs text-muted-foreground pt-2 border-t">
+                            Verificado el {new Date(payment.verified_at).toLocaleString('es-DO')}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* No payments message */}
+              {orderPayments.length === 0 && selectedOrder.status === 'pending' && (
+                <div className="p-4 border rounded-lg bg-muted/30 flex items-center gap-3">
+                  <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  <div>
+                    <p className="font-medium">Sin comprobante de pago</p>
+                    <p className="text-sm text-muted-foreground">El cliente aún no ha enviado el comprobante de transferencia</p>
+                  </div>
+                </div>
+              )}
+
               {/* Shipping Address */}
               {selectedOrder.shipping_address && (
                 <div>
@@ -740,6 +957,28 @@ export default function AdminOrders() {
               {updating ? 'Actualizando...' : 'Actualizar Estado'}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Proof Image Full View Dialog */}
+      <Dialog open={!!selectedProofUrl} onOpenChange={() => setSelectedProofUrl(null)}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Comprobante de Pago</DialogTitle>
+          </DialogHeader>
+          {selectedProofUrl && (
+            <div className="flex flex-col items-center gap-4">
+              <img 
+                src={selectedProofUrl} 
+                alt="Comprobante de pago"
+                className="max-h-[70vh] object-contain rounded-lg"
+              />
+              <Button onClick={() => window.open(selectedProofUrl, '_blank')}>
+                <ExternalLink className="h-4 w-4 mr-2" />
+                Abrir en nueva pestaña
+              </Button>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </Layout>
