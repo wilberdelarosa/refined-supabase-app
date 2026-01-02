@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Sensitive Supabase documentation (contains credentials)
+docs/supabase/
+
