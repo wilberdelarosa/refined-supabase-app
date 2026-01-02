@@ -517,8 +517,15 @@ export default function OrderConfirmation() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Estado:</span>
-                    <Badge variant={existingPayment?.status === 'verified' ? 'default' : 'secondary'}>
-                      {existingPayment?.status === 'verified' ? 'Verificado' : 'Pendiente de verificación'}
+                    <Badge 
+                      variant={existingPayment?.status === 'verified' ? 'default' : existingPayment?.status === 'rejected' ? 'destructive' : 'secondary'}
+                      className={existingPayment?.status === 'verified' ? 'bg-emerald-500' : existingPayment?.status === 'rejected' ? '' : 'bg-orange-500'}
+                    >
+                      {existingPayment?.status === 'verified' 
+                        ? '✓ Verificado' 
+                        : existingPayment?.status === 'rejected'
+                        ? '✗ Rechazado'
+                        : '⏳ Pendiente de verificación'}
                     </Badge>
                   </div>
                   
@@ -551,11 +558,36 @@ export default function OrderConfirmation() {
                     </div>
                   )}
 
-                  <div className="pt-4 p-4 bg-muted/50 rounded-lg">
-                    <p className="text-sm">
-                      <strong>Próximos pasos:</strong> Verificaremos tu pago y te notificaremos por correo cuando tu pedido esté siendo preparado.
-                    </p>
-                  </div>
+                  {/* Status-specific messages */}
+                  {existingPayment?.status === 'pending' && (
+                    <div className="pt-4 p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
+                      <p className="text-sm">
+                        <strong className="text-orange-600 dark:text-orange-400">⏳ En verificación</strong>
+                        <br />
+                        Estamos revisando tu comprobante. Te notificaremos por correo cuando sea verificado.
+                      </p>
+                    </div>
+                  )}
+
+                  {existingPayment?.status === 'verified' && (
+                    <div className="pt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                      <p className="text-sm">
+                        <strong className="text-emerald-600 dark:text-emerald-400">✓ Pago confirmado</strong>
+                        <br />
+                        Tu pago ha sido verificado. Pronto comenzaremos a preparar tu pedido.
+                      </p>
+                    </div>
+                  )}
+
+                  {existingPayment?.status === 'rejected' && (
+                    <div className="pt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                      <p className="text-sm">
+                        <strong className="text-red-600 dark:text-red-400">✗ Pago rechazado</strong>
+                        <br />
+                        El comprobante enviado no pudo ser verificado. Por favor, envía un nuevo comprobante o contáctanos para más información.
+                      </p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             )}
