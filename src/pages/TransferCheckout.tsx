@@ -167,14 +167,14 @@ export default function TransferCheckout() {
         if (res.error) console.error('Email error:', res.error);
       });
 
-      // Clear cart and redirect
+      // Clear cart and redirect to order confirmation
       clearCart();
       
       toast.success('¡Pedido creado exitosamente!', {
-        description: 'Te enviaremos un correo con los detalles'
+        description: 'Ahora puedes adjuntar tu comprobante de pago'
       });
 
-      navigate('/orders');
+      navigate(`/order/${order.id}`);
     } catch (error) {
       console.error('Error creating order:', error);
       toast.error('Error al crear el pedido', {

@@ -46,11 +46,18 @@ const statusConfig: Record<string, {
   borderColor: string;
 }> = {
   pending: { 
-    label: 'Pendiente', 
+    label: 'Pendiente de Pago', 
     icon: <Clock className="h-3.5 w-3.5" />, 
     color: 'text-amber-600 dark:text-amber-400',
     bgColor: 'bg-amber-50 dark:bg-amber-950/30',
     borderColor: 'border-amber-200 dark:border-amber-800'
+  },
+  payment_pending: { 
+    label: 'Verificando Pago', 
+    icon: <Clock className="h-3.5 w-3.5" />, 
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+    borderColor: 'border-orange-200 dark:border-orange-800'
   },
   paid: { 
     label: 'Pagado', 
@@ -65,6 +72,13 @@ const statusConfig: Record<string, {
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-50 dark:bg-blue-950/30',
     borderColor: 'border-blue-200 dark:border-blue-800'
+  },
+  packed: { 
+    label: 'Empacado', 
+    icon: <Package className="h-3.5 w-3.5" />, 
+    color: 'text-purple-600 dark:text-purple-400',
+    bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+    borderColor: 'border-purple-200 dark:border-purple-800'
   },
   shipped: { 
     label: 'Enviado', 
@@ -86,6 +100,13 @@ const statusConfig: Record<string, {
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-50 dark:bg-red-950/30',
     borderColor: 'border-red-200 dark:border-red-800'
+  },
+  refunded: { 
+    label: 'Reembolsado', 
+    icon: <XCircle className="h-3.5 w-3.5" />, 
+    color: 'text-orange-600 dark:text-orange-400',
+    bgColor: 'bg-orange-50 dark:bg-orange-950/30',
+    borderColor: 'border-orange-200 dark:border-orange-800'
   },
 };
 
@@ -182,7 +203,8 @@ function OrderCard({
   });
   const orderNumber = order.id.slice(0, 8).toUpperCase();
   const itemCount = order.order_items.reduce((acc, item) => acc + item.quantity, 0);
-  const canViewInvoice = order.status === 'paid' || order.status === 'delivered';
+  const canViewInvoice = order.status === 'paid' || order.status === 'delivered' || order.status === 'processing' || order.status === 'shipped';
+  const canViewOrder = order.status === 'pending' || order.status === 'payment_pending';
 
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-foreground/5 hover:border-foreground/20">
@@ -286,18 +308,34 @@ function OrderCard({
         )}
         
         {/* Actions */}
-        {canViewInvoice && (
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="w-full sm:w-auto gap-2 group/btn"
-            onClick={() => onViewInvoice(order.id)}
-          >
-            <FileText className="h-4 w-4" />
-            <span>Ver Factura</span>
-            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover/btn:translate-x-0.5" />
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {canViewOrder && (
+            <Button 
+              variant="default" 
+              size="sm" 
+              className="w-full sm:w-auto gap-2 group/btn"
+              asChild
+            >
+              <Link to={`/order/${order.id}`}>
+                <Package className="h-4 w-4" />
+                <span>Ver Pedido</span>
+                <ChevronRight className="h-3.5 w-3.5 text-primary-foreground/70 transition-transform group-hover/btn:translate-x-0.5" />
+              </Link>
+            </Button>
+          )}
+          {canViewInvoice && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="w-full sm:w-auto gap-2 group/btn"
+              onClick={() => onViewInvoice(order.id)}
+            >
+              <FileText className="h-4 w-4" />
+              <span>Ver Factura</span>
+              <ChevronRight className="h-3.5 w-3.5 text-muted-foreground transition-transform group-hover/btn:translate-x-0.5" />
+            </Button>
+          )}
+        </div>
       </div>
     </Card>
   );

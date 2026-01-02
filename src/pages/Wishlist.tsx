@@ -47,7 +47,7 @@ export default function Wishlist() {
 
   const handleAddToCart = (item: typeof items[0]) => {
     addToCart({
-      id: item.product_id,
+      id: item.shopify_product_id,
       name: item.product_name,
       price: item.product_price || 0,
       category: '',
@@ -95,7 +95,7 @@ export default function Wishlist() {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {items.map((item) => (
                 <Card key={item.id} className="overflow-hidden group">
-                  <Link to={`/product/${item.product_id}`}>
+                <Link to={`/product/${item.shopify_product_id}`}>
                     <div className="aspect-square bg-white overflow-hidden rounded-lg">
                       {item.product_image_url ? (
                         <img
@@ -111,7 +111,7 @@ export default function Wishlist() {
                     </div>
                   </Link>
                   <CardContent className="p-4">
-                    <Link to={`/product/${item.product_id}`}>
+                    <Link to={`/product/${item.shopify_product_id}`}>
                       <h3 className="font-medium line-clamp-2 hover:text-primary transition-colors">
                         {item.product_name}
                       </h3>
@@ -133,7 +133,7 @@ export default function Wishlist() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => removeFromWishlist(item.product_id)}
+                        onClick={() => removeFromWishlist(item.shopify_product_id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
