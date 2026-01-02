@@ -11,12 +11,12 @@ import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/lib/auth-context';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { 
-  CheckCircle, 
-  Upload, 
-  ArrowLeft, 
-  Clock, 
-  CreditCard, 
+import {
+  CheckCircle,
+  Upload,
+  ArrowLeft,
+  Clock,
+  CreditCard,
   Package,
   Copy,
   Check,
@@ -74,7 +74,7 @@ export default function OrderConfirmation() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
+
   const [order, setOrder] = useState<Order | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +103,7 @@ export default function OrderConfirmation() {
       .select('*')
       .eq('is_active', true)
       .order('display_order', { ascending: true });
-    
+
     if (data) setPaymentMethods(data);
   }
 
@@ -176,7 +176,7 @@ export default function OrderConfirmation() {
       // Upload proof image
       const fileExt = proofFile.name.split('.').pop();
       const fileName = `${order.id}-${Date.now()}.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from('order-proofs')
         .upload(fileName, proofFile);
@@ -275,7 +275,7 @@ export default function OrderConfirmation() {
               Mis Pedidos
             </Link>
           </Button>
-          
+
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -285,7 +285,7 @@ export default function OrderConfirmation() {
                 </h1>
               </div>
               <p className="text-muted-foreground">
-                Pedido #{order.id.slice(0, 8).toUpperCase()} • Creado el {new Date(order.created_at).toLocaleDateString('es-DO', { 
+                Pedido #{order.id.slice(0, 8).toUpperCase()} • Creado el {new Date(order.created_at).toLocaleDateString('es-DO', {
                   day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
                 })}
               </p>
@@ -317,9 +317,9 @@ export default function OrderConfirmation() {
                     </p>
                   </div>
                 ))}
-                
+
                 <Separator className="my-4" />
-                
+
                 <div className="space-y-2">
                   {order.subtotal && (
                     <div className="flex justify-between text-sm">
@@ -413,10 +413,9 @@ export default function OrderConfirmation() {
                 </CardHeader>
                 <CardContent className="space-y-6">
                   {/* File Upload Area */}
-                  <div 
-                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer hover:border-primary hover:bg-primary/5 ${
-                      proofPreview ? 'border-primary bg-primary/5' : 'border-muted-foreground/30'
-                    }`}
+                  <div
+                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer hover:border-primary hover:bg-primary/5 ${proofPreview ? 'border-primary bg-primary/5' : 'border-muted-foreground/30'
+                      }`}
                     onClick={() => fileInputRef.current?.click()}
                   >
                     <input
@@ -426,13 +425,13 @@ export default function OrderConfirmation() {
                       className="hidden"
                       onChange={handleFileChange}
                     />
-                    
+
                     {proofPreview ? (
                       <div className="space-y-4">
                         <div className="relative inline-block">
-                          <img 
-                            src={proofPreview} 
-                            alt="Comprobante" 
+                          <img
+                            src={proofPreview}
+                            alt="Comprobante"
                             className="max-h-48 mx-auto rounded-lg shadow-md"
                           />
                           <Button
@@ -483,8 +482,8 @@ export default function OrderConfirmation() {
                   </div>
 
                   {/* Submit Button */}
-                  <Button 
-                    className="w-full" 
+                  <Button
+                    className="w-full"
                     size="lg"
                     onClick={handleSubmitProof}
                     disabled={!proofFile || uploading}
@@ -517,18 +516,18 @@ export default function OrderConfirmation() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-muted-foreground">Estado:</span>
-                    <Badge 
+                    <Badge
                       variant={existingPayment?.status === 'verified' ? 'default' : existingPayment?.status === 'rejected' ? 'destructive' : 'secondary'}
                       className={existingPayment?.status === 'verified' ? 'bg-emerald-500' : existingPayment?.status === 'rejected' ? '' : 'bg-orange-500'}
                     >
-                      {existingPayment?.status === 'verified' 
-                        ? '✓ Verificado' 
+                      {existingPayment?.status === 'verified'
+                        ? '✓ Verificado'
                         : existingPayment?.status === 'rejected'
-                        ? '✗ Rechazado'
-                        : '⏳ Pendiente de verificación'}
+                          ? '✗ Rechazado'
+                          : '⏳ Pendiente de verificación'}
                     </Badge>
                   </div>
-                  
+
                   {existingPayment?.reference_number && (
                     <div className="flex items-center justify-between">
                       <span className="text-muted-foreground">Referencia:</span>
@@ -539,16 +538,33 @@ export default function OrderConfirmation() {
                   {existingPayment?.proof_url && (
                     <div className="pt-4">
                       <p className="text-sm text-muted-foreground mb-2">Comprobante enviado:</p>
-                      <div className="relative">
-                        <img 
-                          src={existingPayment.proof_url} 
-                          alt="Comprobante" 
-                          className="w-full max-h-64 object-contain rounded-lg border"
+                      <div className="relative bg-muted/30 rounded-lg overflow-hidden">
+                        <img
+                          src={existingPayment.proof_url}
+                          alt="Comprobante de transferencia"
+                          className="w-full max-h-64 object-contain rounded-lg"
+                          loading="lazy"
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const parent = target.parentElement;
+                            if (parent) {
+                              parent.innerHTML = `
+                                <div class="flex flex-col items-center justify-center p-8 text-muted-foreground">
+                                  <svg class="h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                  </svg>
+                                  <p class="text-sm">Error al cargar imagen</p>
+                                  <a href="${existingPayment.proof_url}" target="_blank" class="text-xs text-primary underline mt-2">Ver en nueva pestaña</a>
+                                </div>
+                              `;
+                            }
+                          }}
                         />
                         <Button
                           size="sm"
                           variant="secondary"
-                          className="absolute top-2 right-2"
+                          className="absolute top-2 right-2 shadow-lg"
                           onClick={() => window.open(existingPayment.proof_url!, '_blank')}
                         >
                           <Eye className="h-4 w-4 mr-1" />

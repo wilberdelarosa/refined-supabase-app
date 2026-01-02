@@ -29,7 +29,7 @@ export default function Auth() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const result = authSchema.safeParse({ email, password, fullName });
     if (!result.success) {
       toast({ title: 'Error', description: result.error.errors[0].message, variant: 'destructive' });
@@ -37,10 +37,10 @@ export default function Auth() {
     }
 
     setLoading(true);
-    const { error } = isLogin 
+    const { error } = isLogin
       ? await signIn(email, password)
       : await signUp(email, password, fullName);
-    
+
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else if (!isLogin) {
@@ -55,7 +55,7 @@ export default function Auth() {
         <div className="text-center mb-8">
           <h1 className="font-display text-3xl font-bold">{isLogin ? 'Iniciar Sesión' : 'Crear Cuenta'}</h1>
           <p className="text-muted-foreground mt-2">
-            {isLogin ? 'Accede a tu cuenta TRIBE' : 'Únete a la comunidad TRIBE'}
+            {isLogin ? 'Accede a tu cuenta TRIBU' : 'Únete a la comunidad TRIBU'}
           </p>
         </div>
 

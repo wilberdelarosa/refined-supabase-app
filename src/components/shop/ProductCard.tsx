@@ -85,18 +85,18 @@ export function ProductCard({ product }: ProductCardProps) {
           </Button>
         </div>
 
-        <CardContent className="p-4 space-y-3">
+        <CardContent className="p-3 sm:p-4 space-y-2 sm:space-y-3">
           <Badge variant="secondary" className="text-xs font-medium">{product.category}</Badge>
-          <h3 className="font-semibold text-sm line-clamp-2 min-h-[2.5rem] text-foreground">
+          <h3 className="font-semibold text-xs sm:text-sm line-clamp-2 min-h-[2.5rem] text-foreground">
             {product.name}
           </h3>
 
           <div className="flex items-baseline gap-2">
-            <p className="text-lg font-bold text-foreground">
+            <p className="text-base sm:text-lg font-bold text-foreground">
               RD${product.price.toLocaleString('es-DO', { minimumFractionDigits: 0 })}
             </p>
             {hasDiscount && (
-              <p className="text-sm text-muted-foreground line-through">
+              <p className="text-xs sm:text-sm text-muted-foreground line-through">
                 RD${product.original_price!.toLocaleString('es-DO', { minimumFractionDigits: 0 })}
               </p>
             )}
@@ -105,11 +105,12 @@ export function ProductCard({ product }: ProductCardProps) {
           <Button
             onClick={handleAddToCart}
             disabled={!isAvailable}
-            className="w-full transition-all duration-200"
+            className="w-full transition-all duration-200 text-xs sm:text-sm"
             size="sm"
           >
-            <ShoppingCart className="h-4 w-4 mr-2" />
-            {isAvailable ? 'Agregar al Carrito' : 'Agotado'}
+            <ShoppingCart className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">{isAvailable ? 'Agregar al Carrito' : 'Agotado'}</span>
+            <span className="sm:hidden">{isAvailable ? 'Agregar' : 'Agotado'}</span>
           </Button>
         </CardContent>
       </Card>

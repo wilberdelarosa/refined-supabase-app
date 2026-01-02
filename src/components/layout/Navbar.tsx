@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Menu, Settings } from 'lucide-react';
+import { User, Menu, Settings, LogOut, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -60,30 +60,68 @@ export function Navbar() {
                   <User className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 shadow-premium">
-                <DropdownMenuItem asChild>
-                  <Link to="/account" className="cursor-pointer font-medium">Mi Cuenta</Link>
+              <DropdownMenuContent align="end" className="w-64 p-2 shadow-xl border-border/50">
+                {/* User Info Header */}
+                <div className="px-3 py-3 mb-1 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center ring-2 ring-primary/20">
+                      <User className="h-5 w-5 text-primary-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">Mi perfil</p>
+                    </div>
+                  </div>
+                </div>
+
+                <DropdownMenuSeparator className="my-2" />
+
+                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2.5 my-0.5">
+                  <Link to="/account" className="flex items-center gap-3 font-medium">
+                    <div className="h-8 w-8 rounded-md bg-blue-500/10 flex items-center justify-center">
+                      <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <span>Mi Cuenta</span>
+                  </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/orders" className="cursor-pointer font-medium">Mis Pedidos</Link>
+
+                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2.5 my-0.5">
+                  <Link to="/orders" className="flex items-center gap-3 font-medium">
+                    <div className="h-8 w-8 rounded-md bg-green-500/10 flex items-center justify-center">
+                      <ShoppingBag className="h-4 w-4 text-green-600 dark:text-green-400" />
+                    </div>
+                    <span>Mis Pedidos</span>
+                  </Link>
                 </DropdownMenuItem>
+
                 {canManageOrders && (
                   <>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer flex items-center gap-2 font-bold text-purple-600 dark:text-purple-400">
-                        <Settings className="h-4 w-4" />
-                        Panel Admin
+                    <DropdownMenuSeparator className="my-2" />
+                    <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2.5 my-0.5">
+                      <Link to="/admin" className="flex items-center gap-3 font-semibold">
+                        <div className="h-8 w-8 rounded-md bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center ring-1 ring-purple-500/30">
+                          <Settings className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
+                          Panel Admin
+                        </span>
                       </Link>
                     </DropdownMenuItem>
                   </>
                 )}
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
+
+                <DropdownMenuSeparator className="my-2" />
+
+                <DropdownMenuItem
                   onClick={() => signOut()}
-                  className="cursor-pointer font-medium text-destructive"
+                  className="cursor-pointer rounded-md px-3 py-2.5 my-0.5 focus:bg-destructive/10 focus:text-destructive"
                 >
-                  Cerrar Sesión
+                  <div className="flex items-center gap-3 font-medium">
+                    <div className="h-8 w-8 rounded-md bg-destructive/10 flex items-center justify-center">
+                      <LogOut className="h-4 w-4 text-destructive" />
+                    </div>
+                    <span className="text-destructive">Cerrar Sesión</span>
+                  </div>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
