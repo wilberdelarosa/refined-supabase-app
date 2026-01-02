@@ -179,18 +179,37 @@ export default function AdminProducts() {
 
   function openCreateDialog() {
     setEditingProduct(null);
-    setFormData({
-      name: '',
-      description: '',
-      price: '',
-      original_price: '',
-      category: categories[0]?.name || '',
-      stock: '0',
-      featured: false,
-      image_url: '',
-    });
-    setImageFile(null);
-    setIsDialogOpen(true);
+    
+    // If no categories loaded yet, fetch them first
+    if (categories.length === 0) {
+      fetchCategories().then(() => {
+        setFormData({
+          name: '',
+          description: '',
+          price: '',
+          original_price: '',
+          category: '',
+          stock: '0',
+          featured: false,
+          image_url: '',
+        });
+        setImageFile(null);
+        setIsDialogOpen(true);
+      });
+    } else {
+      setFormData({
+        name: '',
+        description: '',
+        price: '',
+        original_price: '',
+        category: categories[0]?.name || '',
+        stock: '0',
+        featured: false,
+        image_url: '',
+      });
+      setImageFile(null);
+      setIsDialogOpen(true);
+    }
   }
 
   function openEditDialog(product: Product) {
@@ -709,6 +728,7 @@ export default function AdminProducts() {
           productId={nutritionProduct.id}
           productName={nutritionProduct.name}
           productCategory={nutritionProduct.category}
+          productDescription={nutritionProduct.description || undefined}
           onSaved={() => { }}
         />
       )}
