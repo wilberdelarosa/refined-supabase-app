@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import {
   Select,
@@ -34,6 +34,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { MobileCard, MobileCardHeader, MobileCardRow, MobileCardActions } from '@/components/ui/mobile-card';
 import {
   Search,
   ArrowLeft,
@@ -136,12 +137,12 @@ export default function AdminOrders() {
   const { user, loading: authLoading } = useAuth();
   const { canManageOrders, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
-  
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  
+
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [orderItems, setOrderItems] = useState<OrderItem[]>([]);
   const [orderPayments, setOrderPayments] = useState<OrderPayment[]>([]);
@@ -170,13 +171,13 @@ export default function AdminOrders() {
 
   async function fetchOrders() {
     setLoading(true);
-    
+
     // Fetch orders first
     const { data: ordersData, error } = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
-    
+
     if (error) {
       toast({ title: 'Error', description: 'No se pudieron cargar los pedidos', variant: 'destructive' });
       setLoading(false);
@@ -209,7 +210,7 @@ export default function AdminOrders() {
     setInvoice(null);
     setOrderPayments([]);
     setInvoiceLoading(true);
-    
+
     const [{ data: items }, { data: invoiceData }, { data: profileData }, { data: paymentsData }] = await Promise.all([
       supabase
         .from('order_items')
@@ -231,7 +232,7 @@ export default function AdminOrders() {
         .eq('order_id', order.id)
         .order('created_at', { ascending: false })
     ]);
-    
+
     setOrderItems(items || []);
     setUserProfile(profileData || null);
     setInvoice(invoiceData || null);
@@ -242,11 +243,11 @@ export default function AdminOrders() {
 
   async function verifyPayment(payment: OrderPayment, approved: boolean) {
     if (!selectedOrder) return;
-    
+
     setVerifyingPayment(true);
     try {
       const newPaymentStatus = approved ? 'verified' : 'rejected';
-      
+
       // Update payment record
       const { error: paymentError } = await supabase
         .from('order_payments')
@@ -282,10 +283,10 @@ export default function AdminOrders() {
         await createInvoiceForOrder(selectedOrder, orderItems);
       }
 
-      toast({ 
-        title: approved ? 'Pago Verificado' : 'Pago Rechazado', 
-        description: approved 
-          ? 'El pago ha sido verificado y el pedido está listo para procesar' 
+      toast({
+        title: approved ? 'Pago Verificado' : 'Pago Rechazado',
+        description: approved
+          ? 'El pago ha sido verificado y el pedido está listo para procesar'
           : 'El pago ha sido rechazado. El cliente deberá enviar otro comprobante.'
       });
 
@@ -301,14 +302,14 @@ export default function AdminOrders() {
 
   async function updateOrderStatus() {
     if (!selectedOrder || newStatus === selectedOrder.status) return;
-    
+
     setUpdating(true);
     try {
       const { error } = await supabase
         .from('orders')
         .update({ status: newStatus })
         .eq('id', selectedOrder.id);
-      
+
       if (error) throw error;
 
       // Log audit
@@ -329,7 +330,7 @@ export default function AdminOrders() {
       const addressLines = selectedOrder.shipping_address?.split('\n') || [];
       const emailLine = addressLines.find(line => line.includes('@')) || '';
       const customerName = addressLines[0] || 'Cliente';
-      
+
       if (emailLine) {
         supabase.functions.invoke('send-order-email', {
           body: {
@@ -365,19 +366,33 @@ export default function AdminOrders() {
 
   async function createInvoiceForOrder(order: Order, items: OrderItem[]): Promise<Invoice | null> {
     try {
-      const { data: existing } = await supabase
+      console.log('Iniciando creación de factura para pedido:', order.id);
+
+      // Verificar si ya existe factura
+      const { data: existing, error: existingError } = await supabase
         .from('invoices')
         .select('*')
         .eq('order_id', order.id)
         .maybeSingle();
 
+      if (existingError) {
+        console.error('Error verificando factura existente:', existingError);
+      }
+
       if (existing) {
+        console.log('Factura existente encontrada:', existing.invoice_number);
         setInvoice(existing);
+        toast({ title: 'Factura existente', description: `Factura ${existing.invoice_number} ya existe` });
         return existing;
       }
 
-      const { data: invoiceNumber } = await supabase.rpc('generate_invoice_number');
-      
+      console.log('Generando número de factura...');
+      const { data: invoiceNumber, error: rpcError } = await supabase.rpc('generate_invoice_number');
+
+      if (rpcError) {
+        console.error('Error generando número de factura:', rpcError);
+      }
+
       const addressLines = order.shipping_address?.split('\n') || [];
       const billingName = addressLines[0] || 'Cliente';
       const billingAddress = addressLines.slice(1, 4).join(', ');
@@ -386,24 +401,33 @@ export default function AdminOrders() {
       const taxRate = 0.18;
       const taxAmount = order.total - subtotal;
 
+      const invoiceData = {
+        invoice_number: invoiceNumber || `INV-${Date.now()}`,
+        order_id: order.id,
+        user_id: order.user_id,
+        subtotal: Math.round(subtotal * 100) / 100,
+        tax_rate: taxRate,
+        tax_amount: Math.round(taxAmount * 100) / 100,
+        total: order.total,
+        status: 'issued',
+        billing_name: billingName,
+        billing_address: billingAddress
+      };
+
+      console.log('Insertando factura con datos:', invoiceData);
+
       const { data: invoice, error: invoiceError } = await supabase
         .from('invoices')
-        .insert({
-          invoice_number: invoiceNumber || `INV-${Date.now()}`,
-          order_id: order.id,
-          user_id: order.user_id,
-          subtotal: Math.round(subtotal * 100) / 100,
-          tax_rate: taxRate,
-          tax_amount: Math.round(taxAmount * 100) / 100,
-          total: order.total,
-          status: 'issued',
-          billing_name: billingName,
-          billing_address: billingAddress
-        })
+        .insert(invoiceData)
         .select()
         .single();
 
-      if (invoiceError) throw invoiceError;
+      if (invoiceError) {
+        console.error('Error insertando factura:', invoiceError);
+        throw invoiceError;
+      }
+
+      console.log('Factura creada exitosamente:', invoice);
 
       const invoiceLines = items.map(item => ({
         invoice_id: invoice.id,
@@ -413,18 +437,32 @@ export default function AdminOrders() {
         total: item.price * item.quantity
       }));
 
+      console.log('Insertando líneas de factura:', invoiceLines.length, 'items');
+
       const { error: linesError } = await supabase
         .from('invoice_lines')
         .insert(invoiceLines);
 
-      if (linesError) throw linesError;
+      if (linesError) {
+        console.error('Error insertando líneas de factura:', linesError);
+        throw linesError;
+      }
 
+      console.log('Líneas de factura creadas exitosamente');
       setInvoice(invoice);
-      toast({ title: 'Factura creada', description: `Factura ${invoice.invoice_number} generada automáticamente` });
+      toast({
+        title: '✅ Factura creada',
+        description: `Factura ${invoice.invoice_number} generada correctamente`
+      });
       return invoice as Invoice;
     } catch (error) {
       console.error('Error creating invoice:', error);
-      toast({ title: 'Advertencia', description: 'No se pudo crear la factura automáticamente', variant: 'destructive' });
+      const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+      toast({
+        title: '❌ Error al crear factura',
+        description: errorMessage,
+        variant: 'destructive'
+      });
       return null;
     }
   }
@@ -569,7 +607,7 @@ export default function AdminOrders() {
                             <div>
                               <p className="font-semibold text-lg mb-1">No hay pedidos</p>
                               <p className="text-muted-foreground text-sm">
-                                {search || filterStatus !== 'all' 
+                                {search || filterStatus !== 'all'
                                   ? 'No se encontraron resultados con los filtros actuales'
                                   : 'Aún no hay pedidos registrados'}
                               </p>
@@ -579,8 +617,8 @@ export default function AdminOrders() {
                       </TableRow>
                     ) : (
                       filteredOrders.map((order, index) => (
-                        <TableRow 
-                          key={order.id} 
+                        <TableRow
+                          key={order.id}
                           className="hover:bg-muted/30 transition-colors animate-fade-in group"
                           style={{ animationDelay: `${index * 0.05}s` }}
                         >
@@ -633,8 +671,8 @@ export default function AdminOrders() {
                             </span>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Button 
-                              variant="ghost" 
+                            <Button
+                              variant="ghost"
                               size="icon"
                               onClick={() => openOrderDetail(order)}
                               className="hover-lift hover:bg-foreground/10"
@@ -766,7 +804,7 @@ export default function AdminOrders() {
                         </>
                       ) : (
                         <Button onClick={handleGenerateInvoice} size="sm" disabled={creatingInvoice || invoiceLoading || orderItems.length === 0}>
-                          {creatingInvoice ? 'Generando...' : 'Generar factura' }
+                          {creatingInvoice ? 'Generando...' : 'Generar factura'}
                         </Button>
                       )}
                     </div>
@@ -841,8 +879,8 @@ export default function AdminOrders() {
                           <div className="space-y-2">
                             <p className="text-xs font-semibold text-muted-foreground uppercase">Comprobante adjunto</p>
                             <div className="relative group">
-                              <img 
-                                src={payment.proof_url} 
+                              <img
+                                src={payment.proof_url}
                                 alt="Comprobante de pago"
                                 className="w-full max-h-60 object-contain rounded-lg border bg-white cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => setSelectedProofUrl(payment.proof_url)}
@@ -950,8 +988,8 @@ export default function AdminOrders() {
             <Button variant="outline" onClick={() => setIsDetailOpen(false)}>
               Cerrar
             </Button>
-            <Button 
-              onClick={updateOrderStatus} 
+            <Button
+              onClick={updateOrderStatus}
               disabled={updating || newStatus === selectedOrder?.status}
             >
               {updating ? 'Actualizando...' : 'Actualizar Estado'}
@@ -968,8 +1006,8 @@ export default function AdminOrders() {
           </DialogHeader>
           {selectedProofUrl && (
             <div className="flex flex-col items-center gap-4">
-              <img 
-                src={selectedProofUrl} 
+              <img
+                src={selectedProofUrl}
                 alt="Comprobante de pago"
                 className="max-h-[70vh] object-contain rounded-lg"
               />
