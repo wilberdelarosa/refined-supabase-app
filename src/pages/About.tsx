@@ -85,14 +85,14 @@ const About = () => {
 
             {/* Image */}
             <div className="relative lg:order-last">
-              <div className="relative rounded-2xl overflow-hidden shadow-2xl aspect-[4/5] lg:aspect-[3/4]">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl">
                 <img
                   src={entrenamientoImg}
                   alt="Entrenamiento Barbaro Nutrition"
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain"
                 />
                 {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
               </div>
               {/* Decorative elements */}
               <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10" />
