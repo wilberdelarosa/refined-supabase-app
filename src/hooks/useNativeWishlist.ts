@@ -7,7 +7,7 @@ import { Product } from '@/types/product';
 export interface WishlistItem {
   id: string;
   user_id: string;
-  product_id: string;
+  shopify_product_id: string;
   product_name: string;
   product_price: number | null;
   product_image_url: string | null;
@@ -39,7 +39,7 @@ export function useNativeWishlist() {
       const mappedItems: WishlistItem[] = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
-        product_id: item.product_id,
+        shopify_product_id: item.shopify_product_id,
         product_name: item.product_title,
         product_price: item.product_price ? parseFloat(item.product_price) : null,
         product_image_url: item.product_image_url,
@@ -69,7 +69,7 @@ export function useNativeWishlist() {
         .from('wishlist')
         .insert({
           user_id: user.id,
-          product_id: product.id,
+          shopify_product_id: product.id,
           product_handle: product.id,
           product_title: product.name,
           product_image_url: product.image_url,
@@ -92,7 +92,7 @@ export function useNativeWishlist() {
     }
   };
 
-  const removeFromWishlist = async (productId: string) => {
+  const removeFromWishlist = async (shopifyProductId: string) => {
     if (!user) return;
 
     try {
@@ -100,7 +100,7 @@ export function useNativeWishlist() {
         .from('wishlist')
         .delete()
         .eq('user_id', user.id)
-        .eq('product_id', productId);
+        .eq('shopify_product_id', shopifyProductId);
 
       if (error) throw error;
 
@@ -113,7 +113,7 @@ export function useNativeWishlist() {
   };
 
   const isInWishlist = (productId: string) => {
-    return items.some(item => item.product_id === productId);
+    return items.some(item => item.shopify_product_id === productId);
   };
 
   const toggleWishlist = async (product: Product) => {
