@@ -194,11 +194,13 @@ export default function AdminInvoices() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  Ver Detalle
+                                <DropdownMenuItem asChild>
+                                  <Link to={`/orders/invoice/${invoice.id}`}>
+                                    <Eye className="h-4 w-4 mr-2" />
+                                    Ver Detalle
+                                  </Link>
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => window.open(`/orders/invoice/${invoice.id}`, '_blank')}>
                                   <Download className="h-4 w-4 mr-2" />
                                   Descargar PDF
                                 </DropdownMenuItem>
