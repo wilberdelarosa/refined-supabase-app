@@ -2,3 +2,6 @@ project_id = "xuhvlomytegdbifziilf"
 
 [functions.send-order-email]
 verify_jwt = false
+
+[functions.ai-nutrition]
+verify_jwt = true

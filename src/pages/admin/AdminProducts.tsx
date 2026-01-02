@@ -41,9 +41,11 @@ import {
   Trash2, 
   Search, 
   ArrowLeft,
-  Package
+  Package,
+  Beaker
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import ProductNutritionDialog from '@/components/admin/ProductNutritionDialog';
 
 interface Product {
   id: string;
@@ -96,6 +98,8 @@ export default function AdminProducts() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastEditedId, setLastEditedId] = useState<string | null>(null);
+  const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
+  const [nutritionProduct, setNutritionProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
@@ -506,7 +510,19 @@ export default function AdminProducts() {
                             )}
                           </TableCell>
                           <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-2">
+                            <div className="flex items-center justify-center gap-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                onClick={() => {
+                                  setNutritionProduct(product);
+                                  setNutritionDialogOpen(true);
+                                }}
+                                className="hover-lift hover:bg-green-500/10"
+                                title="Info Nutricional"
+                              >
+                                <Beaker className="h-4 w-4 text-green-600" />
+                              </Button>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
@@ -707,6 +723,18 @@ export default function AdminProducts() {
           </form>
         </DialogContent>
       </Dialog>
+
+      {/* Nutrition Dialog */}
+      {nutritionProduct && (
+        <ProductNutritionDialog
+          open={nutritionDialogOpen}
+          onOpenChange={setNutritionDialogOpen}
+          productId={nutritionProduct.id}
+          productName={nutritionProduct.name}
+          productCategory={nutritionProduct.category}
+          onSaved={() => {}}
+        />
+      )}
     </Layout>
   );
 }
