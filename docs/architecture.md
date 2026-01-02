@@ -13,7 +13,7 @@
 - **Carrito/Wishlist**: estado efímero por usuario; no calcula impuestos/pagos.
 - **Checkout/Orquestación**: valida carrito, precios vigentes, stock, promociones; crea intención de cobro.
 - **Órdenes**: lifecycle (`pending/paid/shipped/...`), idempotencia por `order_id`.
-- **Pagos**: interfaz `PaymentProvider` (stripe|mercadopago|shopify-payments|…); adaptadores aislados.
+- **Pagos**: interfaz `PaymentProvider` (stripe|mercadopago|otros); adaptadores aislados.
 - **Notificaciones**: email/push; suscriptor de eventos `order.*`, `payment.*`.
 - **Admin/Reportes**: lecturas agregadas, sin escribir en dominios núcleo.
 
@@ -21,7 +21,7 @@
 - **API (interface)**: controladores HTTP (REST v1), validación (zod), authz.
 - **Aplicación**: casos de uso, orquestación, políticas; sin dependencias de infra.
 - **Dominio**: entidades y lógica pura.
-- **Infra/Adaptadores**: DB, providers externos (Shopify, pago, email), cache, colas.
+- **Infra/Adaptadores**: DB, providers externos (pago, email, integraciones), cache, colas.
 
 ## Esquema de carpetas sugerido
 ```
@@ -29,7 +29,7 @@ supabase/
   functions/
     catalog-api/        # controladores REST
     catalog-core/       # casos de uso + dominio
-    catalog-adapters/   # db/shopify adapters
+    catalog-adapters/   # db/adaptadores de catálogo
     inventory-api/
     inventory-core/
     inventory-adapters/

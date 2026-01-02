@@ -2,13 +2,13 @@
 CREATE TABLE public.wishlist (
     id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
     user_id UUID NOT NULL,
-    shopify_product_id TEXT NOT NULL,
+    product_id TEXT NOT NULL,
     product_handle TEXT NOT NULL,
     product_title TEXT NOT NULL,
     product_image_url TEXT,
     product_price TEXT,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
-    UNIQUE(user_id, shopify_product_id)
+    UNIQUE(user_id, product_id)
 );
 
 -- Enable RLS

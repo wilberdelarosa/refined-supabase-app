@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -71,6 +71,7 @@ export default function AdminProducts() {
   const PAGE_SIZE = 15;
   
   const [products, setProducts] = useState<Product[]>([]);
+  const productsCountRef = useRef(0);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [tableLoading, setTableLoading] = useState(false);
@@ -114,15 +115,15 @@ export default function AdminProducts() {
   }, [debouncedSearch, filterCategory]);
 
   useEffect(() => {
-    fetchProducts(page);
-  }, [debouncedSearch, filterCategory, page]);
-
-  useEffect(() => {
     fetchCategories();
   }, []);
 
-  async function fetchProducts(targetPage = page) {
-    if (targetPage === 1 && products.length === 0) {
+  useEffect(() => {
+    productsCountRef.current = products.length;
+  }, [products.length]);
+
+  const fetchProducts = useCallback(async (targetPage: number) => {
+    if (targetPage === 1 && productsCountRef.current === 0) {
       setLoading(true);
     }
     setTableLoading(true);
@@ -155,7 +156,11 @@ export default function AdminProducts() {
 
     setLoading(false);
     setTableLoading(false);
-  }
+  }, [PAGE_SIZE, debouncedSearch, filterCategory]);
+
+  useEffect(() => {
+    fetchProducts(page);
+  }, [debouncedSearch, filterCategory, page, fetchProducts]);
 
   async function fetchCategories() {
     const { data } = await supabase
@@ -286,7 +291,7 @@ export default function AdminProducts() {
       toast({ title: 'Error', description: 'No se pudo eliminar el producto', variant: 'destructive' });
     } else {
       toast({ title: 'Eliminado', description: 'Producto eliminado correctamente' });
-      fetchProducts();
+      fetchProducts(page);
     }
   }
 

@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 export interface WishlistItem {
   id: string;
   user_id: string;
-  shopify_product_id: string;
+  product_id: string;
   product_handle: string;
   product_title: string;
   product_image_url: string | null;
@@ -47,7 +47,7 @@ export function useWishlist() {
   }, [fetchWishlist]);
 
   const addToWishlist = async (product: {
-    shopify_product_id: string;
+    product_id: string;
     product_handle: string;
     product_title: string;
     product_image_url?: string;
@@ -61,7 +61,7 @@ export function useWishlist() {
     try {
       const { error } = await supabase.from('wishlist').insert({
         user_id: user.id,
-        shopify_product_id: product.shopify_product_id,
+        product_id: product.product_id,
         product_handle: product.product_handle,
         product_title: product.product_title,
         product_image_url: product.product_image_url || null,
@@ -86,7 +86,7 @@ export function useWishlist() {
     }
   };
 
-  const removeFromWishlist = async (shopifyProductId: string) => {
+  const removeFromWishlist = async (productId: string) => {
     if (!user) return false;
 
     try {
@@ -94,7 +94,7 @@ export function useWishlist() {
         .from('wishlist')
         .delete()
         .eq('user_id', user.id)
-        .eq('shopify_product_id', shopifyProductId);
+        .eq('product_id', productId);
 
       if (error) throw error;
 
@@ -108,19 +108,19 @@ export function useWishlist() {
     }
   };
 
-  const isInWishlist = (shopifyProductId: string) => {
-    return items.some(item => item.shopify_product_id === shopifyProductId);
+  const isInWishlist = (productId: string) => {
+    return items.some(item => item.product_id === productId);
   };
 
   const toggleWishlist = async (product: {
-    shopify_product_id: string;
+    product_id: string;
     product_handle: string;
     product_title: string;
     product_image_url?: string;
     product_price?: string;
   }) => {
-    if (isInWishlist(product.shopify_product_id)) {
-      return removeFromWishlist(product.shopify_product_id);
+    if (isInWishlist(product.product_id)) {
+      return removeFromWishlist(product.product_id);
     } else {
       return addToWishlist(product);
     }

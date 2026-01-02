@@ -39,7 +39,7 @@ export function useNativeWishlist() {
       const mappedItems: WishlistItem[] = (data || []).map(item => ({
         id: item.id,
         user_id: item.user_id,
-        product_id: item.shopify_product_id,
+        product_id: item.product_id,
         product_name: item.product_title,
         product_price: item.product_price ? parseFloat(item.product_price) : null,
         product_image_url: item.product_image_url,
@@ -69,7 +69,7 @@ export function useNativeWishlist() {
         .from('wishlist')
         .insert({
           user_id: user.id,
-          shopify_product_id: product.id,
+          product_id: product.id,
           product_handle: product.id,
           product_title: product.name,
           product_image_url: product.image_url,
@@ -100,7 +100,7 @@ export function useNativeWishlist() {
         .from('wishlist')
         .delete()
         .eq('user_id', user.id)
-        .eq('shopify_product_id', productId);
+        .eq('product_id', productId);
 
       if (error) throw error;
 

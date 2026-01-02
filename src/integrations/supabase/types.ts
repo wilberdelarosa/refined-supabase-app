@@ -537,7 +537,7 @@ export type Database = {
           product_image_url: string | null
           product_price: string | null
           product_title: string
-          shopify_product_id: string
+          product_id: string
           user_id: string
         }
         Insert: {
@@ -547,7 +547,7 @@ export type Database = {
           product_image_url?: string | null
           product_price?: string | null
           product_title: string
-          shopify_product_id: string
+          product_id: string
           user_id: string
         }
         Update: {
@@ -557,7 +557,7 @@ export type Database = {
           product_image_url?: string | null
           product_price?: string | null
           product_title?: string
-          shopify_product_id?: string
+          product_id?: string
           user_id?: string
         }
         Relationships: []

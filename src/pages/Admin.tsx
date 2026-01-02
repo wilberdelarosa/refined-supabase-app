@@ -59,14 +59,14 @@ export default function Admin() {
     },
     {
       title: 'Productos',
-      description: 'Catálogo Shopify',
+      description: 'Catálogo de productos',
       icon: Package,
       href: '/admin/products',
       visible: canManageProducts,
     },
     {
       title: 'Inventario',
-      description: 'Control de stock Shopify',
+      description: 'Control de stock',
       icon: Boxes,
       href: '/admin/inventory',
       visible: canManageProducts,

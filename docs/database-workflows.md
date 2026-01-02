@@ -14,9 +14,7 @@
 supabase/
 ├── config.toml              # Configuración del proyecto
 ├── functions/               # Edge Functions
-│   ├── send-order-email/
-│   ├── sync-shopify-customer/
-│   └── shopify-admin/
+│   └── send-order-email/
 └── migrations/              # Migraciones de base de datos
     ├── 20251230230821_*.sql
     ├── 20251230234014_*.sql
