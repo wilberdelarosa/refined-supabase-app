@@ -56,6 +56,10 @@ interface Order {
   status: string;
   shipping_address: string | null;
   created_at: string;
+  profiles?: {
+    full_name: string | null;
+    email: string | null;
+  } | null;
 }
 
 interface OrderItem {
@@ -143,16 +147,34 @@ export default function AdminOrders() {
 
   async function fetchOrders() {
     setLoading(true);
-    const { data, error } = await supabase
+    
+    // Fetch orders first
+    const { data: ordersData, error } = await supabase
       .from('orders')
       .select('*')
       .order('created_at', { ascending: false });
     
     if (error) {
       toast({ title: 'Error', description: 'No se pudieron cargar los pedidos', variant: 'destructive' });
-    } else {
-      setOrders(data || []);
+      setLoading(false);
+      return;
     }
+
+    // Fetch profiles for all user_ids
+    const userIds = [...new Set((ordersData || []).map(o => o.user_id))];
+    const { data: profilesData } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, email')
+      .in('user_id', userIds);
+
+    // Map profiles to orders
+    const profilesMap = new Map(profilesData?.map(p => [p.user_id, p]) || []);
+    const ordersWithProfiles = (ordersData || []).map(order => ({
+      ...order,
+      profiles: profilesMap.get(order.user_id) || null
+    }));
+
+    setOrders(ordersWithProfiles);
     setLoading(false);
   }
 
@@ -425,6 +447,7 @@ export default function AdminOrders() {
                   <TableHeader>
                     <TableRow className="bg-muted/50 hover:bg-muted/50">
                       <TableHead className="font-bold">ID Pedido</TableHead>
+                      <TableHead className="font-bold">Cliente</TableHead>
                       <TableHead className="font-bold">Fecha & Hora</TableHead>
                       <TableHead className="font-bold">Estado</TableHead>
                       <TableHead className="text-right font-bold">Total</TableHead>
@@ -434,7 +457,7 @@ export default function AdminOrders() {
                   <TableBody>
                     {filteredOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-16">
+                        <TableCell colSpan={6} className="text-center py-16">
                           <div className="flex flex-col items-center gap-4 animate-fade-in">
                             <div className="p-4 rounded-full bg-muted">
                               <ShoppingBag className="h-12 w-12 text-muted-foreground" />
@@ -461,6 +484,21 @@ export default function AdminOrders() {
                             <span className="font-mono text-sm font-bold bg-muted px-2.5 py-1.5 rounded-md">
                               #{order.id.slice(0, 8).toUpperCase()}
                             </span>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-sm">
+                                  {order.profiles?.full_name || parseCustomerInfo(order.shipping_address).name || 'Cliente'}
+                                </span>
+                                <span className="text-xs text-muted-foreground truncate max-w-[150px]">
+                                  {order.profiles?.email || parseCustomerInfo(order.shipping_address).email || '—'}
+                                </span>
+                              </div>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <div className="flex flex-col">
