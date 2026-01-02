@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from '@/components/ui/table';
 import {
   Dialog,
@@ -27,6 +27,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { MobileCard, MobileCardHeader, MobileCardRow, MobileCardActions } from '@/components/ui/mobile-card';
 import { Search, ArrowLeft, Shield, Users } from 'lucide-react';
 
 interface UserWithRoles {
@@ -49,11 +50,11 @@ export default function AdminUsers() {
   const { user, loading: authLoading } = useAuth();
   const { isAdmin, loading: rolesLoading } = useRoles();
   const navigate = useNavigate();
-  
+
   const [users, setUsers] = useState<UserWithRoles[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  
+
   const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -73,12 +74,12 @@ export default function AdminUsers() {
 
   async function fetchUsers() {
     setLoading(true);
-    
+
     // Get profiles
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
       .select('user_id, email, full_name, created_at');
-    
+
     if (profilesError) {
       toast({ title: 'Error', description: 'No se pudieron cargar los usuarios', variant: 'destructive' });
       setLoading(false);
@@ -112,8 +113,8 @@ export default function AdminUsers() {
   }
 
   function toggleRole(role: string) {
-    setSelectedRoles(prev => 
-      prev.includes(role) 
+    setSelectedRoles(prev =>
+      prev.includes(role)
         ? prev.filter(r => r !== role)
         : [...prev, role]
     );
@@ -121,7 +122,7 @@ export default function AdminUsers() {
 
   async function saveRoles() {
     if (!selectedUser) return;
-    
+
     setSaving(true);
     try {
       // Remove all existing roles for this user
@@ -136,11 +137,11 @@ export default function AdminUsers() {
           user_id: selectedUser.id,
           role: role as 'admin' | 'manager' | 'editor' | 'support' | 'customer',
         }));
-        
+
         const { error } = await supabase
           .from('user_roles')
           .insert(rolesToInsert);
-        
+
         if (error) throw error;
       }
 
@@ -164,7 +165,7 @@ export default function AdminUsers() {
     }
   }
 
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     u.email.toLowerCase().includes(search.toLowerCase()) ||
     u.full_name?.toLowerCase().includes(search.toLowerCase())
   );
@@ -220,63 +221,117 @@ export default function AdminUsers() {
           {/* Users Table */}
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Usuario</TableHead>
-                    <TableHead>Roles</TableHead>
-                    <TableHead>Fecha registro</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredUsers.length === 0 ? (
+              {/* Desktop Table */}
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center py-12">
-                        <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="text-muted-foreground">No se encontraron usuarios</p>
-                      </TableCell>
+                      <TableHead>Usuario</TableHead>
+                      <TableHead>Roles</TableHead>
+                      <TableHead>Fecha registro</TableHead>
+                      <TableHead className="text-right">Acciones</TableHead>
                     </TableRow>
-                  ) : (
-                    filteredUsers.map((userItem) => (
-                      <TableRow key={userItem.id}>
-                        <TableCell>
-                          <div>
-                            <p className="font-medium">{userItem.full_name || 'Sin nombre'}</p>
-                            <p className="text-sm text-muted-foreground">{userItem.email}</p>
-                          </div>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={4} className="text-center py-12">
+                          <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">No se encontraron usuarios</p>
                         </TableCell>
-                        <TableCell>
-                          <div className="flex flex-wrap gap-1">
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((userItem) => (
+                        <TableRow key={userItem.id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{userItem.full_name || 'Sin nombre'}</p>
+                              <p className="text-sm text-muted-foreground">{userItem.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-1">
+                              {userItem.roles.length === 0 ? (
+                                <span className="text-sm text-muted-foreground">Sin roles</span>
+                              ) : (
+                                userItem.roles.map(role => (
+                                  <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
+                                    {role === 'admin' && <Shield className="h-3 w-3 mr-1" />}
+                                    {role}
+                                  </Badge>
+                                ))
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {new Date(userItem.created_at).toLocaleDateString('es-DO')}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openRoleDialog(userItem)}
+                            >
+                              Gestionar Roles
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile Cards */}
+              <div className="block md:hidden p-4 space-y-3">
+                {filteredUsers.length === 0 ? (
+                  <div className="flex flex-col items-center gap-4 py-12">
+                    <Users className="h-12 w-12 text-muted-foreground" />
+                    <p className="text-muted-foreground">No se encontraron usuarios</p>
+                  </div>
+                ) : (
+                  filteredUsers.map((userItem) => (
+                    <MobileCard key={userItem.id}>
+                      <MobileCardHeader
+                        title={userItem.full_name || 'Sin nombre'}
+                        subtitle={userItem.email}
+                      />
+                      <MobileCardRow
+                        label="Roles"
+                        value={
+                          <div className="flex flex-wrap gap-1 justify-end">
                             {userItem.roles.length === 0 ? (
-                              <span className="text-sm text-muted-foreground">Sin roles</span>
+                              <span className="text-xs text-muted-foreground">Sin roles</span>
                             ) : (
                               userItem.roles.map(role => (
-                                <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
+                                <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'} className="text-xs">
                                   {role === 'admin' && <Shield className="h-3 w-3 mr-1" />}
                                   {role}
                                 </Badge>
                               ))
                             )}
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          {new Date(userItem.created_at).toLocaleDateString('es-DO')}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => openRoleDialog(userItem)}
-                          >
-                            Gestionar Roles
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
+                        }
+                      />
+                      <MobileCardRow
+                        label="Registro"
+                        value={new Date(userItem.created_at).toLocaleDateString('es-DO')}
+                      />
+                      <MobileCardActions>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => openRoleDialog(userItem)}
+                        >
+                          <Shield className="h-4 w-4 mr-2" />
+                          Gestionar Roles
+                        </Button>
+                      </MobileCardActions>
+                    </MobileCard>
+                  ))
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
