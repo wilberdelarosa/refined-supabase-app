@@ -2,7 +2,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Star, Clock, Award } from 'lucide-react';
-import { Nutritionist } from '../../api';
+import { Nutritionist } from '@/features/appointments/api';
 
 interface NutritionistCardProps {
     nutritionist: Nutritionist;

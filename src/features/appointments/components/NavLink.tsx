@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Calendar } from 'lucide-react';
-import { useAppointmentFeature } from '../config';
+import { useAppointmentFeature } from '@/features/appointments/config';
 
 export default function AppointmentsNavLink() {
     const showLink = useAppointmentFeature('SHOW_NAVBAR_LINK');

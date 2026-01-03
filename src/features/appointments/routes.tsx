@@ -31,4 +31,4 @@ export const appointmentsRoutes = APPOINTMENTS_CONFIG.ENABLED
 /**
  * Componente para agregar en Navbar (condicional)
  */
-export { default as AppointmentsNavLink } from './components/NavLink';
+export { default as AppointmentsNavLink } from './components/NavLink.tsx';

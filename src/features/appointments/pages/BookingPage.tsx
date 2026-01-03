@@ -9,8 +9,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, Clock, User } from 'lucide-react';
-import { appointmentsAPI, Nutritionist } from '../../api';
-import { useAppointmentSlots } from '../../hooks/useAppointments';
+import { appointmentsAPI, Nutritionist } from '@/features/appointments/api';
+import { useAppointmentSlots } from '@/features/appointments/hooks/useAppointments';
 import { toast } from 'sonner';
 import { useEffect } from 'react';
 

@@ -6,9 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Calendar, ArrowLeft } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useNutritionists } from '../../hooks/useAppointments';
-import { NutritionistCard } from '../components/client/NutritionistCard';
-import { Nutritionist } from '../../api';
+import { useNutritionists } from '@/features/appointments/hooks/useAppointments';
+import { NutritionistCard } from '@/features/appointments/components/client/NutritionistCard';
+import { Nutritionist } from '@/features/appointments/api';
 
 export default function AppointmentsPage() {
     const navigate = useNavigate();

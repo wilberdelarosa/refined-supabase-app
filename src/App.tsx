@@ -30,6 +30,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import { useSavedCart } from "./hooks/useSavedCart";
 import AppointmentsPage from "./features/appointments/pages/AppointmentsPage";
 import BookingPage from "./features/appointments/pages/BookingPage";
+import MyAppointmentsPage from "./features/appointments/pages/MyAppointmentsPage";
 
 const queryClient = new QueryClient();
 
@@ -75,6 +76,7 @@ const App = () => (
             {/* Appointments Microservice - Conditional */}
             <Route path="/appointments" element={<AppointmentsPage />} />
             <Route path="/appointments/book/:nutritionistId" element={<BookingPage />} />
+            <Route path="/account/appointments" element={<MyAppointmentsPage />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>

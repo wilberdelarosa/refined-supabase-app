@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Package, MapPin, Settings, Shield, LogOut, Heart, Edit } from 'lucide-react';
+import { User, Package, MapPin, Settings, Shield, LogOut, Heart, Edit, Calendar } from 'lucide-react';
 
 interface Profile {
   full_name: string | null;
@@ -119,6 +119,21 @@ export default function Account() {
                     <div>
                       <CardTitle className="text-lg">Mis Pedidos</CardTitle>
                       <CardDescription>Ver historial de compras</CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+              </Card>
+            </Link>
+            <Link to="/account/appointments">
+              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
+                <CardHeader>
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Calendar className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-lg">Mis Citas</CardTitle>
+                      <CardDescription>Gestiona tus consultas con nutricionistas</CardDescription>
                     </div>
                   </div>
                 </CardHeader>

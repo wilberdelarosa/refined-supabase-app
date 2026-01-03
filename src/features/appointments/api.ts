@@ -83,24 +83,32 @@ class AppointmentsAPI {
         this.checkEnabled();
         const { data, error } = await supabase
             .from('nutritionists' as any)
-            .select('*')
+            .select('*, profiles(full_name, email)')
             .eq('is_active', true)
             .order('rating', { ascending: false });
 
         if (error) throw error;
-        return (data || []) as Nutritionist[];
+        const rows = (data ?? []) as any[];
+        return rows.map((row) => ({
+            ...row,
+            full_name: row.profiles?.full_name,
+            email: row.profiles?.email,
+        })) as Nutritionist[];
     }
 
     async getNutritionist(id: string): Promise<Nutritionist | null> {
         this.checkEnabled();
         const { data, error } = await supabase
             .from('nutritionists' as any)
-            .select('*')
+            .select('*, profiles(full_name, email)')
             .eq('id', id)
             .single();
 
         if (error) throw error;
-        return data as Nutritionist;
+        const row = data as any;
+        return row
+            ? { ...row, full_name: row.profiles?.full_name, email: row.profiles?.email }
+            : null;
     }
 
     async getAvailableSlots(nutritionistId: string, dateFrom?: string): Promise<AppointmentSlot[]> {
@@ -119,7 +127,7 @@ class AppointmentsAPI {
 
         const { data, error } = await query;
         if (error) throw error;
-        return (data || []) as AppointmentSlot[];
+        return (data ?? []) as unknown as AppointmentSlot[];
     }
 
     async createAppointment(appointmentData: {
@@ -149,7 +157,15 @@ class AppointmentsAPI {
             .single();
 
         if (error) throw error;
-        return data as Appointment;
+
+        // Mark slot as unavailable
+        await supabase
+            .from('appointment_slots' as any)
+            .update({ is_available: false })
+            .eq('id', appointmentData.slotId)
+            .eq('is_available', true);
+
+        return data as unknown as Appointment;
     }
 
     async getMyAppointments(): Promise<Appointment[]> {
@@ -164,7 +180,7 @@ class AppointmentsAPI {
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return (data || []) as Appointment[];
+        return (data ?? []) as unknown as Appointment[];
     }
 
     async cancelAppointment(appointmentId: string, reason?: string): Promise<void> {
@@ -190,7 +206,7 @@ class AppointmentsAPI {
             .single();
 
         if (error) throw error;
-        return data as Quote;
+        return data as unknown as Quote;
     }
 
     async acceptQuote(id: string): Promise<void> {
