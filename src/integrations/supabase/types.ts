@@ -14,6 +14,110 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_slots: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          is_available: boolean | null
+          nutritionist_id: string
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          nutritionist_id: string
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          nutritionist_id?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_slots_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointments: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          client_data: Json | null
+          client_id: string
+          consultation_type: string
+          created_at: string
+          id: string
+          notes: string | null
+          nutritionist_id: string
+          paid: boolean | null
+          slot_id: string | null
+          status: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          client_data?: Json | null
+          client_id: string
+          consultation_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          nutritionist_id: string
+          paid?: boolean | null
+          slot_id?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          client_data?: Json | null
+          client_id?: string
+          consultation_type?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          nutritionist_id?: string
+          paid?: boolean | null
+          slot_id?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointments_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointments_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "appointment_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action: string
@@ -341,6 +445,56 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "orders"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      nutritionists: {
+        Row: {
+          bio: string | null
+          consultation_duration: number
+          created_at: string
+          id: string
+          is_active: boolean | null
+          price_per_session: number
+          rating: number | null
+          specialization: string[] | null
+          total_consultations: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bio?: string | null
+          consultation_duration?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          price_per_session?: number
+          rating?: number | null
+          specialization?: string[] | null
+          total_consultations?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bio?: string | null
+          consultation_duration?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          price_per_session?: number
+          rating?: number | null
+          specialization?: string[] | null
+          total_consultations?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nutritionists_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }
@@ -840,6 +994,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      quotes: {
+        Row: {
+          accepted_at: string | null
+          client_id: string
+          created_at: string
+          id: string
+          nutritionist_id: string
+          services: Json
+          status: string
+          total: number
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          client_id: string
+          created_at?: string
+          id?: string
+          nutritionist_id: string
+          services?: Json
+          status?: string
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          client_id?: string
+          created_at?: string
+          id?: string
+          nutritionist_id?: string
+          services?: Json
+          status?: string
+          total?: number
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionists"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       saved_carts: {
         Row: {
