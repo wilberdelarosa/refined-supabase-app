@@ -16,7 +16,9 @@ import {
   FileEdit,
   Shield,
   CreditCard,
-  Tags
+  Tags,
+  Calendar,
+  UserCheck
 } from 'lucide-react';
 
 export default function Admin() {
@@ -100,6 +102,14 @@ export default function Admin() {
       icon: FileText,
       href: '/admin/invoices',
       visible: canManageOrders,
+    },
+    {
+      title: 'Nutricionistas',
+      description: 'Citas y asesorías',
+      icon: UserCheck,
+      href: '/admin/nutritionists',
+      badge: 'Nuevo',
+      visible: isAdmin,
     },
     {
       title: 'Clientes',
