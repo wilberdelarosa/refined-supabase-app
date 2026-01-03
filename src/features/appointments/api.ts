@@ -1,8 +1,7 @@
 /**
  * APPOINTMENTS API CLIENT
- * 
- * Wrapper para todas las llamadas API del microservicio
- * Aislado del resto de la aplicación
+ * Wrapper desacoplado para el microservicio de citas
+ * Usa `as any` para evitar errores de tipos antes de aplicar migración SQL
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -22,7 +21,6 @@ export interface Nutritionist {
     rating: number;
     total_consultations: number;
     is_active: boolean;
-    // Datos del perfil
     full_name?: string;
     email?: string;
 }
@@ -65,7 +63,7 @@ export interface Quote {
 }
 
 // ============================================
-// API CLIENT CLASS
+// API CLIENT
 // ============================================
 
 class AppointmentsAPI {
@@ -75,96 +73,40 @@ class AppointmentsAPI {
         this.enabled = APPOINTMENTS_CONFIG.ENABLED;
     }
 
-    /**
-     * Verificar si el servicio está habilitado
-     */
     private checkEnabled() {
         if (!this.enabled) {
             throw new Error('Appointments microservice is disabled');
         }
     }
 
-    // ==================== NUTRITIONISTS ====================
-
-    /**
-     * Obtener lista de nutricionistas
-     */
-    async getNutritionists(filters?: {
-        specialization?: string;
-        minRating?: number;
-    }): Promise<Nutritionist[]> {
+    async getNutritionists(): Promise<Nutritionist[]> {
         this.checkEnabled();
-
-        let query = supabase
-            .from('nutritionists')
-            .select(`
-        *,
-        profiles:user_id (
-          full_name,
-          email
-        )
-      `)
+        const { data, error } = await supabase
+            .from('nutritionists' as any)
+            .select('*')
             .eq('is_active', true)
             .order('rating', { ascending: false });
 
-        if (filters?.minRating) {
-            query = query.gte('rating', filters.minRating);
-        }
-
-        const { data, error } = await query;
-
         if (error) throw error;
-
-        return data.map(n => ({
-            ...n,
-            full_name: n.profiles?.full_name,
-            email: n.profiles?.email,
-        }));
+        return (data || []) as Nutritionist[];
     }
 
-    /**
-     * Obtener un nutricionista por ID
-     */
     async getNutritionist(id: string): Promise<Nutritionist | null> {
         this.checkEnabled();
-
         const { data, error } = await supabase
-            .from('nutritionists')
-            .select(`
-        *,
-        profiles:user_id (
-          full_name,
-          email
-        )
-      `)
+            .from('nutritionists' as any)
+            .select('*')
             .eq('id', id)
             .single();
 
         if (error) throw error;
-
-        if (!data) return null;
-
-        return {
-            ...data,
-            full_name: data.profiles?.full_name,
-            email: data.profiles?.email,
-        };
+        return data as Nutritionist;
     }
 
-    // ==================== SLOTS ====================
-
-    /**
-     * Obtener slots disponibles
-     */
-    async getAvailableSlots(
-        nutritionistId: string,
-        dateFrom?: string,
-        dateTo?: string
-    ): Promise<AppointmentSlot[]> {
+    async getAvailableSlots(nutritionistId: string, dateFrom?: string): Promise<AppointmentSlot[]> {
         this.checkEnabled();
-
         let query = supabase
-            .from('appointment_slots')
+            .from('appointment_slots' as any)
             .select('*')
             .eq('nutritionist_id', nutritionistId)
             .eq('is_available', true)
@@ -175,80 +117,60 @@ class AppointmentsAPI {
             query = query.gte('date', dateFrom);
         }
 
-        if (dateTo) {
-            query = query.lte('date', dateTo);
-        }
-
         const { data, error } = await query;
-
         if (error) throw error;
-        return data;
+        return (data || []) as AppointmentSlot[];
     }
 
-    // ==================== APPOINTMENTS ====================
-
-    /**
-     * Crear una cita
-     */
-    async createAppointment(data: {
+    async createAppointment(appointmentData: {
         nutritionistId: string;
         slotId: string;
         consultationType: Appointment['consultation_type'];
         clientData: Record<string, any>;
     }): Promise<Appointment> {
         this.checkEnabled();
-
-        // Obtener precio del nutricionista
-        const nutritionist = await this.getNutritionist(data.nutritionistId);
+        const nutritionist = await this.getNutritionist(appointmentData.nutritionistId);
         if (!nutritionist) throw new Error('Nutritionist not found');
-
-        const { data: appointment, error } = await supabase
-            .from('appointments')
-            .insert({
-                nutritionist_id: data.nutritionistId,
-                slot_id: data.slotId,
-                consultation_type: data.consultationType,
-                client_data: data.clientData,
-                total_price: nutritionist.price_per_session,
-                client_id: (await supabase.auth.getUser()).data.user?.id,
-            })
-            .select()
-            .single();
-
-        if (error) throw error;
-        return appointment;
-    }
-
-    /**
-     * Obtener mis citas
-     */
-    async getMyAppointments(): Promise<Appointment[]> {
-        this.checkEnabled();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
 
         const { data, error } = await supabase
-            .from('appointments')
+            .from('appointments' as any)
+            .insert({
+                nutritionist_id: appointmentData.nutritionistId,
+                slot_id: appointmentData.slotId,
+                consultation_type: appointmentData.consultationType,
+                client_data: appointmentData.clientData,
+                total_price: nutritionist.price_per_session,
+                client_id: user.id,
+            })
+            .select()
+            .single();
+
+        if (error) throw error;
+        return data as Appointment;
+    }
+
+    async getMyAppointments(): Promise<Appointment[]> {
+        this.checkEnabled();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('Not authenticated');
+
+        const { data, error } = await supabase
+            .from('appointments' as any)
             .select('*')
             .eq('client_id', user.id)
             .order('created_at', { ascending: false });
 
         if (error) throw error;
-        return data;
+        return (data || []) as Appointment[];
     }
 
-    /**
-     * Cancelar cita
-     */
-    async cancelAppointment(
-        appointmentId: string,
-        reason?: string
-    ): Promise<void> {
+    async cancelAppointment(appointmentId: string, reason?: string): Promise<void> {
         this.checkEnabled();
-
         const { error } = await supabase
-            .from('appointments')
+            .from('appointments' as any)
             .update({
                 status: 'cancelled',
                 cancelled_at: new Date().toISOString(),
@@ -259,32 +181,22 @@ class AppointmentsAPI {
         if (error) throw error;
     }
 
-    // ==================== QUOTES ====================
-
-    /**
-     * Obtener cotización
-     */
     async getQuote(id: string): Promise<Quote | null> {
         this.checkEnabled();
-
         const { data, error } = await supabase
-            .from('quotes')
+            .from('quotes' as any)
             .select('*')
             .eq('id', id)
             .single();
 
         if (error) throw error;
-        return data;
+        return data as Quote;
     }
 
-    /**
-     * Aceptar cotización
-     */
     async acceptQuote(id: string): Promise<void> {
         this.checkEnabled();
-
         const { error } = await supabase
-            .from('quotes')
+            .from('quotes' as any)
             .update({
                 status: 'accepted',
                 accepted_at: new Date().toISOString(),
@@ -294,9 +206,5 @@ class AppointmentsAPI {
         if (error) throw error;
     }
 }
-
-// ============================================
-// SINGLETON EXPORT
-// ============================================
 
 export const appointmentsAPI = new AppointmentsAPI();

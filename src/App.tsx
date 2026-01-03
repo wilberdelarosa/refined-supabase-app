@@ -28,6 +28,8 @@ import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import { useSavedCart } from "./hooks/useSavedCart";
+import AppointmentsPage from "./features/appointments/pages/AppointmentsPage";
+import BookingPage from "./features/appointments/pages/BookingPage";
 
 const queryClient = new QueryClient();
 
@@ -69,6 +71,11 @@ const App = () => (
             <Route path="/order/:orderId" element={<OrderConfirmation />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
+
+            {/* Appointments Microservice - Conditional */}
+            <Route path="/appointments" element={<AppointmentsPage />} />
+            <Route path="/appointments/book/:nutritionistId" element={<BookingPage />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
