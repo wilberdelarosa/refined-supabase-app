@@ -4,7 +4,7 @@ project_id = "xuhvlomytegdbifziilf"
 verify_jwt = false
 
 [functions.ai-nutrition]
-verify_jwt = true
+verify_jwt = false
 
 [functions.ai-consultation-intake]
 verify_jwt = false

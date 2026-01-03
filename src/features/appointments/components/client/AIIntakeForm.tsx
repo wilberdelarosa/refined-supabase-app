@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Sparkles, ChevronRight, ChevronLeft } from 'lucide-react';
+import { Loader2, Sparkles, ChevronRight, ChevronLeft, Save } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -20,6 +20,7 @@ interface Question {
 
 interface AIIntakeFormProps {
   goal: string;
+  nutritionistId: string;
   onComplete: (answers: Record<string, any>) => void;
   onBack: () => void;
 }
@@ -31,6 +32,8 @@ const STAGE_LABELS: Record<(typeof STAGES)[number], string> = {
   objetivos: 'Objetivos y Preferencias',
 };
 
+const STORAGE_KEY_PREFIX = 'intake_draft_';
+
 function normalizeText(value: string) {
   return value
     .toLowerCase()
@@ -41,12 +44,10 @@ function normalizeText(value: string) {
 }
 
 function withStageId(stage: (typeof STAGES)[number], q: Question): Question {
-  // Evita colisiones entre etapas (p.ej. "age" repetida en varias etapas)
   return { ...q, id: `${stage}.${q.id}` };
 }
 
 function defaultQuestionsForStage(stage: (typeof STAGES)[number]): Question[] {
-  // Base robusta: asegura info mínima aunque la IA repita o falle.
   if (stage === 'inicial') {
     return [
       { id: 'age', question: '¿Cuál es tu edad?', type: 'number', required: true },
@@ -63,7 +64,13 @@ function defaultQuestionsForStage(stage: (typeof STAGES)[number]): Question[] {
         id: 'activity_level',
         question: '¿Cuál es tu nivel de actividad física?',
         type: 'select',
-        options: ['Sedentario', 'Ligero (1-2 días/semana)', 'Moderado (3-4 días/semana)', 'Activo (5-6 días/semana)', 'Muy activo (diario)'],
+        options: [
+          'Sedentario',
+          'Ligero (1-2 días/semana)',
+          'Moderado (3-4 días/semana)',
+          'Activo (5-6 días/semana)',
+          'Muy activo (diario)',
+        ],
         required: true,
       },
     ];
@@ -71,43 +78,99 @@ function defaultQuestionsForStage(stage: (typeof STAGES)[number]): Question[] {
 
   if (stage === 'historial') {
     return [
-      { id: 'medical_conditions', question: '¿Tienes alguna condición médica relevante (diagnosticada)?', type: 'textarea', required: false },
-      { id: 'medications', question: '¿Tomas medicamentos actualmente? (cuáles y dosis si aplica)', type: 'textarea', required: false },
+      {
+        id: 'medical_conditions',
+        question: '¿Tienes alguna condición médica relevante (diagnosticada)?',
+        type: 'textarea',
+        required: false,
+      },
+      {
+        id: 'medications',
+        question: '¿Tomas medicamentos actualmente? (cuáles y dosis si aplica)',
+        type: 'textarea',
+        required: false,
+      },
       { id: 'allergies', question: '¿Alergias o intolerancias alimentarias?', type: 'textarea', required: false },
-      { id: 'injuries', question: '¿Lesiones recientes o dolor recurrente al entrenar?', type: 'textarea', required: false },
+      {
+        id: 'injuries',
+        question: '¿Lesiones recientes o dolor recurrente al entrenar?',
+        type: 'textarea',
+        required: false,
+      },
     ];
   }
 
   return [
-    { id: 'training_routine', question: 'Describe tu rutina de entrenamiento actual (días/semana, tipo, duración).', type: 'textarea', required: true },
-    { id: 'diet', question: '¿Cómo es tu alimentación típica en un día normal?', type: 'textarea', required: true },
-    { id: 'supplements_current', question: '¿Qué suplementos consumes actualmente? (marca, dosis y horario)', type: 'textarea', required: false },
-    { id: 'constraints', question: '¿Tienes restricciones (presupuesto, tiempo, preferencia vegana, etc.)?', type: 'textarea', required: false },
-    { id: 'notes', question: '¿Algo más que quieras que el nutricionista sepa?', type: 'textarea', required: false },
+    {
+      id: 'training_routine',
+      question: 'Describe tu rutina de entrenamiento actual (días/semana, tipo, duración).',
+      type: 'textarea',
+      required: true,
+    },
+    {
+      id: 'diet',
+      question: '¿Cómo es tu alimentación típica en un día normal?',
+      type: 'textarea',
+      required: true,
+    },
+    {
+      id: 'supplements_current',
+      question: '¿Qué suplementos consumes actualmente? (marca, dosis y horario)',
+      type: 'textarea',
+      required: false,
+    },
+    {
+      id: 'constraints',
+      question: '¿Tienes restricciones (presupuesto, tiempo, preferencia vegana, etc.)?',
+      type: 'textarea',
+      required: false,
+    },
+    {
+      id: 'notes',
+      question: '¿Algo más que quieras que el nutricionista sepa?',
+      type: 'textarea',
+      required: false,
+    },
   ];
 }
 
-export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
-  const [currentStage, setCurrentStage] = useState(0);
+export function AIIntakeForm({ goal, nutritionistId, onComplete, onBack }: AIIntakeFormProps) {
+  const storageKey = `${STORAGE_KEY_PREFIX}${nutritionistId}_${goal}`;
+
+  // Load saved state from localStorage
+  const loadSavedState = useCallback(() => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error('Error loading saved intake:', e);
+    }
+    return null;
+  }, [storageKey]);
+
+  const savedState = loadSavedState();
+
+  const [currentStage, setCurrentStage] = useState(savedState?.currentStage ?? 0);
   const [questions, setQuestions] = useState<Question[]>([]);
-  const [answers, setAnswers] = useState<Record<string, any>>({});
+  const [answers, setAnswers] = useState<Record<string, any>>(savedState?.answers ?? {});
   const [loading, setLoading] = useState(true);
   const [summary, setSummary] = useState<string | null>(null);
-
-  // Para evitar preguntas repetidas entre recargas/etapas
-  const [askedSignatures, setAskedSignatures] = useState<Set<string>>(new Set());
+  const [askedSignatures, setAskedSignatures] = useState<Set<string>>(new Set(savedState?.askedSignatures ?? []));
 
   const stageKey = STAGES[currentStage];
 
+  // Save state to localStorage whenever it changes
   useEffect(() => {
-    // Si cambia el objetivo, reiniciamos el flujo para evitar reusar estado viejo.
-    setCurrentStage(0);
-    setQuestions([]);
-    setAnswers({});
-    setSummary(null);
-    setAskedSignatures(new Set());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [goal]);
+    const stateToSave = {
+      currentStage,
+      answers,
+      askedSignatures: Array.from(askedSignatures),
+      goal,
+    };
+    localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+  }, [currentStage, answers, askedSignatures, goal, storageKey]);
 
   useEffect(() => {
     loadQuestions();
@@ -133,7 +196,6 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
       const raw: Question[] = Array.isArray(data?.questions) ? data.questions : [];
       const aiQuestions = raw.map((q) => withStageId(stageKey, q));
 
-      // Filtra duplicados (por id y por texto) y fusiona con base fija.
       const nextAsked = new Set(askedSignatures);
       const deduped: Question[] = [];
 
@@ -155,7 +217,6 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
       if (data?.summary) setSummary(data.summary);
     } catch (err) {
       console.error('Error loading AI questions:', err);
-      // Fallback robusto por etapa
       setQuestions(stageDefaults.map((q) => withStageId(stageKey, q)));
     } finally {
       setLoading(false);
@@ -170,6 +231,8 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
     if (currentStage < STAGES.length - 1) {
       setCurrentStage((prev) => prev + 1);
     } else {
+      // Clear draft on completion
+      localStorage.removeItem(storageKey);
       onComplete(answers);
     }
   }
@@ -182,7 +245,16 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
     }
   }
 
+  function handleClearDraft() {
+    localStorage.removeItem(storageKey);
+    setCurrentStage(0);
+    setAnswers({});
+    setAskedSignatures(new Set());
+    setSummary(null);
+  }
+
   const isStageComplete = questions.every((q) => !q.required || Boolean(answers[q.id]));
+  const hasSavedProgress = Object.keys(answers).length > 0;
 
   return (
     <Card>
@@ -192,9 +264,17 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
             <Sparkles className="h-5 w-5 text-primary" />
             <CardTitle className="text-lg">Cuestionario Inteligente</CardTitle>
           </div>
-          <Badge variant="outline">
-            {currentStage + 1} de {STAGES.length}
-          </Badge>
+          <div className="flex items-center gap-2">
+            {hasSavedProgress && (
+              <Badge variant="secondary" className="gap-1">
+                <Save className="h-3 w-3" />
+                Guardado
+              </Badge>
+            )}
+            <Badge variant="outline">
+              {currentStage + 1} de {STAGES.length}
+            </Badge>
+          </div>
         </div>
 
         <div className="flex gap-2 mt-4">
@@ -281,10 +361,7 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
                   )}
 
                   {q.type === 'select' && q.options && (
-                    <Select
-                      value={answers[q.id] ?? ''}
-                      onValueChange={(value) => handleAnswerChange(q.id, value)}
-                    >
+                    <Select value={answers[q.id] ?? ''} onValueChange={(value) => handleAnswerChange(q.id, value)}>
                       <SelectTrigger className="mt-1">
                         <SelectValue placeholder="Selecciona una opción" />
                       </SelectTrigger>
@@ -319,6 +396,14 @@ export function AIIntakeForm({ goal, onComplete, onBack }: AIIntakeFormProps) {
             )}
           </Button>
         </div>
+
+        {hasSavedProgress && currentStage === 0 && (
+          <div className="text-center">
+            <Button variant="link" size="sm" onClick={handleClearDraft} className="text-muted-foreground">
+              Borrar progreso guardado y empezar de nuevo
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
