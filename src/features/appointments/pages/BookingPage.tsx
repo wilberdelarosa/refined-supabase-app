@@ -227,6 +227,7 @@ export default function BookingPage() {
             >
               <AIIntakeForm
                 goal={GOALS.find(g => g.id === selectedGoal)?.label || selectedGoal}
+                nutritionistId={nutritionistId || ''}
                 onComplete={(answers) => {
                   setIntakeAnswers(answers);
                   setStep('schedule');
