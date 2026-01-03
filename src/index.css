@@ -324,3 +324,119 @@
     transform: scale(0.98);
   }
 }
+
+/* Print Styles - Optimized for PDF Generation */
+@media print {
+  /* Reset page margins and setup */
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+
+  /* Hide unnecessary elements */
+  body {
+    background: white !important;
+    color: black !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Remove shadows and unnecessary decorations */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Ensure dark mode doesn't affect print */
+  .dark {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+  }
+
+  /* Keep borders visible */
+  [class*="border"] {
+    border-color: #e5e7eb !important;
+  }
+
+  /* Optimize table printing */
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  /* Ensure colors print correctly */
+  .bg-muted,
+  .bg-muted\/50 {
+    background-color: #f9fafb !important;
+  }
+
+  .text-muted-foreground {
+    color: #6b7280 !important;
+  }
+
+  /* Logo and images */
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Badges and status indicators */
+  [class*="Badge"] {
+    border: 1px solid #d1d5db !important;
+  }
+
+  /* Ensure good contrast */
+  .bg-gradient-to-r,
+  .bg-gradient-to-br {
+    background: white !important;
+  }
+
+  /* Card optimization */
+  [class*="Card"] {
+    page-break-inside: avoid;
+  }
+
+  /* Remove interactive states */
+  a,
+  button {
+    text-decoration: none !important;
+  }
+
+  /* Fix spacing for compact print */
+  .print\:space-y-4 > * + * {
+    margin-top: 1rem !important;
+  }
+
+  .print\:gap-3 {
+    gap: 0.75rem !important;
+  }
+
+  .print\:p-2 {
+    padding: 0.5rem !important;
+  }
+
+  .print\:py-4 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .print\:pt-4 {
+    padding-top: 1rem !important;
+  }
+
+  .print\:text-sm {
+    font-size: 0.875rem !important;
+    line-height: 1.25rem !important;
+  }
+}
+

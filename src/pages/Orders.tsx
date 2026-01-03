@@ -349,22 +349,30 @@ export default function Orders() {
 
   const handleDownloadInvoice = async (orderId: string) => {
     try {
+      console.log('Buscando factura para pedido:', orderId);
       const { data: invoice, error } = await supabase
         .from('invoices')
         .select('*')
         .eq('order_id', orderId)
         .maybeSingle();
 
-      if (error) throw error;
+      console.log('Resultado búsqueda factura:', { invoice, error });
+
+      if (error) {
+        console.error('Error al buscar factura:', error);
+        throw error;
+      }
 
       if (invoice) {
+        console.log('Factura encontrada, navegando a:', `/orders/invoice/${invoice.id}`);
         navigate(`/orders/invoice/${invoice.id}`);
       } else {
-        alert('La factura aún no está disponible para este pedido.');
+        console.warn('No se encontró factura para el pedido:', orderId);
+        alert('La factura aún no está disponible para este pedido. Por favor, contacta con el administrador.');
       }
     } catch (error) {
       console.error('Error fetching invoice:', error);
-      alert('Error al obtener la factura');
+      alert('Error al obtener la factura. Por favor, intenta de nuevo.');
     }
   };
 

@@ -110,7 +110,13 @@ export default function InvoiceDetail() {
   }, [invoiceId, user, authLoading, navigate, canManageOrders, rolesLoading]);
 
   const handlePrint = () => {
-    window.print();
+    // Preparar el documento para imprimir
+    document.title = `Factura-${invoice?.invoice_number || 'INV'}`;
+    
+    // Trigger print dialog
+    setTimeout(() => {
+      window.print();
+    }, 100);
   };
 
   if (authLoading || loading) {
@@ -132,7 +138,7 @@ export default function InvoiceDetail() {
 
   return (
     <Layout>
-      <div className="container py-8 print:py-0">
+      <div className="container py-8 print:py-4">
         <div className="print:hidden mb-6 flex items-center justify-between">
           <Button variant="ghost" asChild>
             <Link to="/orders">
@@ -140,14 +146,14 @@ export default function InvoiceDetail() {
               Volver a Pedidos
             </Link>
           </Button>
-          <Button onClick={handlePrint} variant="outline" className="gap-2">
+          <Button onClick={handlePrint} variant="default" className="gap-2 font-semibold">
             <Download className="h-4 w-4" />
-            Imprimir / Guardar PDF
+            Descargar PDF
           </Button>
         </div>
 
-        <Card className="max-w-4xl mx-auto print:shadow-none print:border-0 print:max-w-full">
-          <CardHeader className="border-b bg-gradient-to-r from-foreground/5 via-background to-background relative overflow-hidden">
+        <Card className="max-w-4xl mx-auto print:shadow-none print:border print:border-gray-300 print:max-w-full">
+          <CardHeader className="border-b bg-gradient-to-r from-foreground/5 via-background to-background relative overflow-hidden print:bg-white print:py-4">
             <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_10%_20%,rgba(0,0,0,0.05),transparent_25%)]" />
             <div className="flex items-center justify-between gap-4 relative">
               <div className="flex items-center gap-4">
@@ -176,8 +182,8 @@ export default function InvoiceDetail() {
             </div>
           </CardHeader>
           
-          <CardContent className="pt-6 space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
+          <CardContent className="pt-6 print:pt-4 space-y-6 print:space-y-4">
+            <div className="grid md:grid-cols-2 gap-4 print:gap-3">
               <div className="p-4 rounded-lg border bg-muted/40 space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2 rounded-md bg-foreground text-background">
@@ -237,24 +243,24 @@ export default function InvoiceDetail() {
             <div>
               <h3 className="font-semibold text-sm text-muted-foreground mb-4">Detalle de productos</h3>
               <div className="border rounded-lg overflow-hidden">
-                <table className="w-full">
+                <table className="w-full print:text-sm">
                   <thead className="bg-muted/50">
                     <tr>
-                      <th className="text-left p-3 text-sm font-medium">Producto</th>
-                      <th className="text-center p-3 text-sm font-medium">Cant.</th>
-                      <th className="text-right p-3 text-sm font-medium">Precio</th>
-                      <th className="text-right p-3 text-sm font-medium">Total</th>
+                      <th className="text-left p-3 print:p-2 text-sm font-medium">Producto</th>
+                      <th className="text-center p-3 print:p-2 text-sm font-medium">Cant.</th>
+                      <th className="text-right p-3 print:p-2 text-sm font-medium">Precio</th>
+                      <th className="text-right p-3 print:p-2 text-sm font-medium">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
                     {lines.map((line) => (
                       <tr key={line.id}>
-                        <td className="p-3">{line.product_name}</td>
-                        <td className="p-3 text-center">{line.quantity}</td>
-                        <td className="p-3 text-right">
+                        <td className="p-3 print:p-2">{line.product_name}</td>
+                        <td className="p-3 print:p-2 text-center">{line.quantity}</td>
+                        <td className="p-3 print:p-2 text-right">
                           DOP {line.unit_price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                         </td>
-                        <td className="p-3 text-right font-medium">
+                        <td className="p-3 print:p-2 text-right font-medium">
                           DOP {line.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
                         </td>
                       </tr>
