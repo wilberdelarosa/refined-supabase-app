@@ -14,6 +14,92 @@ export type Database = {
   }
   public: {
     Tables: {
+      appointment_notes: {
+        Row: {
+          appointment_id: string
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          is_private: boolean | null
+          recommendations: Json | null
+          updated_at: string
+        }
+        Insert: {
+          appointment_id: string
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          is_private?: boolean | null
+          recommendations?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          appointment_id?: string
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_private?: boolean | null
+          recommendations?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_notes_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      appointment_reviews: {
+        Row: {
+          appointment_id: string
+          client_id: string
+          comment: string | null
+          created_at: string
+          id: string
+          nutritionist_id: string
+          rating: number
+        }
+        Insert: {
+          appointment_id: string
+          client_id: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          nutritionist_id: string
+          rating: number
+        }
+        Update: {
+          appointment_id?: string
+          client_id?: string
+          comment?: string | null
+          created_at?: string
+          id?: string
+          nutritionist_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "appointment_reviews_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: true
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "appointment_reviews_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       appointment_slots: {
         Row: {
           created_at: string
@@ -344,6 +430,50 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dynamic_forms: {
+        Row: {
+          created_at: string
+          description: string | null
+          fields: Json
+          form_type: string
+          id: string
+          is_active: boolean | null
+          name: string
+          nutritionist_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          form_type?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          nutritionist_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          fields?: Json
+          form_type?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          nutritionist_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dynamic_forms_nutritionist_id_fkey"
+            columns: ["nutritionist_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionists"
             referencedColumns: ["id"]
           },
         ]

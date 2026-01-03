@@ -31,6 +31,7 @@ import { useSavedCart } from "./hooks/useSavedCart";
 import AppointmentsPage from "./features/appointments/pages/AppointmentsPage";
 import BookingPage from "./features/appointments/pages/BookingPage";
 import MyAppointmentsPage from "./features/appointments/pages/MyAppointmentsPage";
+import AdminNutritionists from "./pages/admin/AdminNutritionists";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
             <Route path="/order/:orderId" element={<OrderConfirmation />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
+            <Route path="/admin/nutritionists" element={<AdminNutritionists />} />
 
             {/* Appointments Microservice - Conditional */}
             <Route path="/appointments" element={<AppointmentsPage />} />
