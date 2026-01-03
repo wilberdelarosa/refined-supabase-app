@@ -173,16 +173,72 @@ export default function AdminNutritionists() {
 
   async function loadAppointments() {
     const { data, error } = await supabase
-      .from('appointments' as any)
-      .select(
-        '*, profiles:client_id(full_name, email), nutritionists(profiles(full_name)), appointment_slots(date, start_time, end_time)'
-      )
+      .from('appointments')
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(100);
 
-    if (!error && data) {
-      setAppointments(data as unknown as Appointment[]);
+    if (error) {
+      console.error('Error loading appointments:', error);
+      return;
     }
+
+    if (!data || data.length === 0) {
+      setAppointments([]);
+      return;
+    }
+
+    // Fetch related data manually due to RLS restrictions
+    const clientIds = [...new Set(data.map(a => a.client_id))];
+    const nutritionistIds = [...new Set(data.map(a => a.nutritionist_id))];
+    const slotIds = data.filter(a => a.slot_id).map(a => a.slot_id);
+
+    // Get profiles for clients
+    const { data: clientProfiles } = await supabase
+      .from('profiles')
+      .select('user_id, full_name, email')
+      .in('user_id', clientIds);
+
+    // Get nutritionists with their profiles
+    const { data: nutritionistsData } = await supabase
+      .from('nutritionists')
+      .select('id, user_id')
+      .in('id', nutritionistIds);
+
+    const nutritionistUserIds = nutritionistsData?.map(n => n.user_id) || [];
+    const { data: nutritionistProfiles } = await supabase
+      .from('profiles')
+      .select('user_id, full_name')
+      .in('user_id', nutritionistUserIds);
+
+    // Get slots
+    const { data: slotsData } = await supabase
+      .from('appointment_slots')
+      .select('id, date, start_time, end_time')
+      .in('id', slotIds);
+
+    // Build lookup maps
+    const clientMap = new Map(clientProfiles?.map(p => [p.user_id, p]) || []);
+    const nutritionistUserMap = new Map(nutritionistsData?.map(n => [n.id, n.user_id]) || []);
+    const nutritionistProfileMap = new Map(nutritionistProfiles?.map(p => [p.user_id, p]) || []);
+    const slotMap = new Map(slotsData?.map(s => [s.id, s]) || []);
+
+    // Enrich appointments
+    const enrichedAppointments = data.map(apt => {
+      const clientProfile = clientMap.get(apt.client_id);
+      const nutritionistUserId = nutritionistUserMap.get(apt.nutritionist_id);
+      const nutritionistProfile = nutritionistUserId ? nutritionistProfileMap.get(nutritionistUserId) : null;
+      const slot = apt.slot_id ? slotMap.get(apt.slot_id) : null;
+
+      return {
+        ...apt,
+        profiles: clientProfile || { full_name: null, email: null },
+        nutritionists: { profiles: nutritionistProfile || { full_name: null } },
+        appointment_slots: slot || null,
+      };
+    });
+
+    setAppointments(enrichedAppointments as unknown as Appointment[]);
   }
 
   async function loadAvailableUsers() {
