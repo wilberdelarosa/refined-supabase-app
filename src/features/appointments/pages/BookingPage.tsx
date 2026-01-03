@@ -362,14 +362,17 @@ export default function BookingPage() {
                     <div className="p-4 bg-primary/5 rounded-lg">
                       <p className="text-sm font-medium mb-2">Información proporcionada:</p>
                       <div className="text-sm space-y-1">
-                        {Object.entries(intakeAnswers).slice(0, 5).map(([key, value]) => (
-                          <div key={key} className="flex justify-between">
-                            <span className="text-muted-foreground capitalize">
-                              {key.replace(/_/g, ' ')}:
-                            </span>
-                            <span>{String(value)}</span>
-                          </div>
-                        ))}
+                        {Object.entries(intakeAnswers).slice(0, 5).map(([key, value]) => {
+                          const cleanKey = key.includes('.') ? key.split('.').slice(1).join('.') : key;
+                          return (
+                            <div key={key} className="flex justify-between">
+                              <span className="text-muted-foreground capitalize">
+                                {cleanKey.replace(/_/g, ' ')}:
+                              </span>
+                              <span>{String(value)}</span>
+                            </div>
+                          );
+                        })}
                         {Object.keys(intakeAnswers).length > 5 && (
                           <p className="text-muted-foreground">
                             +{Object.keys(intakeAnswers).length - 5} más
