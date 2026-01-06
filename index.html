@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/src/assets/barbaro-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light" />
     <title>Barbaro Nutrition | Suplementos Deportivos Premium</title>
     <meta name="description" content="Barbaro Nutrition: suplementos deportivos premium y asesoría personalizada." />
     <meta name="author" content="Barbaro Nutrition" />
@@ -12,15 +13,20 @@
     <meta property="og:description" content="Suplementos deportivos premium, rutinas y apoyo personalizado para tu rendimiento." />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Barbaro Nutrition" />
-    <meta property="og:image" content="/og-barbaro-v2.jpg?v=1" />
+    <meta property="og:image" content="/og-barbaro-light.png?v=3" />
 
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Barbaro Nutrition" />
     <meta name="twitter:description" content="Suplementos deportivos premium, rutinas y apoyo personalizado para tu rendimiento." />
-    <meta name="twitter:image" content="/og-barbaro-v2.jpg?v=1" />
+    <meta name="twitter:image" content="/og-barbaro-light.png?v=3" />
   </head>
 
   <body>
+    <script>
+      // Force light theme even if device is in dark mode
+      document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
