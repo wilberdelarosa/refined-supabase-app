@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Layout } from '@/components/layout/Layout';
+import { ProfileLayout } from '@/components/layout/ProfileLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { ArrowLeft, Camera, Loader2, User } from 'lucide-react';
+import { Camera, Loader2, User, Save, Upload } from 'lucide-react';
 
 interface Profile {
   full_name: string | null;
@@ -71,7 +71,6 @@ export default function ProfileEdit() {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
       toast.error('La imagen no debe superar 5MB');
       return;
@@ -81,7 +80,6 @@ export default function ProfileEdit() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      // Use user.id as folder name for RLS policy compliance
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
@@ -139,81 +137,65 @@ export default function ProfileEdit() {
 
   if (loading) {
     return (
-      <Layout>
-        <div className="container py-12">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
-          </div>
+      <ProfileLayout>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
         </div>
-      </Layout>
+      </ProfileLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="container py-8">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="flex items-center gap-4 mb-8">
-            <Link to="/account">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="font-display text-2xl font-bold">Editar Perfil</h1>
-              <p className="text-muted-foreground text-sm">
-                Actualiza tu información personal
-              </p>
-            </div>
-          </div>
+    <ProfileLayout>
+      <div className="max-w-4xl mx-auto">
+        <header className="mb-8">
+          <h1 className="text-2xl font-bold text-slate-900">Configuración de Perfil</h1>
+          <p className="text-slate-500 text-sm">Gestiona tu información personal y preferencias</p>
+        </header>
 
-          <form onSubmit={handleSubmit}>
-            {/* Avatar Section */}
-            <Card className="mb-6">
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Sidebar / Avatar Section */}
+          <div className="space-y-6">
+            <Card className="border-slate-200 shadow-sm text-center">
               <CardHeader>
-                <CardTitle>Foto de Perfil</CardTitle>
-                <CardDescription>
-                  Haz clic en la imagen para cambiarla
-                </CardDescription>
+                <CardTitle className="text-base">Foto de Perfil</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-6">
-                  <div className="relative">
-                    <Avatar className="h-24 w-24">
-                      <AvatarImage src={profile.avatar_url || undefined} />
-                      <AvatarFallback>
-                        <User className="h-12 w-12" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <label className="absolute bottom-0 right-0 p-2 bg-primary rounded-full cursor-pointer hover:bg-primary/90 transition-colors">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={handleAvatarUpload}
-                        disabled={uploading}
-                      />
-                      {uploading ? (
-                        <Loader2 className="h-4 w-4 text-primary-foreground animate-spin" />
-                      ) : (
-                        <Camera className="h-4 w-4 text-primary-foreground" />
-                      )}
-                    </label>
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground">
-                      Formatos soportados: JPG, PNG, GIF. Máximo 5MB.
-                    </p>
-                  </div>
+              <CardContent className="flex flex-col items-center">
+                <div className="relative mb-4 group cursor-pointer">
+                  <Avatar className="h-32 w-32 border-4 border-slate-50 shadow-sm transition-transform group-hover:scale-105">
+                    <AvatarImage src={profile.avatar_url || undefined} />
+                    <AvatarFallback className="bg-slate-100 text-slate-400">
+                      <User className="h-12 w-12" />
+                    </AvatarFallback>
+                  </Avatar>
+                  <label className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-all shadow-md">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleAvatarUpload}
+                      disabled={uploading}
+                    />
+                    {uploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Camera className="h-4 w-4" />
+                    )}
+                  </label>
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Recomendado: 400x400px <br /> Max 5MB, JPG/PNG
+                </p>
               </CardContent>
             </Card>
+          </div>
 
-            {/* Personal Info */}
-            <Card className="mb-6">
+          {/* Main Form */}
+          <div className="md:col-span-2 space-y-6">
+            <Card className="border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Información Personal</CardTitle>
+                <CardDescription>Datos básicos de tu cuenta</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -223,6 +205,7 @@ export default function ProfileEdit() {
                       id="full_name"
                       value={profile.full_name || ''}
                       onChange={(e) => setProfile(p => ({ ...p, full_name: e.target.value }))}
+                      className="bg-slate-50 border-slate-200"
                     />
                   </div>
                   <div className="space-y-2">
@@ -232,7 +215,7 @@ export default function ProfileEdit() {
                       type="email"
                       value={profile.email || ''}
                       disabled
-                      className="bg-muted"
+                      className="bg-slate-100 border-slate-200 text-slate-500"
                     />
                   </div>
                 </div>
@@ -244,15 +227,16 @@ export default function ProfileEdit() {
                     value={profile.phone || ''}
                     onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
                     placeholder="+1 809 555 0123"
+                    className="bg-slate-50 border-slate-200"
                   />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Address */}
-            <Card className="mb-6">
+            <Card className="border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle>Dirección de Envío</CardTitle>
+                <CardDescription>Utilizada para calcular envíos</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
@@ -262,6 +246,7 @@ export default function ProfileEdit() {
                     value={profile.address || ''}
                     onChange={(e) => setProfile(p => ({ ...p, address: e.target.value }))}
                     placeholder="Calle, número, sector"
+                    className="bg-slate-50 border-slate-200"
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -272,6 +257,7 @@ export default function ProfileEdit() {
                       value={profile.city || ''}
                       onChange={(e) => setProfile(p => ({ ...p, city: e.target.value }))}
                       placeholder="Santo Domingo"
+                      className="bg-slate-50 border-slate-200"
                     />
                   </div>
                   <div className="space-y-2">
@@ -280,35 +266,34 @@ export default function ProfileEdit() {
                       id="country"
                       value={profile.country || ''}
                       onChange={(e) => setProfile(p => ({ ...p, country: e.target.value }))}
+                      className="bg-slate-50 border-slate-200"
                     />
                   </div>
                 </div>
               </CardContent>
+              <CardFooter className="bg-slate-50/50 border-t border-slate-100 flex justify-end p-4">
+                <div className="flex gap-3">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    onClick={() => navigate('/account')}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={saving} className="min-w-[120px]">
+                    {saving ? (
+                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    ) : (
+                      <Save className="h-4 w-4 mr-2" />
+                    )}
+                    Guardar
+                  </Button>
+                </div>
+              </CardFooter>
             </Card>
-
-            {/* Actions */}
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/account')}
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Guardando...
-                  </>
-                ) : (
-                  'Guardar Cambios'
-                )}
-              </Button>
-            </div>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
-    </Layout>
+    </ProfileLayout>
   );
 }

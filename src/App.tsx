@@ -28,10 +28,7 @@ import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import { useSavedCart } from "./hooks/useSavedCart";
-import AppointmentsPage from "./features/appointments/pages/AppointmentsPage";
-import BookingPage from "./features/appointments/pages/BookingPage";
-import MyAppointmentsPage from "./features/appointments/pages/MyAppointmentsPage";
-import AdminNutritionists from "./pages/admin/AdminNutritionists";
+
 
 const queryClient = new QueryClient();
 
@@ -73,12 +70,6 @@ const App = () => (
             <Route path="/order/:orderId" element={<OrderConfirmation />} />
             <Route path="/admin/categories" element={<AdminCategories />} />
             <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
-            <Route path="/admin/nutritionists" element={<AdminNutritionists />} />
-
-            {/* Appointments Microservice - Conditional */}
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/appointments/book/:nutritionistId" element={<BookingPage />} />
-            <Route path="/account/appointments" element={<MyAppointmentsPage />} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
