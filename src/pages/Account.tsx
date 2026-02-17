@@ -236,6 +236,12 @@ export default function Account() {
                   <span className="text-sm font-medium">Mis Pedidos</span>
                 </div>
               </Link>
+              <Link to="/account/appointments">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-primary/50 transition-all cursor-pointer">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">Mis Citas</span>
+                </div>
+              </Link>
               <Link to="/wishlist">
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-primary/50 transition-all cursor-pointer">
                   <Heart className="h-5 w-5 text-primary" />
