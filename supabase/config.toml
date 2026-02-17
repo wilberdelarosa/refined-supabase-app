@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.ai-consultation-intake]
 verify_jwt = false
+
+[functions.seed-catalog]
+verify_jwt = false
+
+[functions.ai-recommendation]
+verify_jwt = false

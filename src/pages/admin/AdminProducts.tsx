@@ -42,7 +42,10 @@ import {
   Search,
   ArrowLeft,
   Package,
-  Beaker
+  Beaker,
+  Download,
+  Upload,
+  Loader2
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProductNutritionDialog from '@/components/admin/ProductNutritionDialog';
@@ -100,6 +103,88 @@ export default function AdminProducts() {
   const [lastEditedId, setLastEditedId] = useState<string | null>(null);
   const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
   const [nutritionProduct, setNutritionProduct] = useState<Product | null>(null);
+  const [seeding, setSeeding] = useState(false);
+
+  async function handleExportJSON() {
+    const { data } = await supabase.from('products').select('*').order('name');
+    if (!data) return;
+    const blob = new Blob([JSON.stringify({ products: data }, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `barbaro-products-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exportado', description: `${data.length} productos exportados` });
+  }
+
+  async function handleExportCSV() {
+    const { data } = await supabase.from('products').select('*').order('name');
+    if (!data || data.length === 0) return;
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(p => Object.values(p).map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `barbaro-products-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: 'Exportado', description: `${data.length} productos exportados como CSV` });
+  }
+
+  async function handleImportJSON(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const parsed = JSON.parse(text);
+      const items = parsed.products || parsed;
+      if (!Array.isArray(items)) throw new Error('Formato inválido');
+
+      let count = 0;
+      for (const item of items) {
+        const { error } = await supabase.from('products').upsert({
+          name: item.name,
+          description: item.description || null,
+          price: Number(item.price) || 0,
+          original_price: item.original_price ? Number(item.original_price) : null,
+          category: item.category || 'General',
+          stock: Number(item.stock) || 0,
+          featured: item.featured || false,
+          image_url: item.image_url || null,
+          brand: item.brand || null,
+          weight_size: item.weight_size || null,
+          sku: item.sku || null,
+        }, { onConflict: 'sku' });
+        if (!error) count++;
+      }
+
+      toast({ title: 'Importado', description: `${count} productos importados correctamente` });
+      fetchProducts(1);
+    } catch (err) {
+      toast({ title: 'Error', description: 'Archivo inválido. Usa formato JSON con array de productos.', variant: 'destructive' });
+    }
+    e.target.value = '';
+  }
+
+  async function handleSeedCatalog() {
+    if (!confirm('¿Poblar la tienda con el catálogo completo? Esto borrará los productos actuales.')) return;
+    setSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-catalog', {
+        body: { action: 'seed' },
+      });
+      if (error) throw error;
+      toast({ title: 'Catálogo poblado', description: `${data.products_inserted} productos, ${data.nutrition_generated} fichas nutricionales generadas` });
+      fetchProducts(1);
+    } catch (err) {
+      toast({ title: 'Error', description: 'Error al poblar catálogo', variant: 'destructive' });
+    } finally {
+      setSeeding(false);
+    }
+  }
 
   useEffect(() => {
     if (!authLoading && !rolesLoading) {
@@ -362,28 +447,54 @@ export default function AdminProducts() {
               </p>
             </div>
           </div>
-          <Button onClick={openCreateDialog} className="shadow-sm hover:shadow-md bg-[#2b8cee] hover:bg-[#206bc4] text-white w-full md:w-auto">
-            <Plus className="h-4 w-4 mr-2" />
-            Nuevo Producto
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSeedCatalog}
+              disabled={seeding}
+              className="text-xs"
+            >
+              {seeding ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Package className="h-4 w-4 mr-1" />}
+              {seeding ? 'Poblando...' : 'Poblar Catálogo'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportJSON} className="text-xs">
+              <Download className="h-4 w-4 mr-1" />
+              JSON
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="text-xs">
+              <Download className="h-4 w-4 mr-1" />
+              CSV
+            </Button>
+            <label>
+              <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
+              <Button variant="outline" size="sm" asChild className="text-xs cursor-pointer">
+                <span><Upload className="h-4 w-4 mr-1" />Importar</span>
+              </Button>
+            </label>
+            <Button onClick={openCreateDialog} className="shadow-sm hover:shadow-md bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Producto
+            </Button>
+          </div>
         </div>
       </div>
 
       {/* Enhanced Filters Card */}
-      <Card className="mb-6 shadow-sm border border-slate-200 overflow-hidden bg-white">
+      <Card className="mb-6 shadow-sm border overflow-hidden">
         <CardContent className="pt-6 relative">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Buscar productos por nombre..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 border-slate-200 bg-slate-50 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
+                className="pl-10"
               />
             </div>
             <Select value={filterCategory} onValueChange={setFilterCategory}>
-              <SelectTrigger className="w-full md:w-[220px] border-slate-200 bg-slate-50">
+              <SelectTrigger className="w-full md:w-[220px]">
                 <SelectValue placeholder="Filtrar por categoría" />
               </SelectTrigger>
               <SelectContent>
