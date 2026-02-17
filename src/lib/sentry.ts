@@ -4,7 +4,6 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { BrowserTracing } from '@sentry/tracing';
 
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const APP_ENV = import.meta.env.VITE_APP_ENV || 'development';
@@ -21,11 +20,7 @@ export function initSentry() {
     dsn: SENTRY_DSN,
     environment: APP_ENV,
     integrations: [
-      new BrowserTracing(),
-      new Sentry.Replay({
-        maskAllText: true,
-        blockAllMedia: true,
-      }),
+      Sentry.browserTracingIntegration(),
     ],
 
     // Performance Monitoring

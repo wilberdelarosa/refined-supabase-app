@@ -1040,6 +1040,8 @@ export type Database = {
       }
       products: {
         Row: {
+          benefits: Json | null
+          brand: string | null
           category: string
           created_at: string
           description: string | null
@@ -1050,10 +1052,15 @@ export type Database = {
           name: string
           original_price: number | null
           price: number
+          sku: string | null
           stock: number
           updated_at: string
+          usage_instructions: string | null
+          weight_size: string | null
         }
         Insert: {
+          benefits?: Json | null
+          brand?: string | null
           category: string
           created_at?: string
           description?: string | null
@@ -1064,10 +1071,15 @@ export type Database = {
           name: string
           original_price?: number | null
           price: number
+          sku?: string | null
           stock?: number
           updated_at?: string
+          usage_instructions?: string | null
+          weight_size?: string | null
         }
         Update: {
+          benefits?: Json | null
+          brand?: string | null
           category?: string
           created_at?: string
           description?: string | null
@@ -1078,8 +1090,11 @@ export type Database = {
           name?: string
           original_price?: number | null
           price?: number
+          sku?: string | null
           stock?: number
           updated_at?: string
+          usage_instructions?: string | null
+          weight_size?: string | null
         }
         Relationships: []
       }

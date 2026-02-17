@@ -5,7 +5,7 @@ import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
 const pwaConfig = {
-  registerType: "autoUpdate",
+  registerType: "autoUpdate" as const,
   devOptions: {
     enabled: true,
     suppressWarnings: true,
@@ -20,28 +20,28 @@ const pwaConfig = {
     description: "Barbaro Nutrition: suplementos deportivos premium y asesoría personalizada.",
     theme_color: "#0f172a",
     background_color: "#ffffff",
-    display: "standalone",
+    display: "standalone" as const,
     start_url: "/",
     scope: "/",
-    orientation: "portrait-primary",
+    orientation: "portrait-primary" as const,
     icons: [
       {
         src: "/pwa-icon-192.svg",
         sizes: "192x192",
         type: "image/svg+xml",
-        purpose: "any",
+        purpose: "any" as const,
       },
       {
         src: "/pwa-icon-512.svg",
         sizes: "512x512",
         type: "image/svg+xml",
-        purpose: "any",
+        purpose: "any" as const,
       },
       {
         src: "/pwa-maskable.svg",
         sizes: "512x512",
         type: "image/svg+xml",
-        purpose: "maskable",
+        purpose: "maskable" as const,
       },
     ],
   },
