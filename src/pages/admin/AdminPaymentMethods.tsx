@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
-import { Layout } from '@/components/layout/Layout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -137,7 +137,7 @@ export default function AdminPaymentMethods() {
 
   const handleSave = async () => {
     if (!formData.name.trim()) {
-      toast.error('El nombre es requerido');
+      toast({ title: 'Error', description: 'El nombre es requerido', variant: 'destructive' });
       return;
     }
 
@@ -161,7 +161,7 @@ export default function AdminPaymentMethods() {
           .eq('id', editingMethod.id);
 
         if (error) throw error;
-        toast.success('Método de pago actualizado');
+        toast({ title: 'Éxito', description: 'Método de pago actualizado' });
       } else {
         const { error } = await supabase
           .from('payment_methods')
@@ -179,14 +179,14 @@ export default function AdminPaymentMethods() {
           });
 
         if (error) throw error;
-        toast.success('Método de pago creado');
+        toast({ title: 'Éxito', description: 'Método de pago creado' });
       }
 
       setDialogOpen(false);
       await fetchMethods();
     } catch (error) {
       console.error('Error saving:', error);
-      toast.error('Error al guardar');
+      toast({ title: 'Error', description: 'Error al guardar', variant: 'destructive' });
     } finally {
       setSaving(false);
     }
@@ -202,13 +202,13 @@ export default function AdminPaymentMethods() {
         .eq('id', editingMethod.id);
 
       if (error) throw error;
-      toast.success('Método de pago eliminado');
+      toast({ title: 'Eliminado', description: 'Método de pago eliminado' });
       setDeleteDialogOpen(false);
       setEditingMethod(null);
       await fetchMethods();
     } catch (error) {
       console.error('Error deleting:', error);
-      toast.error('Error al eliminar');
+      toast({ title: 'Error', description: 'Error al eliminar', variant: 'destructive' });
     }
   };
 
@@ -220,107 +220,108 @@ export default function AdminPaymentMethods() {
         .eq('id', method.id);
 
       if (error) throw error;
-      toast.success(method.is_active ? 'Método desactivado' : 'Método activado');
+      toast({
+        title: method.is_active ? 'Desactivado' : 'Activado',
+        description: method.is_active ? 'El método ha sido desactivado' : 'El método ha sido activado'
+      });
       await fetchMethods();
     } catch (error) {
-      toast.error('Error al actualizar');
+      toast({ title: 'Error', description: 'Error al actualizar', variant: 'destructive' });
     }
   };
 
   if (loading || rolesLoading) {
     return (
-      <Layout>
-        <div className="container py-12">
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
+      <AdminLayout>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="container py-8">
-        <div className="max-w-5xl mx-auto">
-          {/* Back button */}
-          <Button variant="ghost" asChild className="mb-6">
-            <Link to="/admin">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Panel de Admin
-            </Link>
-          </Button>
-
-          <div className="space-y-6">
+    <AdminLayout>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <CreditCard className="h-6 w-6" />
-            Métodos de Pago
-          </h2>
-          <p className="text-muted-foreground">
-            Administra las cuentas bancarias y métodos de pago disponibles
-          </p>
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 flex-1">
+            <Link to="/admin">
+              <Button variant="ghost" size="icon" className="hover-lift hover:bg-slate-100">
+                <ArrowLeft className="h-5 w-5 text-slate-600" />
+              </Button>
+            </Link>
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-slate-900">
+                <CreditCard className="h-7 w-7 text-slate-700" />
+                Métodos de Pago
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                Administra las cuentas bancarias y métodos de pago disponibles
+              </p>
+            </div>
+          </div>
+          <Button onClick={openCreateDialog} className="shadow-sm hover:shadow-md bg-[#2b8cee] hover:bg-[#206bc4] text-white w-full md:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar Método
+          </Button>
         </div>
-        <Button onClick={openCreateDialog}>
-          <Plus className="h-4 w-4 mr-2" />
-          Agregar Método
-        </Button>
       </div>
 
       {/* Methods Table */}
-      <Card>
+      <Card className="shadow-sm border border-slate-200 overflow-hidden bg-white">
         <CardContent className="p-0">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="w-12"></TableHead>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Banco</TableHead>
-                <TableHead>Número de Cuenta</TableHead>
-                <TableHead>Titular</TableHead>
-                <TableHead className="text-center">Estado</TableHead>
-                <TableHead className="text-right">Acciones</TableHead>
+              <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-200">
+                <TableHead className="w-12 text-slate-700"></TableHead>
+                <TableHead className="font-bold text-slate-700">Nombre</TableHead>
+                <TableHead className="font-bold text-slate-700">Banco</TableHead>
+                <TableHead className="font-bold text-slate-700">Número de Cuenta</TableHead>
+                <TableHead className="font-bold text-slate-700">Titular</TableHead>
+                <TableHead className="text-center font-bold text-slate-700">Estado</TableHead>
+                <TableHead className="text-right font-bold text-slate-700">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {methods.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                    No hay métodos de pago configurados
+                  <TableCell colSpan={7} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="p-4 rounded-full bg-slate-100">
+                        <CreditCard className="h-12 w-12 text-slate-400" />
+                      </div>
+                      <p className="text-slate-500 font-medium">No hay métodos de pago configurados</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 methods.map((method) => (
-                  <TableRow key={method.id}>
+                  <TableRow key={method.id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
                     <TableCell>
-                      <GripVertical className="h-4 w-4 text-muted-foreground" />
+                      <GripVertical className="h-4 w-4 text-slate-400 cursor-move" />
                     </TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="font-medium text-slate-900">
                       <div className="flex items-center gap-2">
-                        <Building2 className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-1.5 bg-[#2b8cee]/10 rounded text-[#2b8cee]">
+                          <Building2 className="h-4 w-4" />
+                        </div>
                         {method.name}
                       </div>
                     </TableCell>
-                    <TableCell>{method.bank_name || '-'}</TableCell>
-                    <TableCell className="font-mono text-sm">
+                    <TableCell className="text-slate-600">{method.bank_name || '-'}</TableCell>
+                    <TableCell className="font-mono text-sm text-slate-600">
                       {method.account_number || '-'}
                     </TableCell>
-                    <TableCell>{method.account_holder || '-'}</TableCell>
+                    <TableCell className="text-slate-600">{method.account_holder || '-'}</TableCell>
                     <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => toggleActive(method)}
-                        className={method.is_active ? 'text-green-600' : 'text-muted-foreground'}
-                      >
-                        {method.is_active ? (
-                          <Check className="h-4 w-4" />
-                        ) : (
-                          <X className="h-4 w-4" />
-                        )}
-                      </Button>
+                      <div className="flex justify-center">
+                        <Switch
+                          checked={method.is_active}
+                          onCheckedChange={() => toggleActive(method)}
+                          className="data-[state=checked]:bg-emerald-500"
+                        />
+                      </div>
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
@@ -328,13 +329,14 @@ export default function AdminPaymentMethods() {
                           variant="ghost"
                           size="icon"
                           onClick={() => openEditDialog(method)}
+                          className="hover:bg-blue-500/10 text-slate-400 hover:text-blue-600"
                         >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="text-destructive"
+                          className="hover:bg-red-500/10 text-slate-400 hover:text-red-600"
                           onClick={() => {
                             setEditingMethod(method);
                             setDeleteDialogOpen(true);
@@ -354,13 +356,13 @@ export default function AdminPaymentMethods() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg bg-white border-slate-200">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-slate-900">
               {editingMethod ? 'Editar Método de Pago' : 'Nuevo Método de Pago'}
             </DialogTitle>
-            <DialogDescription>
-              {editingMethod 
+            <DialogDescription className="text-slate-500">
+              {editingMethod
                 ? 'Modifica los datos del método de pago'
                 : 'Agrega una nueva cuenta bancaria o método de pago'}
             </DialogDescription>
@@ -368,99 +370,113 @@ export default function AdminPaymentMethods() {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Nombre *</Label>
+              <Label htmlFor="name" className="text-slate-700">Nombre *</Label>
               <Input
                 id="name"
                 placeholder="Ej: Banco Popular - Cuenta Principal"
                 value={formData.name}
                 onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))}
+                className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bank_name">Nombre del Banco</Label>
+                <Label htmlFor="bank_name" className="text-slate-700">Nombre del Banco</Label>
                 <Input
                   id="bank_name"
                   placeholder="Banco Popular Dominicano"
                   value={formData.bank_name || ''}
                   onChange={(e) => setFormData(f => ({ ...f, bank_name: e.target.value }))}
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="account_type">Tipo de Cuenta</Label>
+                <Label htmlFor="account_type" className="text-slate-700">Tipo de Cuenta</Label>
                 <Input
                   id="account_type"
                   placeholder="Cuenta Corriente"
                   value={formData.account_type || ''}
                   onChange={(e) => setFormData(f => ({ ...f, account_type: e.target.value }))}
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="account_number">Número de Cuenta</Label>
+              <Label htmlFor="account_number" className="text-slate-700">Número de Cuenta</Label>
               <Input
                 id="account_number"
                 placeholder="123-456789-0"
                 value={formData.account_number || ''}
                 onChange={(e) => setFormData(f => ({ ...f, account_number: e.target.value }))}
+                className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="account_holder">Titular</Label>
+                <Label htmlFor="account_holder" className="text-slate-700">Titular</Label>
                 <Input
                   id="account_holder"
                   placeholder="Nombre del titular"
                   value={formData.account_holder || ''}
                   onChange={(e) => setFormData(f => ({ ...f, account_holder: e.target.value }))}
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="rnc">RNC</Label>
+                <Label htmlFor="rnc" className="text-slate-700">RNC</Label>
                 <Input
                   id="rnc"
                   placeholder="1-31-12345-6"
                   value={formData.rnc || ''}
                   onChange={(e) => setFormData(f => ({ ...f, rnc: e.target.value }))}
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="instructions">Instrucciones adicionales</Label>
+              <Label htmlFor="instructions" className="text-slate-700">Instrucciones adicionales</Label>
               <Textarea
                 id="instructions"
                 placeholder="Instrucciones especiales para este método de pago..."
                 value={formData.instructions || ''}
                 onChange={(e) => setFormData(f => ({ ...f, instructions: e.target.value }))}
                 rows={3}
+                className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
               />
             </div>
 
-            <div className="flex items-center justify-between py-2">
-              <div className="space-y-0.5">
-                <Label>Estado</Label>
-                <p className="text-sm text-muted-foreground">
-                  {formData.is_active ? 'Visible para clientes' : 'Oculto'}
-                </p>
-              </div>
+            <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 bg-slate-50">
               <Switch
                 checked={formData.is_active}
                 onCheckedChange={(checked) => setFormData(f => ({ ...f, is_active: checked }))}
+                className="data-[state=checked]:bg-[#2b8cee]"
               />
+              <div className="space-y-0.5">
+                <Label className="text-slate-700 font-medium">Estado</Label>
+                <p className="text-xs text-slate-500">
+                  {formData.is_active ? 'Visible para clientes' : 'Oculto'}
+                </p>
+              </div>
             </div>
           </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setDialogOpen(false)} className="border-slate-200 text-slate-700">
               Cancelar
             </Button>
-            <Button onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {editingMethod ? 'Guardar Cambios' : 'Crear Método'}
+            <Button onClick={handleSave} disabled={saving} className="bg-[#2b8cee] hover:bg-[#206bc4] text-white">
+              {saving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                editingMethod ? 'Guardar Cambios' : 'Crear Método'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -468,27 +484,24 @@ export default function AdminPaymentMethods() {
 
       {/* Delete Confirmation */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white border-slate-200">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar método de pago?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-slate-900">¿Eliminar método de pago?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500">
               Esta acción no se puede deshacer. El método "{editingMethod?.name}" será eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="border-slate-200 text-slate-700">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              className="bg-red-600 text-white hover:bg-red-700"
             >
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-          </div>
-        </div>
-      </div>
-    </Layout>
+    </AdminLayout>
   );
 }

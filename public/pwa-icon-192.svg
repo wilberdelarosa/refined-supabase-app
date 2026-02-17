@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Barbaro Nutrition">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1f2a44" />
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="36" fill="url(#bg)" />
+  <path fill="#fbbf24" d="M64 48h40c22 0 40 12 40 32 0 13-8 24-22 29l-2 1 1 1c8 5 13 13 13 22 0 19-16 31-36 31H64V48Zm22 74v28h14c8 0 14-5 14-12s-6-12-14-12H86Zm0-20h18c9 0 16-6 16-14s-7-14-16-14H86v28Z" />
+</svg>

@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
-import { Layout } from '@/components/layout/Layout';
-import { Button } from '@/components/ui/button';
+import { ProfileLayout } from '@/components/layout/ProfileLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
-import { User, Package, MapPin, Settings, Shield, LogOut, Heart, Edit, Calendar } from 'lucide-react';
+import { Calendar, Package, Heart, MapPin, Bell, Smartphone, User, TrendingUp } from 'lucide-react';
 
 interface Profile {
   full_name: string | null;
@@ -21,11 +20,40 @@ interface Profile {
 }
 
 export default function Account() {
-  const { user, signOut } = useAuth();
-  const { roles, isAdmin, loading: rolesLoading } = useRoles();
+  const { user } = useAuth();
+  const { roles } = useRoles();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ordersCount, setOrdersCount] = useState(0);
+  const [wishlistCount, setWishlistCount] = useState(0);
+
+  const notificationOptions = [
+    {
+      key: 'orders',
+      title: 'Actualizaciones de pedidos',
+      description: 'Alertas de pago, comprobantes y entregas.',
+      icon: Package,
+      comingSoon: true,
+      defaultOn: true,
+    },
+    {
+      key: 'promos',
+      title: 'Promociones y novedades',
+      description: 'Ofertas personalizadas y recordatorios.',
+      icon: Bell,
+      comingSoon: true,
+      defaultOn: false,
+    },
+    {
+      key: 'mobile',
+      title: 'Alertas en tu móvil',
+      description: 'Notificaciones push y WhatsApp.',
+      icon: Smartphone,
+      comingSoon: true,
+      defaultOn: false,
+    },
+  ];
 
   useEffect(() => {
     if (!user) {
@@ -33,216 +61,199 @@ export default function Account() {
       return;
     }
 
-    async function fetchProfile() {
-      const { data, error } = await supabase
+    async function fetchData() {
+      // Profile
+      const { data: profileData } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', user!.id)
         .maybeSingle();
 
-      if (!error && data) {
-        setProfile(data);
+      if (profileData) {
+        setProfile(profileData);
       }
+
+      // Orders Count
+      const { count: orders } = await supabase
+        .from('orders')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user!.id);
+
+      if (orders !== null) setOrdersCount(orders);
+
+      // Wishlist Count (Local logic not easily countable if handled locally, but if in DB...)
+      // The current wishlist hook uses local storage or DB?
+      // Based on Wishlist.tsx, it uses `useNativeWishlist`. Let's assume we can just show a placeholder or skip it if it's complex.
+      // For now, let's just count orders.
+
       setLoading(false);
     }
 
-    fetchProfile();
+    fetchData();
   }, [user, navigate]);
 
   if (!user) return null;
 
-  return (
-    <Layout>
-      <div className="container py-12">
-        <div className="max-w-4xl mx-auto">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="font-display text-3xl font-bold mb-2">Mi Cuenta</h1>
-            <p className="text-muted-foreground">
-              Gestiona tu perfil, pedidos y preferencias
-            </p>
-          </div>
+  if (loading) {
+    return (
+      <ProfileLayout>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        </div>
+      </ProfileLayout>
+    );
+  }
 
-          {/* User Info Card */}
-          <Card className="mb-8">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Avatar className="h-16 w-16">
-                    <AvatarImage src={profile?.avatar_url || undefined} />
-                    <AvatarFallback>
-                      <User className="h-8 w-8" />
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-xl">
-                      {profile?.full_name || user.user_metadata?.full_name || 'Usuario'}
-                    </CardTitle>
-                    <CardDescription>{user.email}</CardDescription>
-                    {!rolesLoading && roles.length > 0 && (
-                      <div className="flex gap-2 mt-2">
-                        {roles.map((role) => (
-                          <Badge key={role} variant={role === 'admin' ? 'default' : 'secondary'}>
-                            {role === 'admin' && <Shield className="h-3 w-3 mr-1" />}
-                            {role.charAt(0).toUpperCase() + role.slice(1)}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <Link to="/profile/edit">
-                    <Button variant="outline" size="sm">
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                  </Link>
-                  <Button variant="outline" size="sm" onClick={() => signOut()}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Salir
-                  </Button>
+  return (
+    <ProfileLayout>
+      {/* Welcome Section */}
+      <section>
+        <h3 className="sr-only">Resumen Principal</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Card 1: Orders */}
+          <Link to="/orders">
+            <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-primary/30 cursor-pointer h-full">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Package className="text-blue-500 h-6 w-6" />
                 </div>
               </div>
+              <p className="text-slate-500 text-sm font-medium mb-1">Mis Pedidos</p>
+              <p className="text-slate-900 text-2xl font-bold tracking-tight">{ordersCount}</p>
+            </div>
+          </Link>
+
+          {/* Card 2: Wishlist */}
+          <Link to="/wishlist">
+            <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all hover:border-primary/30 cursor-pointer h-full">
+              <div className="flex items-center justify-between mb-4">
+                <div className="p-2 bg-rose-500/10 rounded-lg">
+                  <Heart className="text-rose-500 h-6 w-6" />
+                </div>
+              </div>
+              <p className="text-slate-500 text-sm font-medium mb-1">Favoritos</p>
+              <p className="text-slate-900 text-2xl font-bold tracking-tight">Ver lista</p>
+            </div>
+          </Link>
+
+          {/* Card 3: Profile Status */}
+          <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <User className="text-emerald-500 h-6 w-6" />
+              </div>
+              <span className="px-2 py-1 bg-emerald-500/10 text-emerald-600 text-xs font-semibold rounded-md flex items-center gap-1">
+                Activo
+              </span>
+            </div>
+            <p className="text-slate-500 text-sm font-medium mb-1">Estado de Cuenta</p>
+            <p className="text-slate-900 text-lg font-bold tracking-tight truncate">
+              {profile?.city ? `${profile.city}, ` : ''}{profile?.country || 'Rep. Dom.'}
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Details & Notifications */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+        {/* Profile Details Card */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4">
+              <div>
+                <CardTitle className="text-lg">Información Personal</CardTitle>
+                <CardDescription>Tus datos de contacto y envío</CardDescription>
+              </div>
+              <Link to="/profile/edit">
+                <Badge variant="secondary" className="cursor-pointer hover:bg-slate-200">Editar</Badge>
+              </Link>
             </CardHeader>
+            <CardContent className="pt-6">
+              <dl className="grid gap-6 sm:grid-cols-2">
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Teléfono</dt>
+                  <dd className="text-sm font-semibold text-slate-900">{profile?.phone || 'No especificado'}</dd>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Dirección</dt>
+                  <dd className="text-sm font-semibold text-slate-900">{profile?.address || 'No especificada'}</dd>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">Ciudad</dt>
+                  <dd className="text-sm font-semibold text-slate-900">{profile?.city || 'No especificada'}</dd>
+                </div>
+                <div className="p-4 rounded-lg bg-slate-50 border border-slate-100">
+                  <dt className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">País</dt>
+                  <dd className="text-sm font-semibold text-slate-900">{profile?.country || 'República Dominicana'}</dd>
+                </div>
+              </dl>
+            </CardContent>
           </Card>
 
-          {/* Quick Actions */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <Link to="/orders">
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Package className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Mis Pedidos</CardTitle>
-                      <CardDescription>Ver historial de compras</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-            <Link to="/account/appointments">
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Calendar className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Mis Citas</CardTitle>
-                      <CardDescription>Gestiona tus consultas con nutricionistas</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-
-            <Link to="/wishlist">
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Heart className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Favoritos</CardTitle>
-                      <CardDescription>Productos guardados</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-
-            <Link to="/profile/edit">
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <MapPin className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Direcciones</CardTitle>
-                      <CardDescription>Gestionar direcciones de envío</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-
-            <Link to="/profile/edit">
-              <Card className="hover:border-foreground/20 transition-colors cursor-pointer h-full">
-                <CardHeader>
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-muted">
-                      <Settings className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Configuración</CardTitle>
-                      <CardDescription>Preferencias de cuenta</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-            </Link>
-
-            {isAdmin && (
-              <Link to="/admin">
-                <Card className="hover:border-foreground/20 transition-colors cursor-pointer border-primary/20 h-full">
-                  <CardHeader>
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <Shield className="h-5 w-5 text-primary" />
+          <Card className="border-slate-200 shadow-sm">
+            <CardHeader className="border-b border-slate-100 pb-4">
+              <CardTitle className="text-lg">Notificaciones</CardTitle>
+              <CardDescription>
+                Gestiona cómo quieres recibir nuestras actualizaciones.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 pt-6">
+              {notificationOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <div key={option.key} className="flex items-start justify-between gap-4 rounded-xl border border-slate-100 p-4 hover:bg-slate-50 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-primary">
+                        <Icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <CardTitle className="text-lg">Panel Admin</CardTitle>
-                        <CardDescription>Gestionar tienda</CardDescription>
+                        <p className="font-medium text-sm text-slate-900">{option.title}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{option.description}</p>
                       </div>
                     </div>
-                  </CardHeader>
-                </Card>
-              </Link>
-            )}
-          </div>
-
-          {/* Profile Details */}
-          {profile && (
-            <Card className="mt-8">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>Información de Perfil</CardTitle>
-                <Link to="/profile/edit">
-                  <Button variant="ghost" size="sm">
-                    <Edit className="h-4 w-4 mr-2" />
-                    Editar
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
-                <dl className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <dt className="text-sm font-medium text-muted-foreground">Teléfono</dt>
-                    <dd className="mt-1">{profile.phone || 'No especificado'}</dd>
+                    <div className="flex items-center gap-2">
+                      {option.comingSoon && <Badge variant="outline" className="text-[10px] h-5 px-1.5">Pronto</Badge>}
+                      <Switch checked={option.defaultOn} disabled aria-readonly />
+                    </div>
                   </div>
-                  <div>
-                    <dt className="text-sm font-medium text-muted-foreground">Dirección</dt>
-                    <dd className="mt-1">{profile.address || 'No especificada'}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-muted-foreground">Ciudad</dt>
-                    <dd className="mt-1">{profile.city || 'No especificada'}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-muted-foreground">País</dt>
-                    <dd className="mt-1">{profile.country || 'República Dominicana'}</dd>
-                  </div>
-                </dl>
-              </CardContent>
-            </Card>
-          )}
+                );
+              })}
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Quick Actions / Sidebar Right */}
+        <div className="space-y-6">
+          <Card className="border-slate-200 shadow-sm bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <CardTitle className="text-base">Acceso Rápido</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Link to="/orders">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-primary/50 transition-all cursor-pointer">
+                  <Package className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">Mis Pedidos</span>
+                </div>
+              </Link>
+              <Link to="/account/appointments">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-primary/50 transition-all cursor-pointer">
+                  <Calendar className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">Mis Citas</span>
+                </div>
+              </Link>
+              <Link to="/wishlist">
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 shadow-sm hover:border-primary/50 transition-all cursor-pointer">
+                  <Heart className="h-5 w-5 text-primary" />
+                  <span className="text-sm font-medium">Favoritos</span>
+                </div>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+
       </div>
-    </Layout>
+    </ProfileLayout>
   );
 }
+

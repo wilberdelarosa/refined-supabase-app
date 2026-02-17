@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Barbaro Nutrition maskable">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="100%" stop-color="#1f2a44" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)" />
+  <path fill="#fbbf24" d="M160 96h160c86 0 152 45 152 120 0 49-30 88-80 105l-8 3 5 3c31 18 47 45 47 77 0 69-54 118-136 118H160V96Zm86 262v86h60c31 0 52-18 52-43s-21-43-52-43h-60Zm0-78h76c33 0 56-20 56-48 0-27-23-48-56-48h-76v96Z" />
+</svg>

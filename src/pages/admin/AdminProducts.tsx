@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
-import { Layout } from '@/components/layout/Layout';
+import { AdminLayout } from '@/components/layout/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -175,11 +175,9 @@ export default function AdminProducts() {
     if (data) setCategories(data);
   }
 
-  const filteredProducts = products;
-
   function openCreateDialog() {
     setEditingProduct(null);
-    
+
     // If no categories loaded yet, fetch them first
     if (categories.length === 0) {
       fetchCategories().then(() => {
@@ -326,266 +324,260 @@ export default function AdminProducts() {
     const row = document.getElementById(`product-${lastEditedId}`);
     if (!row) return;
     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    row.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+    row.classList.add('bg-[#2b8cee]/10');
     const timeout = setTimeout(() => {
-      row.classList.remove('ring-2', 'ring-primary', 'ring-offset-2');
+      row.classList.remove('bg-[#2b8cee]/10');
     }, 1200);
     return () => clearTimeout(timeout);
   }, [lastEditedId, products]);
 
   if (showInitialLoader) {
     return (
-      <Layout>
-        <div className="container py-12">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
-          </div>
+      <AdminLayout>
+        <div className="flex h-[50vh] items-center justify-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
         </div>
-      </Layout>
+      </AdminLayout>
     );
   }
 
   return (
-    <Layout>
-      <div className="container py-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Enhanced Header */}
-          <div className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
-              <div className="flex items-center gap-4 flex-1">
-                <Link to="/admin">
-                  <Button variant="ghost" size="icon" className="hover-lift">
-                    <ArrowLeft className="h-5 w-5" />
-                  </Button>
-                </Link>
-                <div className="flex-1">
-                  <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3">
-                    <Package className="h-7 w-7" />
-                    Gestión de Productos
-                  </h1>
-                  <p className="text-muted-foreground text-sm mt-1">
-                    {(total || products.length)} {(total || products.length) === 1 ? 'producto' : 'productos'} en total
-                  </p>
-                </div>
-              </div>
-              <Button onClick={openCreateDialog} className="shadow-premium hover-glow w-full md:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Producto
+    <AdminLayout>
+      {/* Enhanced Header */}
+      <div className="mb-6 md:mb-8">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 flex-1">
+            <Link to="/admin">
+              <Button variant="ghost" size="icon" className="hover-lift hover:bg-slate-100">
+                <ArrowLeft className="h-5 w-5 text-slate-600" />
               </Button>
+            </Link>
+            <div className="flex-1">
+              <h1 className="text-2xl md:text-3xl font-bold flex items-center gap-3 text-slate-900">
+                <Package className="h-7 w-7 text-slate-700" />
+                Gestión de Productos
+              </h1>
+              <p className="text-slate-500 text-sm mt-1">
+                {(total || products.length)} {(total || products.length) === 1 ? 'producto' : 'productos'} en total
+              </p>
             </div>
           </div>
-
-          {/* Enhanced Filters Card */}
-          <Card className="mb-6 shadow-premium border-0 overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-foreground/5 to-transparent"></div>
-            <CardContent className="pt-6 relative">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar productos por nombre..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="pl-10 border-0 bg-background/50"
-                  />
-                </div>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger className="w-full md:w-[220px] border-0 bg-background/50">
-                    <SelectValue placeholder="Filtrar por categoría" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas las categorías</SelectItem>
-                    {categories.map(c => (
-                      <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Enhanced Products Table */}
-          <Card className="shadow-premium border-0 overflow-hidden">
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="bg-muted/50 hover:bg-muted/50">
-                      <TableHead className="w-[80px] font-bold">Imagen</TableHead>
-                      <TableHead className="font-bold">Producto</TableHead>
-                      <TableHead className="font-bold">Categoría</TableHead>
-                      <TableHead className="text-right font-bold">Precio</TableHead>
-                      <TableHead className="text-center font-bold">Stock</TableHead>
-                      <TableHead className="text-center font-bold">Destacado</TableHead>
-                      <TableHead className="text-center font-bold">Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {tableLoading ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-12">
-                          <Package className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
-                          <p className="text-sm text-muted-foreground mt-2">Cargando productos...</p>
-                        </TableCell>
-                      </TableRow>
-                    ) : products.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={7} className="text-center py-12">
-                          <Package className="h-12 w-12 mx-auto text-muted-foreground opacity-50" />
-                          <p className="text-muted-foreground mt-4 font-medium">Ningún producto encontrado</p>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      products.map((product) => (
-                        <TableRow
-                          key={product.id}
-                          className={
-                            lastEditedId === product.id
-                              ? 'bg-primary/5 dark:bg-primary/10 border-l-2 border-l-primary animate-fade-in'
-                              : ''
-                          }
-                        >
-                          <TableCell className="text-center">
-                            {product.image_url ? (
-                              <img
-                                src={product.image_url}
-                                alt={product.name}
-                                className="w-12 h-12 object-cover rounded-md mx-auto border shadow-sm"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 bg-muted rounded-md mx-auto flex items-center justify-center">
-                                <Package className="h-5 w-5 text-muted-foreground" />
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <div className="space-y-1">
-                              <p className="font-medium">{product.name}</p>
-                              {product.description && (
-                                <p className="text-xs text-muted-foreground line-clamp-1">
-                                  {product.description}
-                                </p>
-                              )}
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className="bg-primary/5">
-                              {product.category}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right font-semibold">
-                            ${product.price.toFixed(2)}
-                            {product.original_price && product.original_price > product.price && (
-                              <div className="text-xs text-muted-foreground line-through">
-                                ${product.original_price.toFixed(2)}
-                              </div>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge
-                              variant="outline"
-                              className={
-                                product.stock > 10
-                                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
-                                  : product.stock > 0
-                                    ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20'
-                                    : 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20'
-                              }
-                            >
-                              {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-center">
-                            {product.featured && (
-                              <Badge
-                                variant="outline"
-                                className="bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20 animate-pulse-subtle"
-                              >
-                                ⭐ Destacado
-                              </Badge>
-                            )}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <div className="flex items-center justify-center gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => {
-                                  setNutritionProduct(product);
-                                  setNutritionDialogOpen(true);
-                                }}
-                                className="hover-lift hover:bg-green-500/10 h-9 w-9"
-                                title="Info Nutricional"
-                              >
-                                <Beaker className="h-4 w-4 text-green-600" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => openEditDialog(product)}
-                                className="hover-lift hover:bg-blue-500/10 h-9 w-9"
-                              >
-                                <Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDelete(product)}
-                                className="hover-lift hover:bg-destructive/10 h-9 w-9"
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-6 py-4 border-t">
-                <p className="text-sm text-muted-foreground">
-                  Página {page} de {pageCount} • Mostrando {products.length} / {total || products.length}
-                </p>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page === 1 || tableLoading}
-                    onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-                  >
-                    Anterior
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= pageCount || tableLoading}
-                    onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
-                  >
-                    Siguiente
-                  </Button>
-                  {tableLoading && (
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-foreground"></div>
-                      <span>Actualizando</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          <Button onClick={openCreateDialog} className="shadow-sm hover:shadow-md bg-[#2b8cee] hover:bg-[#206bc4] text-white w-full md:w-auto">
+            <Plus className="h-4 w-4 mr-2" />
+            Nuevo Producto
+          </Button>
         </div>
       </div>
 
-      {/* Product Dialog */}
+      {/* Enhanced Filters Card */}
+      <Card className="mb-6 shadow-sm border border-slate-200 overflow-hidden bg-white">
+        <CardContent className="pt-6 relative">
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                placeholder="Buscar productos por nombre..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-10 border-slate-200 bg-slate-50 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
+              />
+            </div>
+            <Select value={filterCategory} onValueChange={setFilterCategory}>
+              <SelectTrigger className="w-full md:w-[220px] border-slate-200 bg-slate-50">
+                <SelectValue placeholder="Filtrar por categoría" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories.map(c => (
+                  <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Enhanced Products Table */}
+      <Card className="shadow-sm border border-slate-200 overflow-hidden bg-white">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-200">
+                  <TableHead className="w-[80px] font-bold text-slate-700">Imagen</TableHead>
+                  <TableHead className="font-bold text-slate-700">Producto</TableHead>
+                  <TableHead className="font-bold text-slate-700">Categoría</TableHead>
+                  <TableHead className="text-right font-bold text-slate-700">Precio</TableHead>
+                  <TableHead className="text-center font-bold text-slate-700">Stock</TableHead>
+                  <TableHead className="text-center font-bold text-slate-700">Destacado</TableHead>
+                  <TableHead className="text-center font-bold text-slate-700">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {tableLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <div className="flex flex-col items-center">
+                        <Package className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                        <p className="text-sm text-slate-500 mt-2">Cargando productos...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : products.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <Package className="h-12 w-12 mx-auto text-slate-300" />
+                      <p className="text-slate-500 mt-4 font-medium">Ningún producto encontrado</p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  products.map((product) => (
+                    <TableRow
+                      key={product.id}
+                      id={`product-${product.id}`}
+                      className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
+                    >
+                      <TableCell className="text-center">
+                        {product.image_url ? (
+                          <img
+                            src={product.image_url}
+                            alt={product.name}
+                            className="w-12 h-12 object-cover rounded-md mx-auto border border-slate-200 shadow-sm"
+                          />
+                        ) : (
+                          <div className="w-12 h-12 bg-slate-100 rounded-md mx-auto flex items-center justify-center border border-slate-200">
+                            <Package className="h-5 w-5 text-slate-400" />
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <p className="font-medium text-slate-900">{product.name}</p>
+                          {product.description && (
+                            <p className="text-xs text-slate-500 line-clamp-1">
+                              {product.description}
+                            </p>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-slate-100 text-slate-700 border-slate-200">
+                          {product.category}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right font-semibold text-slate-900">
+                        ${product.price.toFixed(2)}
+                        {product.original_price && product.original_price > product.price && (
+                          <div className="text-xs text-slate-400 line-through">
+                            ${product.original_price.toFixed(2)}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Badge
+                          variant="outline"
+                          className={
+                            product.stock > 10
+                              ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                              : product.stock > 0
+                                ? 'bg-orange-500/10 text-orange-600 border-orange-500/20'
+                                : 'bg-red-500/10 text-red-600 border-red-500/20'
+                          }
+                        >
+                          {product.stock} {product.stock === 1 ? 'unidad' : 'unidades'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        {product.featured && (
+                          <Badge
+                            variant="outline"
+                            className="bg-purple-500/10 text-purple-600 border-purple-500/20"
+                          >
+                            ⭐ Destacado
+                          </Badge>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => {
+                              setNutritionProduct(product);
+                              setNutritionDialogOpen(true);
+                            }}
+                            className="hover:bg-green-500/10 h-9 w-9 text-slate-400 hover:text-green-600"
+                            title="Info Nutricional"
+                          >
+                            <Beaker className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => openEditDialog(product)}
+                            className="hover:bg-blue-500/10 h-9 w-9 text-slate-400 hover:text-blue-600"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(product)}
+                            className="hover:bg-red-500/10 h-9 w-9 text-slate-400 hover:text-red-600"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 px-6 py-4 border-t border-slate-200">
+            <p className="text-sm text-slate-500">
+              Página {page} de {pageCount} • Mostrando {products.length} / {total || products.length}
+            </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1 || tableLoading}
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                className="border-slate-200 text-slate-600"
+              >
+                Anterior
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page >= pageCount || tableLoading}
+                onClick={() => setPage((prev) => Math.min(pageCount, prev + 1))}
+                className="border-slate-200 text-slate-600"
+              >
+                Siguiente
+              </Button>
+              {tableLoading && (
+                <div className="flex items-center gap-2 text-xs text-slate-400">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
+                  <span>Actualizando</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Product Dialog - Styling Updates */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-white border-slate-200">
           <DialogHeader>
-            <DialogTitle>
+            <DialogTitle className="text-slate-900">
               {editingProduct ? 'Editar Producto' : 'Nuevo Producto'}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-slate-500">
               {editingProduct ? 'Modifica los datos del producto' : 'Completa los datos para crear un nuevo producto'}
             </DialogDescription>
           </DialogHeader>
@@ -593,27 +585,29 @@ export default function AdminProducts() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="name">Nombre del producto *</Label>
+                <Label htmlFor="name" className="text-slate-700">Nombre del producto *</Label>
                 <Input
                   id="name"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   required
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
 
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="description">Descripción</Label>
+                <Label htmlFor="description" className="text-slate-700">Descripción</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="price">Precio (RD$) *</Label>
+                <Label htmlFor="price" className="text-slate-700">Precio (RD$) *</Label>
                 <Input
                   id="price"
                   type="number"
@@ -622,11 +616,12 @@ export default function AdminProducts() {
                   value={formData.price}
                   onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                   required
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="original_price">Precio Original (opcional)</Label>
+                <Label htmlFor="original_price" className="text-slate-700">Precio Original (opcional)</Label>
                 <Input
                   id="original_price"
                   type="number"
@@ -634,16 +629,17 @@ export default function AdminProducts() {
                   step="0.01"
                   value={formData.original_price}
                   onChange={(e) => setFormData({ ...formData, original_price: e.target.value })}
+                  className="border-slate-200 focus:border-[#2b8cee] focus:ring-[#2b8cee]"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="category">Categoría *</Label>
+                <Label htmlFor="category" className="text-slate-700">Categoría *</Label>
                 <Select
                   value={formData.category}
                   onValueChange={(value) => setFormData({ ...formData, category: value })}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-slate-200">
                     <SelectValue placeholder="Seleccionar categoría" />
                   </SelectTrigger>
                   <SelectContent>
@@ -655,7 +651,7 @@ export default function AdminProducts() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="stock">Stock *</Label>
+                <Label htmlFor="stock" className="text-slate-700">Stock *</Label>
                 <Input
                   id="stock"
                   type="number"
@@ -663,14 +659,15 @@ export default function AdminProducts() {
                   value={formData.stock}
                   onChange={(e) => setFormData({ ...formData, stock: e.target.value })}
                   required
+                  className="border-slate-200"
                 />
               </div>
 
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="image">Imagen del producto</Label>
+                <Label htmlFor="image" className="text-slate-700">Imagen del producto</Label>
                 <div className="flex gap-4">
                   {(formData.image_url || imageFile) && (
-                    <div className="h-20 w-20 rounded-lg bg-muted overflow-hidden flex-shrink-0">
+                    <div className="h-20 w-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
                       <img
                         src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
                         alt="Preview"
@@ -684,12 +681,13 @@ export default function AdminProducts() {
                       type="file"
                       accept="image/*"
                       onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                      className="border-slate-200 text-slate-500 cursor-pointer"
                     />
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-slate-400 mt-1">
                       O ingresa una URL de imagen:
                     </p>
                     <Input
-                      className="mt-1"
+                      className="mt-1 border-slate-200"
                       placeholder="https://..."
                       value={formData.image_url}
                       onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
@@ -704,15 +702,15 @@ export default function AdminProducts() {
                   checked={formData.featured}
                   onCheckedChange={(checked) => setFormData({ ...formData, featured: checked })}
                 />
-                <Label htmlFor="featured">Producto destacado</Label>
+                <Label htmlFor="featured" className="text-slate-700">Producto destacado</Label>
               </div>
             </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+            <DialogFooter className="gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="border-slate-200 text-slate-700">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving} className="bg-[#2b8cee] hover:bg-[#206bc4] text-white">
                 {saving ? 'Guardando...' : editingProduct ? 'Guardar cambios' : 'Crear producto'}
               </Button>
             </DialogFooter>
@@ -720,7 +718,7 @@ export default function AdminProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* Nutrition Dialog */}
+      {/* Nutrition Dialog - Pass props comfortably */}
       {nutritionProduct && (
         <ProductNutritionDialog
           open={nutritionDialogOpen}
@@ -732,6 +730,6 @@ export default function AdminProducts() {
           onSaved={() => { }}
         />
       )}
-    </Layout>
+    </AdminLayout>
   );
 }

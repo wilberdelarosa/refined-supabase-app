@@ -1,20 +1,20 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Layout } from '@/components/layout/Layout';
+import { ProfileLayout } from '@/components/layout/ProfileLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Package, 
-  ShoppingBag, 
-  ArrowRight, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  Truck, 
+import {
+  Package,
+  ShoppingBag,
+  ArrowRight,
+  FileText,
+  Clock,
+  CheckCircle,
+  Truck,
   XCircle,
   MapPin,
   Calendar,
@@ -38,72 +38,72 @@ interface OrderWithDetails {
   }>;
 }
 
-const statusConfig: Record<string, { 
-  label: string; 
-  icon: React.ReactNode; 
+const statusConfig: Record<string, {
+  label: string;
+  icon: React.ReactNode;
   color: string;
   bgColor: string;
   borderColor: string;
 }> = {
-  pending: { 
-    label: 'Pendiente de Pago', 
-    icon: <Clock className="h-3.5 w-3.5" />, 
+  pending: {
+    label: 'Pendiente de Pago',
+    icon: <Clock className="h-3.5 w-3.5" />,
     color: 'text-amber-600 dark:text-amber-400',
     bgColor: 'bg-amber-50 dark:bg-amber-950/30',
     borderColor: 'border-amber-200 dark:border-amber-800'
   },
-  payment_pending: { 
-    label: 'Verificando Pago', 
-    icon: <Clock className="h-3.5 w-3.5" />, 
+  payment_pending: {
+    label: 'Verificando Pago',
+    icon: <Clock className="h-3.5 w-3.5" />,
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-50 dark:bg-orange-950/30',
     borderColor: 'border-orange-200 dark:border-orange-800'
   },
-  paid: { 
-    label: 'Pagado', 
-    icon: <CheckCircle className="h-3.5 w-3.5" />, 
+  paid: {
+    label: 'Pagado',
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
     color: 'text-emerald-600 dark:text-emerald-400',
     bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
     borderColor: 'border-emerald-200 dark:border-emerald-800'
   },
-  processing: { 
-    label: 'Procesando', 
-    icon: <Package className="h-3.5 w-3.5" />, 
+  processing: {
+    label: 'Procesando',
+    icon: <Package className="h-3.5 w-3.5" />,
     color: 'text-blue-600 dark:text-blue-400',
     bgColor: 'bg-blue-50 dark:bg-blue-950/30',
     borderColor: 'border-blue-200 dark:border-blue-800'
   },
-  packed: { 
-    label: 'Empacado', 
-    icon: <Package className="h-3.5 w-3.5" />, 
+  packed: {
+    label: 'Empacado',
+    icon: <Package className="h-3.5 w-3.5" />,
     color: 'text-purple-600 dark:text-purple-400',
     bgColor: 'bg-purple-50 dark:bg-purple-950/30',
     borderColor: 'border-purple-200 dark:border-purple-800'
   },
-  shipped: { 
-    label: 'Enviado', 
-    icon: <Truck className="h-3.5 w-3.5" />, 
+  shipped: {
+    label: 'Enviado',
+    icon: <Truck className="h-3.5 w-3.5" />,
     color: 'text-violet-600 dark:text-violet-400',
     bgColor: 'bg-violet-50 dark:bg-violet-950/30',
     borderColor: 'border-violet-200 dark:border-violet-800'
   },
-  delivered: { 
-    label: 'Entregado', 
-    icon: <CheckCircle className="h-3.5 w-3.5" />, 
+  delivered: {
+    label: 'Entregado',
+    icon: <CheckCircle className="h-3.5 w-3.5" />,
     color: 'text-emerald-600 dark:text-emerald-400',
     bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
     borderColor: 'border-emerald-200 dark:border-emerald-800'
   },
-  cancelled: { 
-    label: 'Cancelado', 
-    icon: <XCircle className="h-3.5 w-3.5" />, 
+  cancelled: {
+    label: 'Cancelado',
+    icon: <XCircle className="h-3.5 w-3.5" />,
     color: 'text-red-600 dark:text-red-400',
     bgColor: 'bg-red-50 dark:bg-red-950/30',
     borderColor: 'border-red-200 dark:border-red-800'
   },
-  refunded: { 
-    label: 'Reembolsado', 
-    icon: <XCircle className="h-3.5 w-3.5" />, 
+  refunded: {
+    label: 'Reembolsado',
+    icon: <XCircle className="h-3.5 w-3.5" />,
     color: 'text-orange-600 dark:text-orange-400',
     bgColor: 'bg-orange-50 dark:bg-orange-950/30',
     borderColor: 'border-orange-200 dark:border-orange-800'
@@ -148,7 +148,7 @@ function EmptyOrders() {
       <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none">
         <PackageOpen className="h-96 w-96" strokeWidth={0.5} />
       </div>
-      
+
       <Card className="relative overflow-hidden border-dashed">
         <CardContent className="flex flex-col items-center justify-center py-20 px-6">
           {/* Icon container with subtle animation */}
@@ -158,7 +158,7 @@ function EmptyOrders() {
               <ShoppingBag className="h-10 w-10 text-muted-foreground" strokeWidth={1.5} />
             </div>
           </div>
-          
+
           {/* Text content */}
           <div className="text-center max-w-sm space-y-2 mb-8">
             <h3 className="text-xl font-semibold tracking-tight">
@@ -168,7 +168,7 @@ function EmptyOrders() {
               Explora nuestra tienda y encuentra los suplementos perfectos para impulsar tu rendimiento.
             </p>
           </div>
-          
+
           {/* CTA Button */}
           <Button size="lg" className="group gap-2 px-6" asChild>
             <Link to="/shop">
@@ -183,11 +183,11 @@ function EmptyOrders() {
 }
 
 // Order card component
-function OrderCard({ 
-  order, 
-  onViewInvoice 
-}: { 
-  order: OrderWithDetails; 
+function OrderCard({
+  order,
+  onViewInvoice
+}: {
+  order: OrderWithDetails;
   onViewInvoice: (orderId: string) => void;
 }) {
   const status = statusConfig[order.status] || statusConfig.pending;
@@ -217,7 +217,7 @@ function OrderCard({
             <div className="shrink-0 p-3 rounded-xl bg-gradient-to-br from-muted to-muted/30 border border-border/50 transition-colors group-hover:border-foreground/10">
               <Package className="h-6 w-6 text-foreground/70" strokeWidth={1.5} />
             </div>
-            
+
             {/* Order details */}
             <div className="min-w-0 space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
@@ -236,9 +236,9 @@ function OrderCard({
               </div>
             </div>
           </div>
-          
+
           {/* Right side - Status badge */}
-          <div 
+          <div
             className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${status.color} ${status.bgColor} ${status.borderColor} transition-colors`}
           >
             {status.icon}
@@ -246,18 +246,17 @@ function OrderCard({
           </div>
         </div>
       </div>
-      
+
       <Separator className="bg-border/50" />
-      
+
       {/* Order Items */}
       <div className="p-5 sm:p-6 bg-muted/20">
         <div className="space-y-3">
           {order.order_items.map((item, index) => (
-            <div 
-              key={item.id} 
-              className={`flex items-center justify-between gap-4 ${
-                index !== order.order_items.length - 1 ? 'pb-3 border-b border-border/30' : ''
-              }`}
+            <div
+              key={item.id}
+              className={`flex items-center justify-between gap-4 ${index !== order.order_items.length - 1 ? 'pb-3 border-b border-border/30' : ''
+                }`}
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="shrink-0 flex items-center justify-center h-8 w-8 rounded-lg bg-background border border-border/50 text-xs font-semibold text-muted-foreground">
@@ -274,9 +273,9 @@ function OrderCard({
           ))}
         </div>
       </div>
-      
+
       <Separator className="bg-border/50" />
-      
+
       {/* Order Footer */}
       <div className="p-5 sm:p-6">
         {/* Total */}
@@ -289,7 +288,7 @@ function OrderCard({
             DOP {order.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
           </p>
         </div>
-        
+
         {/* Shipping Address */}
         {order.shipping_address && (
           <div className="mb-4 p-3 rounded-lg bg-muted/30 border border-border/30">
@@ -306,13 +305,13 @@ function OrderCard({
             </div>
           </div>
         )}
-        
+
         {/* Actions */}
         <div className="flex flex-wrap gap-2">
           {canViewOrder && (
-            <Button 
-              variant="default" 
-              size="sm" 
+            <Button
+              variant="default"
+              size="sm"
               className="w-full sm:w-auto gap-2 group/btn"
               asChild
             >
@@ -324,9 +323,9 @@ function OrderCard({
             </Button>
           )}
           {canViewInvoice && (
-            <Button 
-              variant="outline" 
-              size="sm" 
+            <Button
+              variant="outline"
+              size="sm"
               className="w-full sm:w-auto gap-2 group/btn"
               onClick={() => onViewInvoice(order.id)}
             >
@@ -407,7 +406,7 @@ export default function Orders() {
 
   if (authLoading || loading) {
     return (
-      <Layout>
+      <ProfileLayout>
         <div className="min-h-[80vh] bg-gradient-to-b from-muted/30 to-background">
           <div className="container py-10 sm:py-16">
             <div className="max-w-3xl mx-auto">
@@ -420,70 +419,67 @@ export default function Orders() {
             </div>
           </div>
         </div>
-      </Layout>
+      </ProfileLayout>
     );
   }
 
   if (!user) return null;
 
   return (
-    <Layout>
-      <div className="min-h-[80vh] bg-gradient-to-b from-muted/30 to-background">
-        <div className="container py-10 sm:py-16">
-          <div className="max-w-3xl mx-auto">
-            {/* Page Header */}
-            <header className="mb-10 animate-fade-in">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 rounded-xl bg-foreground text-background">
-                  <Package className="h-5 w-5" strokeWidth={2} />
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-                  Mis Pedidos
-                </h1>
+    <ProfileLayout>
+      <div className="bg-slate-50/50 min-h-full">
+        <div className="max-w-5xl mx-auto">
+          {/* Page Header */}
+          <header className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-white border border-slate-200 shadow-sm text-primary">
+                <Package className="h-5 w-5" strokeWidth={2} />
               </div>
-              <p className="text-muted-foreground text-sm sm:text-base pl-[52px]">
-                Historial de compras y seguimiento de envíos
-              </p>
-            </header>
-
-            {/* Content */}
-            <div className="animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
-              {orders.length === 0 ? (
-                <EmptyOrders />
-              ) : (
-                <>
-                  {/* Orders count indicator */}
-                  <div className="flex items-center justify-between mb-6">
-                    <p className="text-sm text-muted-foreground">
-                      <span className="font-medium text-foreground">{orders.length}</span>
-                      {' '}{orders.length === 1 ? 'pedido realizado' : 'pedidos realizados'}
-                    </p>
-                  </div>
-                  
-                  {/* Orders list */}
-                  <div className="space-y-4">
-                    {orders.map((order, index) => (
-                      <div 
-                        key={order.id}
-                        className="animate-slide-up"
-                        style={{ 
-                          animationDelay: `${150 + index * 50}ms`,
-                          animationFillMode: 'backwards'
-                        }}
-                      >
-                        <OrderCard 
-                          order={order} 
-                          onViewInvoice={handleDownloadInvoice} 
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+                Mis Pedidos
+              </h1>
             </div>
+            <p className="text-slate-500 text-sm pl-[44px]">
+              Historial de compras y seguimiento de envíos
+            </p>
+          </header>
+
+          {/* Content */}
+          <div className="animate-slide-up" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
+            {orders.length === 0 ? (
+              <EmptyOrders />
+            ) : (
+              <>
+                {/* Orders count indicator */}
+                <div className="flex items-center justify-between mb-4">
+                  <p className="text-sm font-medium text-slate-500">
+                    Mostrando all <span className="text-slate-900">{orders.length}</span> {orders.length === 1 ? 'pedido' : 'pedidos'}
+                  </p>
+                </div>
+
+                {/* Orders list */}
+                <div className="space-y-4">
+                  {orders.map((order, index) => (
+                    <div
+                      key={order.id}
+                      className="animate-slide-up"
+                      style={{
+                        animationDelay: `${150 + index * 50}ms`,
+                        animationFillMode: 'backwards'
+                      }}
+                    >
+                      <OrderCard
+                        order={order}
+                        onViewInvoice={handleDownloadInvoice}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
-    </Layout>
+    </ProfileLayout>
   );
 }

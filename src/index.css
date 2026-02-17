@@ -259,6 +259,20 @@
   .discount-badge {
     @apply absolute top-3 left-3 bg-foreground text-background text-xs font-bold px-2 py-1 rounded-sm;
   }
+  /* Custom scrollbar for sidebar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9; 
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #cbd5e1; 
+    border-radius: 3px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #2b8cee; 
+  }
 }
 
 @keyframes fadeIn {

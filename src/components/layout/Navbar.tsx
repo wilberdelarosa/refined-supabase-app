@@ -15,15 +15,11 @@ import {
 import { CartDrawer } from '@/components/shop/CartDrawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import barbaroLogo from '@/assets/barbaro-logo.png';
-import { useAppointmentFeature } from '@/features/appointments/config';
 
 export function Navbar() {
-  const showAppointmentsLink = useAppointmentFeature('SHOW_NAVBAR_LINK');
-
   const navLinks = [
     { name: 'Inicio', path: '/' },
     { name: 'Tienda', path: '/shop' },
-    ...(showAppointmentsLink ? [{ name: 'Nutricionistas', path: '/appointments' }] : []),
     { name: 'Sobre Nosotros', path: '/about' },
   ];
   const [isOpen, setIsOpen] = useState(false);

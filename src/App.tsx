@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { LoadingSplash } from "@/components/LoadingSplash";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Shop from "./pages/Shop";
@@ -28,10 +29,7 @@ import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import { useSavedCart } from "./hooks/useSavedCart";
-import AppointmentsPage from "./features/appointments/pages/AppointmentsPage";
-import BookingPage from "./features/appointments/pages/BookingPage";
-import MyAppointmentsPage from "./features/appointments/pages/MyAppointmentsPage";
-import AdminNutritionists from "./pages/admin/AdminNutritionists";
+
 
 const queryClient = new QueryClient();
 
@@ -42,50 +40,46 @@ function CartSync() {
 }
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <TooltipProvider>
-        <LoadingSplash />
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <CartSync />
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/cart" element={<Shop />} /> {/* Redirect to shop, use CartDrawer */}
-            <Route path="/about" element={<About />} />
-            <Route path="/account" element={<Account />} />
-            <Route path="/profile/edit" element={<ProfileEdit />} />
-            <Route path="/wishlist" element={<Wishlist />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/orders/invoice/:invoiceId" element={<InvoiceDetail />} />
-            <Route path="/admin" element={<Admin />} />
-            <Route path="/admin/products" element={<AdminProducts />} />
-            <Route path="/admin/inventory" element={<AdminInventory />} />
-            <Route path="/admin/discounts" element={<AdminDiscounts />} />
-            <Route path="/admin/orders" element={<AdminOrders />} />
-            <Route path="/admin/users" element={<AdminUsers />} />
-            <Route path="/admin/invoices" element={<AdminInvoices />} />
-            <Route path="/producto/:handle" element={<ProductDetail />} />
-            <Route path="/checkout/transferencia" element={<TransferCheckout />} />
-            <Route path="/order/:orderId" element={<OrderConfirmation />} />
-            <Route path="/admin/categories" element={<AdminCategories />} />
-            <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
-            <Route path="/admin/nutritionists" element={<AdminNutritionists />} />
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <TooltipProvider>
+          <LoadingSplash />
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <CartSync />
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/shop" element={<Shop />} />
+              <Route path="/cart" element={<Shop />} /> {/* Redirect to shop, use CartDrawer */}
+              <Route path="/about" element={<About />} />
+              <Route path="/account" element={<Account />} />
+              <Route path="/profile/edit" element={<ProfileEdit />} />
+              <Route path="/wishlist" element={<Wishlist />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/orders/invoice/:invoiceId" element={<InvoiceDetail />} />
+              <Route path="/admin" element={<Admin />} />
+              <Route path="/admin/products" element={<AdminProducts />} />
+              <Route path="/admin/inventory" element={<AdminInventory />} />
+              <Route path="/admin/discounts" element={<AdminDiscounts />} />
+              <Route path="/admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/users" element={<AdminUsers />} />
+              <Route path="/admin/invoices" element={<AdminInvoices />} />
+              <Route path="/producto/:handle" element={<ProductDetail />} />
+              <Route path="/checkout/transferencia" element={<TransferCheckout />} />
+              <Route path="/order/:orderId" element={<OrderConfirmation />} />
+              <Route path="/admin/categories" element={<AdminCategories />} />
+              <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
 
-            {/* Appointments Microservice - Conditional */}
-            <Route path="/appointments" element={<AppointmentsPage />} />
-            <Route path="/appointments/book/:nutritionistId" element={<BookingPage />} />
-            <Route path="/account/appointments" element={<MyAppointmentsPage />} />
-
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </QueryClientProvider>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
