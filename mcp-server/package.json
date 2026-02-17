@@ -1,0 +1,22 @@
+{
+  "name": "barbaro-docs-mcp-server",
+  "version": "0.1.0",
+  "description": "MCP Server for Barbaro project documentation",
+  "type": "module",
+  "main": "dist/docs-server.js",
+  "bin": {
+    "barbaro-docs-server": "dist/docs-server.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/docs-server.js",
+    "dev": "tsc && node dist/docs-server.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.8.0"
+  }
+}
