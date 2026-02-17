@@ -1,0 +1,17 @@
+{
+  "mcpServers": {
+    "barbaro-docs": {
+      "command": "node",
+      "args": [
+        "mcp-server/dist/docs-server.js"
+      ],
+      "cwd": ".",
+      "description": "Servidor de documentación del proyecto Barbaro"
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "description": "Upstash Context7 MCP server for enhanced context management"
+    }
+  }
+}

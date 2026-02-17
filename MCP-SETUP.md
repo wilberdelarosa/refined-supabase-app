@@ -22,10 +22,17 @@ npm run mcp:dev
 
 ### 🔍 Herramientas MCP
 
+### 📚 Servidor de Documentación (barbaro-docs)
 1. **search_docs** - Buscar en documentación
 2. **get_doc** - Obtener documento específico  
 3. **list_docs** - Listar todos los documentos
 4. **docs_summary** - Resumen de documentación
+
+### 🧠 Context7 (Upstash)
+1. **Gestión de contexto avanzada** - Mantiene conversaciones largas
+2. **Memoria persistente** - Recuerda información entre sesiones
+3. **Análisis de contexto** - Comprende mejor el flujo de trabajo
+4. **Optimización automática** - Gestiona eficientemente el contexto
 
 ## 📋 Documentación Indexada
 
@@ -52,11 +59,21 @@ Agrega esta configuración a `claude_desktop_config.json`:
       "args": [
         "C:/ruta/completa/al/proyecto/mcp-server/dist/docs-server.js"
       ],
-      "cwd": "C:/ruta/completa/al/proyecto"
+      "cwd": "C:/ruta/completa/al/proyecto",
+      "description": "Servidor de documentación del proyecto Barbaro"
+    },
+    "Context7": {
+      "command": "npx",
+      "args": ["-y", "@upstash/context7-mcp"],
+      "description": "Upstash Context7 MCP server for enhanced context management"
     }
   }
 }
 ```
+
+**📋 Configuración incluida:**
+- **barbaro-docs**: Tu servidor de documentación personalizado
+- **Context7**: Servidor Upstash para gestión avanzada de contexto
 
 ### Consultas Típicas
 
@@ -91,6 +108,8 @@ mcp-server/
 - ✅ **Compilado**: Servidor JavaScript listo
 - ✅ **Indexado**: ${new Date().toLocaleDateString()} - Documentación procesada
 - ✅ **Scripts**: Comandos npm configurados
+- ✅ **Context7**: Servidor Upstash configurado
+- ✅ **Configuración dual**: barbaro-docs + Context7
 - 🔄 **Listo para usar**: Configura en tu cliente MCP
 
 ## 🎯 Próximos Pasos

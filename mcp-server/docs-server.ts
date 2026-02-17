@@ -11,10 +11,19 @@ import {
 import fs from 'fs';
 import path from 'path';
 
+interface DocumentMetadata {
+  title: string;
+  content: string;
+  path: string;
+  relative: string;
+  size: number;
+  lastModified: Date;
+}
+
 class DocumentationServer {
   private server: Server;
   private docsPath: string;
-  private documentIndex: Map<string, any> = new Map();
+  private documentIndex: Map<string, DocumentMetadata> = new Map();
 
   constructor() {
     this.server = new Server(
@@ -182,7 +191,13 @@ class DocumentationServer {
   }
 
   private async searchDocs(query: string, limit: number) {
-    const results: any[] = [];
+    const results: Array<{
+      path: string;
+      title: string;
+      context: string;
+      relevance: number;
+      size: number;
+    }> = [];
     const searchTerm = query.toLowerCase();
 
     for (const [path, doc] of this.documentIndex) {
