@@ -4,6 +4,7 @@ import { Product } from '@/types/product';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { normalizeImageUrl, getProductImageFallback } from '@/lib/image-url';
 
 interface RelatedProductsProps {
   currentProductId: string;
@@ -12,6 +13,7 @@ interface RelatedProductsProps {
 
 export default function RelatedProducts({ currentProductId, category }: RelatedProductsProps) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
 
   useEffect(() => {
     async function fetch() {
@@ -38,13 +40,31 @@ export default function RelatedProducts({ currentProductId, category }: RelatedP
             <Card className="hover:shadow-md transition-shadow h-full">
               <CardContent className="p-3 space-y-2">
                 <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                  {product.image_url ? (
-                    <img src={product.image_url} alt={product.name} className="w-full h-full object-contain p-2" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                      Sin imagen
-                    </div>
-                  )}
+                  {(() => {
+                    const normalizedUrl = normalizeImageUrl(product.image_url);
+                    const fallbackUrl = normalizedUrl || getProductImageFallback(product.name);
+                    return (fallbackUrl && !failedImageIds.has(product.id)) ? (
+                      <img
+                        src={fallbackUrl}
+                        alt={product.name}
+                        className="w-full h-full object-contain p-2"
+                        loading="lazy"
+                        decoding="async"
+                        referrerPolicy="no-referrer"
+                        onError={() => {
+                          setFailedImageIds((prev) => {
+                            const next = new Set(prev);
+                            next.add(product.id);
+                            return next;
+                          });
+                        }}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                        Sin imagen
+                      </div>
+                    );
+                  })()}
                 </div>
                 <p className="text-sm font-medium line-clamp-2">{product.name}</p>
                 <p className="text-sm font-bold text-primary">

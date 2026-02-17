@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { useCartStore } from '@/stores/cartStore';
 import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { Product } from '@/types/product';
 import { toast } from 'sonner';
+import { normalizeImageUrl, getProductImageFallback } from '@/lib/image-url';
 
 interface ProductCardProps {
   product: Product;
@@ -15,6 +17,13 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const addItem = useCartStore(state => state.addItem);
   const { isInWishlist, toggleWishlist } = useNativeWishlist();
+  const [imageFailed, setImageFailed] = useState(false);
+
+  const imageSrc = useMemo(() => {
+    const normalized = normalizeImageUrl(product.image_url);
+    if (normalized) return normalized;
+    return getProductImageFallback(product.name);
+  }, [product.image_url, product.name]);
 
   const isAvailable = product.stock > 0;
   const isFavorite = isInWishlist(product.id);
@@ -71,12 +80,15 @@ export function ProductCard({ product }: ProductCardProps) {
     <Link to={`/producto/${product.id}`}>
       <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 h-full border-border/50 bg-card">
         <div className="relative aspect-square overflow-hidden bg-white">
-          {product.image_url ? (
+          {imageSrc && !imageFailed ? (
             <img
-              src={product.image_url}
+              src={imageSrc}
               alt={product.name}
               className="h-full w-full object-contain p-4 transition-transform duration-500 group-hover:scale-110"
               loading="lazy"
+              decoding="async"
+              referrerPolicy="no-referrer"
+              onError={() => setImageFailed(true)}
             />
           ) : (
             <div className="flex h-full items-center justify-center text-muted-foreground">
@@ -139,3 +151,4 @@ export function ProductCard({ product }: ProductCardProps) {
     </Link>
   );
 }
+
