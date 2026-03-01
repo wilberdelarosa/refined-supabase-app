@@ -38,21 +38,43 @@ export default function ProductGallery({ productId, mainImageUrl, productName }:
     fetchImages();
   }, [productId, mainImageUrl, productName]);
 
-  const allImages = images.length > 0 ? images : (mainImageUrl ? [{ id: 'main', url: mainImageUrl, alt_text: productName, is_primary: true, display_order: 0 }] : []);
-
   const visibleImages = useMemo(() => {
-    const normalized = allImages
-      .map((img) => {
-        let url = normalizeImageUrl(img.url);
-        if (!url) {
-          url = getProductImageFallback(productName);
-        }
-        return { ...img, url };
-      })
-      .filter((img) => !!img.url);
+    const candidates: ProductImage[] = [];
+    
+    // Always consider mainImageUrl as a candidate
+    if (mainImageUrl) {
+      candidates.push({
+        id: 'main-image-fallback',
+        url: mainImageUrl,
+        alt_text: productName,
+        is_primary: true,
+        display_order: -1
+      });
+    }
+    
+    // Add all gallery images
+    candidates.push(...images);
 
-    return normalized.filter((img) => !failedImageIds.has(img.id));
-  }, [allImages, failedImageIds, productName]);
+    // Normalize and filter
+    const uniqueUrls = new Set<string>();
+    
+    return candidates
+      .map(img => {
+        const url = normalizeImageUrl(img.url);
+        return { ...img, url };
+      }) // Normalize first
+      .filter((img): img is ProductImage & { url: string } => {
+        // Must have valid URL
+        if (!img.url) return false;
+        // Must not be failed
+        if (failedImageIds.has(img.id)) return false;
+        // Must be unique
+        if (uniqueUrls.has(img.url)) return false;
+        
+        uniqueUrls.add(img.url);
+        return true;
+      });
+  }, [images, mainImageUrl, failedImageIds, productName]);
 
   useEffect(() => {
     if (selectedIndex >= visibleImages.length) {

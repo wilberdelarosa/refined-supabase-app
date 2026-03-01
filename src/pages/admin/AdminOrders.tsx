@@ -30,6 +30,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
@@ -52,8 +53,13 @@ import {
   XCircle,
   ExternalLink,
   ImageIcon,
-  MoreVertical
+  MoreVertical,
+  ChevronDown,
+  Package
 } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/image-url';
+import { Spinner } from '@/components/ui/spinner';
+import { formatCurrency } from '@/lib/format-currency';
 
 interface Order {
   id: string;
@@ -73,6 +79,9 @@ interface OrderItem {
   product_name: string;
   quantity: number;
   price: number;
+  products?: {
+    image_url: string | null;
+  } | null;
 }
 
 interface Invoice {
@@ -214,7 +223,7 @@ export default function AdminOrders() {
     const [{ data: items }, { data: invoiceData }, { data: profileData }, { data: paymentsData }] = await Promise.all([
       supabase
         .from('order_items')
-        .select('*')
+        .select('*, products(image_url)')
         .eq('order_id', order.id),
       supabase
         .from('invoices')
@@ -488,7 +497,7 @@ export default function AdminOrders() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-[#2b8cee]" />
         </div>
       </AdminLayout>
     );
@@ -540,23 +549,47 @@ export default function AdminOrders() {
                 ))}
               </SelectContent>
             </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 shrink-0"
+              onClick={() => {
+                const data = filteredOrders.map(o => {
+                  const profile = o.profiles;
+                  const email = profile?.email || o.shipping_address?.split('\n').find(l => l.includes('@')) || '';
+                  return [o.id.slice(0, 8).toUpperCase(), o.created_at.slice(0, 10), o.status, o.total.toFixed(2), profile?.full_name || '', email];
+                });
+                const csv = [['Pedido', 'Fecha', 'Estado', 'Total', 'Cliente', 'Email'], ...data.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(','))].join('\n');
+                const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `pedidos-${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+                toast({ title: 'Exportación completada', description: 'CSV descargado correctamente' });
+              }}
+            >
+              <Download className="h-4 w-4" />
+              Exportar CSV
+            </Button>
           </div>
         </CardContent>
       </Card>
 
-      {/* Enhanced Orders Table */}
+      {/* Enhanced Orders Table - Más compacta */}
       <Card className="shadow-sm border border-slate-200 overflow-hidden bg-white">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow className="bg-slate-50 hover:bg-slate-50 border-b border-slate-200">
-                  <TableHead className="font-bold text-slate-700">ID Pedido</TableHead>
-                  <TableHead className="font-bold text-slate-700">Cliente</TableHead>
-                  <TableHead className="font-bold text-slate-700">Fecha & Hora</TableHead>
-                  <TableHead className="font-bold text-slate-700">Estado</TableHead>
-                  <TableHead className="text-right font-bold text-slate-700">Total</TableHead>
-                  <TableHead className="text-center font-bold text-slate-700">Acciones</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600 uppercase tracking-wider py-3">Pedido</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600 uppercase tracking-wider py-3">Cliente</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600 uppercase tracking-wider py-3">Fecha</TableHead>
+                  <TableHead className="font-semibold text-xs text-slate-600 uppercase tracking-wider py-3">Estado</TableHead>
+                  <TableHead className="text-right font-semibold text-xs text-slate-600 uppercase tracking-wider py-3">Total</TableHead>
+                  <TableHead className="text-center font-semibold text-xs text-slate-600 uppercase tracking-wider py-3 w-16">Acción</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -579,41 +612,45 @@ export default function AdminOrders() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredOrders.map((order, index) => (
+                  filteredOrders.map((order) => (
                     <TableRow
                       key={order.id}
-                      className="hover:bg-slate-50 transition-colors group border-b border-slate-100 last:border-0"
+                      className="hover:bg-slate-50/50 transition-colors group border-b border-slate-100 last:border-0"
                     >
-                      <TableCell>
-                        <span className="font-mono text-sm font-bold bg-slate-100 text-slate-700 px-2.5 py-1.5 rounded-md">
-                          #{order.id.slice(0, 8).toUpperCase()}
-                        </span>
-                      </TableCell>
-                      <TableCell>
+                      <TableCell className="py-3">
                         <div className="flex items-center gap-2">
-                          <div className="h-8 w-8 rounded-full bg-[#2b8cee]/10 flex items-center justify-center">
-                            <User className="h-4 w-4 text-[#2b8cee]" />
+                          <div className="p-1.5 rounded bg-primary/10">
+                            <ShoppingCart className="h-3.5 w-3.5 text-primary" />
                           </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-sm text-slate-900">
+                          <span className="font-mono text-xs font-semibold text-slate-900">
+                            #{order.id.slice(0, 8).toUpperCase()}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
+                            <User className="h-3.5 w-3.5 text-slate-600" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm text-slate-900 truncate">
                               {order.profiles?.full_name || parseCustomerInfo(order.shipping_address).name || 'Cliente'}
-                            </span>
-                            <span className="text-xs text-slate-500 truncate max-w-[150px]">
+                            </p>
+                            <p className="text-xs text-slate-500 truncate">
                               {order.profiles?.email || parseCustomerInfo(order.shipping_address).email || '—'}
-                            </span>
+                            </p>
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex flex-col">
+                      <TableCell className="py-3">
+                        <div className="text-sm">
                           <span className="font-medium text-slate-900">
                             {new Date(order.created_at).toLocaleDateString('es-DO', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric'
+                              day: '2-digit',
+                              month: 'short'
                             })}
                           </span>
-                          <span className="text-xs text-slate-500">
+                          <span className="text-xs text-slate-500 block">
                             {new Date(order.created_at).toLocaleTimeString('es-DO', {
                               hour: '2-digit',
                               minute: '2-digit'
@@ -621,23 +658,22 @@ export default function AdminOrders() {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="py-3">
                         {getStatusBadge(order.status)}
                       </TableCell>
-                      <TableCell className="text-right">
-                        <span className="font-bold text-lg text-slate-900">
-                          RD${order.total.toLocaleString('es-DO', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                          })}
+                      <TableCell className="text-right py-3">
+                      <TableCell className="text-right py-3">
+                        <span className="font-bold text-base text-slate-900">
+                          {formatCurrency(order.total)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-center">
+                      </TableCell>
+                      <TableCell className="text-center py-3">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => openOrderDetail(order)}
-                          className="hover:bg-[#2b8cee]/10 text-slate-400 hover:text-[#2b8cee]"
+                          className="h-8 w-8 hover:bg-primary/10 text-slate-500 hover:text-primary transition-colors"
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -651,272 +687,305 @@ export default function AdminOrders() {
         </CardContent>
       </Card>
 
-      {/* Order Detail Dialog - Styling Updates */}
+      {/* Order Detail Dialog - Compacto y Profesional */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className="max-w-3xl w-[95vw] bg-white text-slate-900 border-slate-200">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">
-              Pedido #{selectedOrder?.id.slice(0, 8).toUpperCase()}
-            </DialogTitle>
-            <DialogDescription className="text-slate-500">
-              {selectedOrder && new Date(selectedOrder.created_at).toLocaleDateString('es-DO', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </DialogDescription>
+        <DialogContent className="max-w-4xl w-[95vw] max-h-[90vh] overflow-y-auto bg-white text-slate-900 border-slate-200">
+          <DialogHeader className="pb-4 border-b border-slate-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5 text-primary" />
+                  Pedido #{selectedOrder?.id.slice(0, 8).toUpperCase()}
+                </DialogTitle>
+                <DialogDescription className="text-slate-500 mt-1">
+                  {selectedOrder && new Date(selectedOrder.created_at).toLocaleDateString('es-DO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </DialogDescription>
+              </div>
+              {selectedOrder && (
+                <div className="flex items-center gap-3">
+                  {getStatusBadge(selectedOrder.status)}
+                  <span className="text-xl font-bold text-slate-900">
+                    {formatCurrency(selectedOrder.total)}
+                  </span>
+                </div>
+              )}
+            </div>
           </DialogHeader>
 
           {selectedOrder && (
-            <div className="space-y-6">
-              {/* Customer + Invoice summary */}
-              <div className="grid gap-4 md:grid-cols-2">
-                <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 space-y-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="p-2 rounded-md bg-slate-900 text-white">
-                      <User className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold text-slate-500 uppercase">Usuario del pedido</p>
-                      <p className="font-bold text-lg leading-tight truncate text-slate-900">
-                        {userProfile?.full_name || customerInfo.name}
-                      </p>
-                      <p className="text-xs text-slate-500">ID: {selectedOrder.user_id.slice(0, 8)}</p>
-                    </div>
+            <div className="space-y-4 py-4">
+              {/* Resumen Compacto */}
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Cliente</p>
+                  <p className="font-semibold text-sm text-slate-900 truncate">
+                    {userProfile?.full_name || customerInfo.name}
+                  </p>
+                  {userProfile?.email && (
+                    <p className="text-xs text-slate-500 truncate mt-1">{userProfile.email}</p>
+                  )}
+                </div>
+                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Factura</p>
+                  <div className="flex items-center gap-2">
+                    {invoiceLoading ? (
+                      <Spinner className="h-3 w-3 text-slate-400" />
+                    ) : (
+                      <FileText className="h-3 w-3 text-slate-400" />
+                    )}
+                    <p className="font-semibold text-sm text-slate-900">
+                      {invoice ? invoice.invoice_number : 'No generada'}
+                    </p>
                   </div>
-                  <div className="space-y-2 text-sm text-slate-500">
+                  {invoice && (
+                    <Button variant="link" size="sm" className="h-auto p-0 mt-1 text-xs" asChild>
+                      <Link to={`/orders/invoice/${invoice.id}`} target="_blank">
+                        Ver factura
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+                <div className="p-3 rounded-lg border border-slate-200 bg-slate-50">
+                  <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Productos</p>
+                  <p className="font-semibold text-sm text-slate-900">
+                    {orderItems.length} {orderItems.length === 1 ? 'producto' : 'productos'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Sección Colapsable: Información del Cliente */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-slate-600" />
+                    <span className="font-medium text-sm text-slate-900">Información del Cliente</span>
+                  </div>
+                  <ChevronDown className="h-4 w-4 text-slate-500 transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 p-4 rounded-lg border border-slate-200 bg-white space-y-3">
+                  <div className="space-y-2 text-sm">
                     {(userProfile?.email || customerInfo.email) && (
-                      <div className="flex items-center gap-2 text-slate-700 break-all">
-                        <Mail className="h-4 w-4" />
+                      <div className="flex items-center gap-2 text-slate-700">
+                        <Mail className="h-4 w-4 text-slate-400" />
                         <span>{userProfile?.email || customerInfo.email}</span>
                       </div>
                     )}
                     {customerInfo.phone && (
                       <div className="flex items-center gap-2">
-                        <Phone className="h-4 w-4" />
+                        <Phone className="h-4 w-4 text-slate-400" />
                         <span>{customerInfo.phone}</span>
                       </div>
                     )}
                     {(customerInfo.address || customerInfo.city) && (
                       <div className="flex items-start gap-2">
-                        <MapPin className="h-4 w-4 mt-0.5" />
-                        <span className="whitespace-pre-line">{[customerInfo.address, customerInfo.city].filter(Boolean).join('\n')}</span>
+                        <MapPin className="h-4 w-4 text-slate-400 mt-0.5" />
+                        <span className="whitespace-pre-line text-slate-700">
+                          {[customerInfo.address, customerInfo.city].filter(Boolean).join('\n')}
+                        </span>
                       </div>
                     )}
-                    {customerInfo.notes && (
-                      <p className="text-xs italic text-slate-600">{customerInfo.notes}</p>
+                    {selectedOrder.shipping_address && (
+                      <div className="pt-2 border-t border-slate-200">
+                        <p className="text-xs font-semibold text-slate-500 uppercase mb-1">Dirección de envío</p>
+                        <p className="text-sm text-slate-700 whitespace-pre-line">{selectedOrder.shipping_address}</p>
+                      </div>
                     )}
                   </div>
-                </div>
+                </CollapsibleContent>
+              </Collapsible>
 
-                <div className="p-4 rounded-lg border border-slate-200 bg-slate-50 space-y-4">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="space-y-1">
-                      <p className="text-xs font-semibold text-slate-500 uppercase">Estado & total</p>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(selectedOrder.status)}
-                      </div>
-                      <p className="text-2xl font-bold text-slate-900">
-                        RD${selectedOrder.total.toLocaleString('es-DO', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </p>
-                    </div>
-                    <div className="text-right space-y-1">
-                      <p className="text-xs font-semibold text-slate-500 uppercase">Pedido</p>
-                      <p className="font-mono text-sm bg-white border border-slate-200 px-2 py-1 rounded text-slate-700">#{selectedOrder.id.slice(0, 10).toUpperCase()}</p>
-                    </div>
+              {/* Sección Colapsable: Productos */}
+              <Collapsible defaultOpen>
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4 text-slate-600" />
+                    <span className="font-medium text-sm text-slate-900">Productos ({orderItems.length})</span>
                   </div>
-
-                  <div className="p-3 rounded-md bg-white border border-slate-200 flex flex-col gap-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <FileText className="h-4 w-4 text-slate-500" />
-                        <div>
-                          <p className="text-xs text-slate-500 uppercase">Factura</p>
-                          <p className="font-semibold text-slate-900">
-                            {invoice ? invoice.invoice_number : invoiceLoading ? 'Buscando factura...' : 'No generada'}
-                          </p>
-                        </div>
-                      </div>
-                      {invoiceLoading && <RefreshCw className="h-4 w-4 animate-spin text-slate-400" />}
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {invoice ? (
-                        <>
-                          <Button variant="outline" size="sm" className="hover:bg-[#2b8cee]/10 hover:text-[#2b8cee] border-slate-200" asChild>
-                            <Link to={`/orders/invoice/${invoice.id}`} target="_blank" rel="noreferrer">
-                              <Eye className="h-4 w-4 mr-2" /> Ver / Descargar
-                            </Link>
-                          </Button>
-                          <Button variant="secondary" size="sm" className="bg-slate-100 text-slate-900 hover:bg-slate-200" onClick={() => window.open(`/orders/invoice/${invoice.id}`, '_blank')}>
-                            <Download className="h-4 w-4 mr-2" /> PDF rápido
-                          </Button>
-                        </>
-                      ) : (
-                        <Button
-                          onClick={handleGenerateInvoice}
-                          size="sm"
-                          disabled={creatingInvoice || invoiceLoading || orderItems.length === 0}
-                          className="bg-[#2b8cee] hover:bg-[#206bc4] text-white"
-                        >
-                          {creatingInvoice ? 'Generando...' : 'Generar factura'}
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Order Items */}
-              <div>
-                <h4 className="font-medium mb-3 text-slate-900">Productos</h4>
-                <div className="border border-slate-200 rounded-lg divide-y divide-slate-200 bg-white">
-                  {orderItems.map(item => (
-                    <div key={item.id} className="flex justify-between p-3">
-                      <div>
-                        <p className="font-medium text-slate-900">{item.product_name}</p>
-                        <p className="text-sm text-slate-500">Cantidad: {item.quantity}</p>
-                      </div>
-                      <p className="font-medium text-slate-900">RD${(item.price * item.quantity).toLocaleString()}</p>
-                    </div>
-                  ))}
-                  <div className="flex justify-between p-3 bg-slate-50 rounded-b-lg">
-                    <p className="font-semibold text-slate-900">Total</p>
-                    <p className="font-semibold text-slate-900">RD${selectedOrder.total.toLocaleString()}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Payment Verification Section */}
-              {orderPayments.length > 0 && (
-                <div className="border-t border-slate-200 pt-4">
-                  <h4 className="font-medium mb-3 flex items-center gap-2 text-slate-900">
-                    <CreditCard className="h-4 w-4" />
-                    Comprobantes de Pago
-                  </h4>
-                  <div className="space-y-4">
-                    {orderPayments.map((payment) => (
-                      <div key={payment.id} className="p-4 border border-slate-200 rounded-lg bg-slate-50 space-y-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-3">
-                            {getPaymentStatusBadge(payment.status)}
-                            <span className="text-sm text-slate-500">
-                              {new Date(payment.created_at).toLocaleString('es-DO', {
-                                day: 'numeric',
-                                month: 'short',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </span>
-                          </div>
-                          <span className="font-bold text-slate-900">
-                            RD${payment.amount.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
-
-                        <div className="grid gap-2 text-sm text-slate-600">
-                          {payment.reference_number && (
-                            <div className="flex justify-between">
-                              <span className="text-slate-500">Referencia:</span>
-                              <span className="font-mono text-slate-900">{payment.reference_number}</span>
-                            </div>
-                          )}
-                          {payment.notes && (
-                            <div className="flex justify-between">
-                              <span className="text-slate-500">Notas:</span>
-                              <span>{payment.notes}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Proof Image */}
-                        {payment.proof_url && (
-                          <div className="space-y-2">
-                            <p className="text-xs font-semibold text-slate-500 uppercase">Comprobante adjunto</p>
-                            <div className="relative group">
-                              <img
-                                src={payment.proof_url}
-                                alt="Comprobante de pago"
-                                className="w-full max-h-60 object-contain rounded-lg border border-slate-200 bg-white cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => setSelectedProofUrl(payment.proof_url)}
-                              />
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white text-slate-900"
-                                onClick={() => window.open(payment.proof_url!, '_blank')}
-                              >
-                                <ExternalLink className="h-4 w-4 mr-1" />
-                                Ver original
-                              </Button>
+                  <ChevronDown className="h-4 w-4 text-slate-500 transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2">
+                  <div className="border border-slate-200 rounded-lg divide-y divide-slate-200 bg-white">
+                    {orderItems.map(item => (
+                      <div key={item.id} className="flex justify-between items-center p-3">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="h-10 w-10 rounded border border-slate-200 bg-slate-100 overflow-hidden flex-shrink-0 relative">
+                            {(() => {
+                              const imgUrl = normalizeImageUrl(item.products?.image_url);
+                              return imgUrl ? (
+                                <img
+                                  src={imgUrl}
+                                  alt={item.product_name}
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center">
+                                  <ImageIcon className="h-4 w-4 text-slate-400" />
+                                </div>
+                              );
+                            })()}
+                            <div className="h-full w-full items-center justify-center absolute top-0 left-0 bg-slate-100 hidden">
+                              <ImageIcon className="h-4 w-4 text-slate-400" />
                             </div>
                           </div>
-                        )}
-
-                        {/* Verification Actions */}
-                        {payment.status === 'pending' && (
-                          <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
-                            <Button
-                              size="sm"
-                              className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white"
-                              onClick={() => verifyPayment(payment, true)}
-                              disabled={verifyingPayment}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Aprobar Pago
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              className="flex-1"
-                              onClick={() => verifyPayment(payment, false)}
-                              disabled={verifyingPayment}
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Rechazar Pago
-                            </Button>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-sm text-slate-900 truncate">{item.product_name}</p>
+                            <p className="text-xs text-slate-500">Cantidad: {item.quantity} × {formatCurrency(item.price)}</p>
                           </div>
-                        )}
-
-                        {payment.verified_at && (
-                          <div className="text-xs text-slate-500 pt-2 border-t border-slate-200">
-                            Verificado el {new Date(payment.verified_at).toLocaleString('es-DO')}
-                          </div>
-                        )}
+                        </div>
+                        <p className="font-semibold text-sm text-slate-900 shrink-0 ml-3">
+                          {formatCurrency(item.price * item.quantity)}
+                        </p>
                       </div>
                     ))}
+                    <div className="flex justify-between items-center p-3 bg-slate-50">
+                      <p className="font-semibold text-slate-900">Total</p>
+                      <p className="font-bold text-lg text-slate-900">{formatCurrency(selectedOrder.total)}</p>
+                    </div>
                   </div>
-                </div>
+                </CollapsibleContent>
+              </Collapsible>
+
+              {/* Sección Colapsable: Comprobantes de Pago */}
+              {(orderPayments.length > 0 || selectedOrder.status === 'pending') && (
+                <Collapsible>
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors">
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="h-4 w-4 text-slate-600" />
+                      <span className="font-medium text-sm text-slate-900">
+                        Comprobantes de Pago {orderPayments.length > 0 && `(${orderPayments.length})`}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-slate-500 transition-transform duration-200 data-[state=open]:rotate-180" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-2 space-y-3">
+                    {orderPayments.length > 0 ? (
+                      orderPayments.map((payment) => (
+                        <div key={payment.id} className="p-4 border border-slate-200 rounded-lg bg-white space-y-3">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div className="flex items-center gap-3">
+                              {getPaymentStatusBadge(payment.status)}
+                              <span className="text-xs text-slate-500">
+                                {new Date(payment.created_at).toLocaleString('es-DO', {
+                                  day: 'numeric',
+                                  month: 'short',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </span>
+                            </div>
+                            <span className="font-bold text-sm text-slate-900">
+                              {formatCurrency(payment.amount)}
+                            </span>
+                          </div>
+
+                          {(payment.reference_number || payment.notes) && (
+                            <div className="grid gap-1.5 text-xs text-slate-600 pt-2 border-t border-slate-200">
+                              {payment.reference_number && (
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Referencia:</span>
+                                  <span className="font-mono text-slate-900">{payment.reference_number}</span>
+                                </div>
+                              )}
+                              {payment.notes && (
+                                <div className="flex justify-between">
+                                  <span className="text-slate-500">Notas:</span>
+                                  <span className="text-right">{payment.notes}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {payment.proof_url && (
+                            <div className="space-y-2 pt-2 border-t border-slate-200">
+                              <p className="text-xs font-semibold text-slate-500 uppercase">Comprobante</p>
+                              <div className="relative group">
+                                <img
+                                  src={payment.proof_url}
+                                  alt="Comprobante de pago"
+                                  className="w-full max-h-48 object-contain rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => setSelectedProofUrl(payment.proof_url)}
+                                />
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white"
+                                  onClick={() => window.open(payment.proof_url!, '_blank')}
+                                >
+                                  <ExternalLink className="h-3.5 w-3.5" />
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {payment.status === 'pending' && (
+                            <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
+                              <Button
+                                size="sm"
+                                className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs"
+                                onClick={() => verifyPayment(payment, true)}
+                                disabled={verifyingPayment}
+                              >
+                                <CheckCircle className="h-3.5 w-3.5 mr-1.5" />
+                                Aprobar
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                className="flex-1 text-xs"
+                                onClick={() => verifyPayment(payment, false)}
+                                disabled={verifyingPayment}
+                              >
+                                <XCircle className="h-3.5 w-3.5 mr-1.5" />
+                                Rechazar
+                              </Button>
+                            </div>
+                          )}
+
+                          {payment.verified_at && (
+                            <div className="text-xs text-slate-500 pt-2 border-t border-slate-200">
+                              Verificado el {new Date(payment.verified_at).toLocaleString('es-DO')}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-4 border border-slate-200 rounded-lg bg-slate-50 flex items-center gap-3">
+                        <ImageIcon className="h-6 w-6 text-slate-400" />
+                        <div>
+                          <p className="font-medium text-sm text-slate-900">Sin comprobante</p>
+                          <p className="text-xs text-slate-500">El cliente aún no ha enviado el comprobante</p>
+                        </div>
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
               )}
 
-              {/* No payments message */}
-              {orderPayments.length === 0 && selectedOrder.status === 'pending' && (
-                <div className="p-4 border border-slate-200 rounded-lg bg-slate-50 flex items-center gap-3">
-                  <ImageIcon className="h-8 w-8 text-slate-400" />
-                  <div>
-                    <p className="font-medium text-slate-900">Sin comprobante de pago</p>
-                    <p className="text-sm text-slate-500">El cliente aún no ha enviado el comprobante de transferencia</p>
+              {/* Sección Colapsable: Actualizar Estado */}
+              <Collapsible>
+                <CollapsibleTrigger className="flex items-center justify-between w-full p-3 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <RefreshCw className="h-4 w-4 text-slate-600" />
+                    <span className="font-medium text-sm text-slate-900">Actualizar Estado</span>
                   </div>
-                </div>
-              )}
-
-              {/* Shipping Address */}
-              {selectedOrder.shipping_address && (
-                <div>
-                  <h4 className="font-medium mb-2 text-slate-900">Dirección de envío</h4>
-                  <p className="text-sm text-slate-500 bg-slate-50 p-3 rounded-lg border border-slate-200">{selectedOrder.shipping_address}</p>
-                </div>
-              )}
-
-              {/* Status Update */}
-              <div className="border-t border-slate-200 pt-4">
-                <h4 className="font-medium mb-3 text-slate-900">Actualizar Estado</h4>
-                <div className="space-y-4">
+                  <ChevronDown className="h-4 w-4 text-slate-500 transition-transform duration-200 data-[state=open]:rotate-180" />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="mt-2 p-4 rounded-lg border border-slate-200 bg-white space-y-3">
                   <div className="space-y-2">
-                    <Label className="text-slate-700">Nuevo estado</Label>
+                    <Label className="text-xs font-semibold text-slate-700">Nuevo estado</Label>
                     <Select value={newStatus} onValueChange={setNewStatus}>
-                      <SelectTrigger className="border-slate-200">
+                      <SelectTrigger className="border-slate-200 h-9">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -927,17 +996,17 @@ export default function AdminOrders() {
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-slate-700">Nota interna (opcional)</Label>
+                    <Label className="text-xs font-semibold text-slate-700">Nota interna (opcional)</Label>
                     <Textarea
                       value={statusNote}
                       onChange={(e) => setStatusNote(e.target.value)}
                       placeholder="Agregar nota sobre el cambio de estado..."
                       rows={2}
-                      className="border-slate-200"
+                      className="border-slate-200 text-sm"
                     />
                   </div>
-                </div>
-              </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
           )}
 

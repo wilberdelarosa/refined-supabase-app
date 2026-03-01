@@ -4,6 +4,7 @@ import { Product } from '@/hooks/useProducts';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/format-currency';
 import { motion } from 'framer-motion';
 
 interface ProductCardProps {
@@ -24,14 +25,7 @@ export function ProductCard({ product, className }: ProductCardProps) {
     await addToCart(product.id);
   };
 
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('es-DO', {
-      style: 'currency',
-      currency: 'DOP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(price).replace('DOP', 'RD$');
-  };
+
 
   return (
     <Link
@@ -120,11 +114,11 @@ export function ProductCard({ product, className }: ProductCardProps) {
         </h3>
         <div className="flex items-center gap-2">
           <span className="font-bold text-lg">
-            {formatPrice(product.price)}
+            {formatCurrency(product.price)}
           </span>
           {hasDiscount && (
             <span className="text-sm text-muted-foreground line-through">
-              {formatPrice(product.original_price!)}
+              {formatCurrency(product.original_price!)}
             </span>
           )}
         </div>

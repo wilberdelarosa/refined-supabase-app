@@ -1,0 +1,2546 @@
+{
+  "metadata": {
+    "generated": "2026-02-17T16:54:07.343Z",
+    "totalProducts": 74,
+    "analyzer": "InventoryImageAnalyzer v1.0"
+  },
+  "imageStandards": {
+    "size": "800x800px",
+    "backgroundType": "White background (RGB: 255,255,255)",
+    "format": "PNG/WEBP",
+    "quality": "High resolution (min 300dpi)",
+    "style": "Professional product photography",
+    "lighting": "Soft, even lighting",
+    "angle": "Front-facing with slight angle for depth",
+    "shadows": "Subtle drop shadow or none",
+    "margin": "10-15% padding around product"
+  },
+  "categorySpecs": {
+    "Proteínas": {
+      "style": "Container prominently displayed",
+      "background": "Pure white",
+      "props": "Optional: protein shake or powder scoop",
+      "angle": "45-degree angle showing front and side"
+    },
+    "Creatinas": {
+      "style": "Powder or capsule container",
+      "background": "Clean white with minimal shadow",
+      "props": "Measuring scoop if powder",
+      "angle": "Straight front view or slight angle"
+    },
+    "Pre-Entrenos": {
+      "style": "Dynamic container design emphasized",
+      "background": "White with subtle energy elements",
+      "props": "Shaker bottle optional",
+      "angle": "Action-oriented angle"
+    },
+    "Vitaminas": {
+      "style": "Clean bottle/container",
+      "background": "Medical-grade clean white",
+      "props": "Pills spilled out (few)",
+      "angle": "Professional, clinical angle"
+    },
+    "Accesorios": {
+      "style": "Product in use context",
+      "background": "White with lifestyle elements",
+      "props": "Contextual usage props",
+      "angle": "Usage-focused angle"
+    }
+  },
+  "analysis": {
+    "products": [
+      {
+        "id": "5f214862-8d51-4f44-bcca-db52986f4ea3",
+        "name": "ALLMAX CREATINA 80 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Allmax - ALLMAX CREATINA 80 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y0v27ZzFL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "c7297376-3eb6-40b6-99a2-67841add1783",
+        "name": "BPI SPORT MICRONIZED CREATINA 120 SERVICIOS",
+        "category": "Creatinas",
+        "description": "BPI Sports - BPI SPORT MICRONIZED CREATINA 120 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71GqC1-IuSL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "2e653162-d8db-41c5-90e5-bb97cfd1f31a",
+        "name": "CELL TECH CREATINA 6 LB",
+        "category": "Creatinas",
+        "description": "MuscleTech - CELL TECH CREATINA 6 LB. Suplemento deportivo premium.",
+        "price": 4500,
+        "stock": 0,
+        "image_url": "https://drive.google.com/file/d/1bUu0f6y4opQ74-wZf81N2vv9KH-p1tBb/view?usp=drivesdk",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "2d4b6d89-70f4-4460-89f2-d3a8bfe179e1",
+        "name": "MUSCLE TECH 100% CREATINA 80 SERVICIOS",
+        "category": "Creatinas",
+        "description": "MuscleTech - MUSCLE TECH 100% CREATINA 80 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rI0TfVb+L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "f4487809-38b9-40ae-bceb-757b32625800",
+        "name": "NUTREX CREATINA MONOHIDRATADA 200 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Nutrex - NUTREX CREATINA MONOHIDRATADA 200 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N-d-K-K4L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "4832c918-bbb2-4e1b-9628-ea8c2d7bc507",
+        "name": "NUTREX CREATINA MONOHIDRATADA 60 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Nutrex - NUTREX CREATINA MONOHIDRATADA 60 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R2H2d847L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "96c70d6e-b9b5-491b-bb50-8ca01a4802d2",
+        "name": "ON MICRONIZED CREATINE POWDER 120 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Optimum Nutrition - ON MICRONIZED CREATINE POWDER 120 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N-E4d386L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "278460cf-bfaf-4303-827f-77cce4e0df96",
+        "name": "PATRIOT CREATINE PUMP 3.4 LB",
+        "category": "Creatinas",
+        "description": "Patriot Nutrition - PATRIOT CREATINE PUMP 3.4 LB. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41-UaO-nF1S._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "dd6cfc89-a9e0-475b-b261-b76878f3d5d4",
+        "name": "SIMPLY CREATINA 100% PURE MONOHYDRATE",
+        "category": "Creatinas",
+        "description": "Simply - SIMPLY CREATINA 100% PURE MONOHYDRATE. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41D20Jq8WfL._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "b0e7e1e5-89b2-4cf2-a543-94639020b660",
+        "name": "ANS PERFORMANCE N-MASS 15 LB",
+        "category": "Mass Gainers",
+        "description": "ANS Performance - ANS PERFORMANCE N-MASS 15 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N1u85+4vL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "9597f9e3-7648-4998-9db3-3bd0fcc33a2d",
+        "name": "ANS PERFORMANCE N-MASS 6 LB",
+        "category": "Mass Gainers",
+        "description": "ANS Performance - ANS PERFORMANCE N-MASS 6 LB. Suplemento deportivo premium.",
+        "price": 3200,
+        "stock": 0,
+        "image_url": "https://www.bing.com/images/search?view=detailV2&ccid=0fki%2bZ9W&id=C9877C566747AC7C322A72381FF6960690C70A4F&thid=OIP.0fki-Z9WaqfXurZljGlJFwHaFw&mediaurl=https%3a%2f%2fwww.bodyfuelgh.com%2fwp-content%2fuploads%2f2017%2f04%2fn-mass-6lb.png&cdnurl=https%3a%2f%2fth.bing.com%2fth%2fid%2fR.d1f922f99f566aa7d7bab6658c694917%3frik%3dTwrHkAaW9h84cg%26pid%3dImgRaw%26r%3d0&exph=513&expw=660&q=ANS+PERFORMANCE+N-MASS+6+LB&FORM=IRPRST&ck=CEC28318F2C5CAAEB689BF4465195B2F&selectedIndex=0&itb=1",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "97e152be-7385-48b2-b165-c595510d6152",
+        "name": "DYMATIZE SUPER MASS GAINER 12 LB",
+        "category": "Mass Gainers",
+        "description": "Dymatize - DYMATIZE SUPER MASS GAINER 12 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41OQ9K2bNIL._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "3fd365ce-c154-47bf-a016-abbb5bc00db1",
+        "name": "DYMATIZE SUPER MASS GAINER 6 LB",
+        "category": "Mass Gainers",
+        "description": "Dymatize - DYMATIZE SUPER MASS GAINER 6 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/718yGq8+OFL.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "038a4a34-b255-4913-bef2-bff914840d65",
+        "name": "GASPARI REAL MASS 12 LB",
+        "category": "Mass Gainers",
+        "description": "Gaspari - GASPARI REAL MASS 12 LB. Suplemento deportivo premium.",
+        "price": 5200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41D5iE488UL._AC_SY780_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "7ce10f6a-1a20-4851-bf30-37cce371f81f",
+        "name": "MUSCLE TECH MASS TECH EXTREME 2000 12 LB",
+        "category": "Mass Gainers",
+        "description": "MuscleTech - MUSCLE TECH MASS TECH EXTREME 2000 12 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u+f+n5WqL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "39762ab6-41f3-401e-932e-8180259f9f26",
+        "name": "MUSCLE TECH MASS TECH EXTREME 6 LB",
+        "category": "Mass Gainers",
+        "description": "MuscleTech - MUSCLE TECH MASS TECH EXTREME 6 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/7178u8b-GEL._AC_SX679_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "8a2ca889-1f40-4952-956f-7426bcd315d6",
+        "name": "MUSCLEMEDS CARNIVOR MASS 6 LB",
+        "category": "Mass Gainers",
+        "description": "MuscleMeds - MUSCLEMEDS CARNIVOR MASS 6 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y08b1UjPL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "b5aa7998-1ad0-4cf4-858f-742c698b4557",
+        "name": "MUTANT MASS EXTREME 2500 12 LB",
+        "category": "Mass Gainers",
+        "description": "Mutant - MUTANT MASS EXTREME 2500 12 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u9sIKRzML._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "ce9e53e1-0f5a-4d18-8943-a74a612d5dfe",
+        "name": "ON SERIOUS MASS 12 LB",
+        "category": "Mass Gainers",
+        "description": "Optimum Nutrition - ON SERIOUS MASS 12 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R3TnvF71L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "0fc0fd15-c891-4315-874b-8c28aa3a9703",
+        "name": "ON SERIOUS MASS 6 LB",
+        "category": "Mass Gainers",
+        "description": "Optimum Nutrition - ON SERIOUS MASS 6 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/718D+UvX-DL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "7476242d-92df-4fcf-8641-e37e9705ffa9",
+        "name": "PATRIOT NUTRITION ATLAS GAINER 15 LB",
+        "category": "Mass Gainers",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION ATLAS GAINER 15 LB. Suplemento deportivo premium.",
+        "price": 4200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8S9S7f1L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "b139e491-0dc8-4e79-b16e-7b835883ef52",
+        "name": "SIMPLY MASS GAINER 13 LB",
+        "category": "Mass Gainers",
+        "description": "Simply - SIMPLY MASS GAINER 13 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41OQz94sWQL._AC_SX679_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false
+      },
+      {
+        "id": "1e3d0b5f-bec9-43fa-8ff6-cd22700df1ef",
+        "name": "ALPHA SUPPS BETA-ALANINE 100 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Alpha Supps - ALPHA SUPPS BETA-ALANINE 100 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y+PpHG6SL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "4089c92b-0104-435a-99ac-59596c08997f",
+        "name": "CELLUCOR C4 SPORT RIPPED 20 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Cellucor - CELLUCOR C4 SPORT RIPPED 20 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8XoU9jQL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "21065cde-eddd-4505-98e7-c9034beb5fef",
+        "name": "MHP ANADROX PUMP & BURN 112 CÁPSULAS",
+        "category": "Pre-Entrenos",
+        "description": "MHP - MHP ANADROX PUMP & BURN 112 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rA0bE0NLL.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "9d78de69-6442-43ec-acab-0ca444160378",
+        "name": "ON GOLD STANDARD PRE-WORKOUT 30 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Optimum Nutrition - ON GOLD STANDARD PRE-WORKOUT 30 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://drive.google.com/file/d/1EmEWAaQ-UdYtr25LbuoiT1GwEQhguudp/view?usp=drivesdk",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "5d04f3c8-b67f-459c-926e-025b46ef140e",
+        "name": "PATRIOT NUTRITION MUSCLE PUMP 50 MG 120 CÁPSULAS",
+        "category": "Pre-Entrenos",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION MUSCLE PUMP 50 MG 120 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N-qO7iMHL._AC_UF894,1000_QL80_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "fb0733f6-9b61-4a08-98a3-01b71f7fb06f",
+        "name": "PATRIOT NUTRITION SUICIDE TEST PRE WORKOUT 50 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION SUICIDE TEST PRE WORKOUT 50 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/719FvYxL3iL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "1f0abe44-37b8-4065-a8ed-d8281837c59a",
+        "name": "PATRIOT NUTRITION TESTO PUMP 90 CÁPSULAS",
+        "category": "Pre-Entrenos",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION TESTO PUMP 90 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61D6s-Fj+fL.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false
+      },
+      {
+        "id": "925128c9-6132-4efe-a39f-5f1d2471ab6e",
+        "name": "ALLMAX ISOFLEX 5 LB",
+        "category": "Proteínas",
+        "description": "Allmax - ALLMAX ISOFLEX 5 LB. Suplemento deportivo premium.",
+        "price": 4500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71p0WfI5pRL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": true
+      },
+      {
+        "id": "801d652a-6b0d-49bf-ab65-77a3b6b11ad6",
+        "name": "ANS PERFORMANCE N-WHEY 5 LB",
+        "category": "Proteínas",
+        "description": "ANS Performance - ANS PERFORMANCE N-WHEY 5 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R33Y6wSCL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "740c129d-2a9b-4444-a773-22fded73d6a4",
+        "name": "BODY FORTRESS 100% PREMIUM PROTEIN 1.78 LB",
+        "category": "Proteínas",
+        "description": "Body Fortress - BODY FORTRESS 100% PREMIUM PROTEIN 1.78 LB. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://i5.walmartimages.com/asr/8f107f7c-7d94-4d82-8bc7-5c5f4c4a4e1e.99723ecdbf4c9c1b3f9dbe1194ac1517.jpeg?odnHeight=612&odnWidth=612&odnBg=FFFFFF",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "78f76106-b710-411c-9c98-390d74a9e333",
+        "name": "DYMATIZE ISO 100 HYDROLYZED 1.6 LB",
+        "category": "Proteínas",
+        "description": "Dymatize - DYMATIZE ISO 100 HYDROLYZED 1.6 LB. Suplemento deportivo premium.",
+        "price": 3200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71r9d6m-mFL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "62170926-f5df-4ab1-bb9e-ebef7225c6e9",
+        "name": "DYMATIZE ISO 100 HYDROLYZED 6 LB",
+        "category": "Proteínas",
+        "description": "Dymatize - DYMATIZE ISO 100 HYDROLYZED 6 LB. Suplemento deportivo premium.",
+        "price": 7500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71YyP9f8iIL.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "4bab69ec-58bb-4ed9-af8a-41c781f66fee",
+        "name": "GOLIATH 100% WHEY PROTEIN 5 LB",
+        "category": "Proteínas",
+        "description": "Goliath - GOLIATH 100% WHEY PROTEIN 5 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u-g2kZf7L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "37f7afd5-331f-470b-8229-f1e18986d44b",
+        "name": "ISOPURE INFUSIONS 14.1 OZ",
+        "category": "Proteínas",
+        "description": "Isopure - ISOPURE INFUSIONS 14.1 OZ. Suplemento deportivo premium.",
+        "price": 2800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u9sWpQOUL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "2fe0795a-f310-4891-9de3-588f15fee149",
+        "name": "ISOPURE ZERO CARB PROTEIN 3 LB",
+        "category": "Proteínas",
+        "description": "Isopure - ISOPURE ZERO CARB PROTEIN 3 LB. Suplemento deportivo premium.",
+        "price": 4200,
+        "stock": 0,
+        "image_url": "https://drive.google.com/file/d/1FOLrgE7cxqJIy8U1fOKmkD0Q1YPD3r2P/view?usp=drivesdk",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "9139f242-64a8-4dc9-b1d1-94e81ae17bd2",
+        "name": "ISOPURE ZERO CARB PROTEIN 4.5 LB",
+        "category": "Proteínas",
+        "description": "Isopure - ISOPURE ZERO CARB PROTEIN 4.5 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rB3Xp2JVL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "bfa517e3-bf70-4a35-af16-cc3552903569",
+        "name": "MUSCLE TECH 100% GRASS FED WHEY PROTEIN 1.80 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH 100% GRASS FED WHEY PROTEIN 1.80 LB. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R3A6L42FL.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false
+      },
+      {
+        "id": "51332aa5-3f3d-480a-84f6-e13b1964e316",
+        "name": "MUSCLE TECH NITRO TECH 100% WHEY GOLD 2 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH NITRO TECH 100% WHEY GOLD 2 LB. Suplemento deportivo premium.",
+        "price": 3000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u+qD-10KL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "93970897-d9f0-4d5a-a488-e7aa755bd4ad",
+        "name": "MUSCLE TECH NITRO TECH 100% WHEY GOLD 5 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH NITRO TECH 100% WHEY GOLD 5 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71pE1Geqf-L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "f9334b44-c6fd-4142-8927-adf36ccc328d",
+        "name": "MUSCLE TECH NITRO TECH CLASSIC WHEY PROTEIN 4 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH NITRO TECH CLASSIC WHEY PROTEIN 4 LB. Suplemento deportivo premium.",
+        "price": 4200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/718y6J1mSCL._AC_SY300_SX300_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "f04dd12a-f368-4720-a3a6-8a7c74fe9aa7",
+        "name": "MUSCLE TECH PLATINUM WHEY + MUSCLE BUILDER 1.80 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH PLATINUM WHEY + MUSCLE BUILDER 1.80 LB. Suplemento deportivo premium.",
+        "price": 2800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8F-V8g-L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "e622ecc3-cba4-4727-8d33-d2376b3cb008",
+        "name": "NUTREX 100% WHEY 5 LB",
+        "category": "Proteínas",
+        "description": "Nutrex - NUTREX 100% WHEY 5 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N73l6844L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "3d3b9198-08b3-470b-851f-2f899c54635d",
+        "name": "ON GOLD STANDARD 100% WHEY 1.47 LB",
+        "category": "Proteínas",
+        "description": "Optimum Nutrition - ON GOLD STANDARD 100% WHEY 1.47 LB. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71q3N7i0RUL.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "813d332c-b688-4ffc-a009-47c52ef87275",
+        "name": "ON GOLD STANDARD 100% WHEY 5 LB",
+        "category": "Proteínas",
+        "description": "Optimum Nutrition - ON GOLD STANDARD 100% WHEY 5 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71B+N6z02DL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "5d325178-fc76-441d-90bd-c05c947034aa",
+        "name": "ON GOLD STANDARD 100% WHEY 5.47 LB",
+        "category": "Proteínas",
+        "description": "Optimum Nutrition - ON GOLD STANDARD 100% WHEY 5.47 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71YQjW-OQCL._AC_SY879_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "e8009fce-a99a-4169-8adf-7e59e80aaed8",
+        "name": "PATRIOT NUTRITION ISO WHEY 1.38 LB",
+        "category": "Proteínas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION ISO WHEY 1.38 LB. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41Dq78gP8nL._AC_SY780_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "d1a4a8f9-be0b-4572-8369-92946164a15c",
+        "name": "PATRIOT NUTRITION SKIRLA WHEY CONCENTRATE 2 LB",
+        "category": "Proteínas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION SKIRLA WHEY CONCENTRATE 2 LB. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y-3m3YVpL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false
+      },
+      {
+        "id": "97a2145e-f584-42a7-9d72-a6c23265af5d",
+        "name": "RONNIE COLEMAN KING MASS 3 LB",
+        "category": "Proteínas",
+        "description": "Ronnie Coleman - RONNIE COLEMAN KING MASS 3 LB. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rJg24a4PL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false
+      },
+      {
+        "id": "fcbd09b5-3453-4c42-9f2e-b8073aba8942",
+        "name": "BALKAN PHARMACEUTICALS OMEGA-3",
+        "category": "Vitaminas",
+        "description": "Balkan Pharmaceuticals - BALKAN PHARMACEUTICALS OMEGA-3. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61bWcZ-Y-mL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "f5fbfef0-08e5-4d2e-8627-c194a2282e72",
+        "name": "COUNTRY LIFE ZINC PICOLINATE 25MG",
+        "category": "Vitaminas",
+        "description": "Country Life - COUNTRY LIFE ZINC PICOLINATE 25MG. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rIe7pC3vL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "acbb7e92-bbb4-48cd-9219-0802111b8c76",
+        "name": "EARTHS CREATION APPLE CIDER VINEGAR GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION APPLE CIDER VINEGAR GUMMIES. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41D8k+t+PBL._AC_SY300_SX300_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false
+      },
+      {
+        "id": "224682f9-43b1-4ba8-83e6-a7735c9fd8fc",
+        "name": "EARTHS CREATION BIOTIN 10,000 MCG",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION BIOTIN 10,000 MCG. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71r5g81hGUL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "667586dc-768e-48f8-847a-2230f0a4097d",
+        "name": "EARTHS CREATION CALCIUM MAGNESIUM ZINC + D3",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION CALCIUM MAGNESIUM ZINC + D3. Suplemento deportivo premium.",
+        "price": 900,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y+R4jK1nL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "915373c8-f051-404f-8bc7-a48eb8b237fc",
+        "name": "EARTHS CREATION KIDS CALCIUM + D3 GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS CALCIUM + D3 GUMMIES. Suplemento deportivo premium.",
+        "price": 750,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Yf1E-14OL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "fbac7749-6d2c-4319-aac8-bed662ec15ac",
+        "name": "EARTHS CREATION KIDS MULTIVITAMIN GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS MULTIVITAMIN GUMMIES. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71+D+Vq80JL.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "7ec66bc1-3b2c-4b63-a79e-cd412683feaf",
+        "name": "EARTHS CREATION KIDS OMEGA-3 GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS OMEGA-3 GUMMIES. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61M6K5W786L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "c40181ab-cb3b-4c3c-ab3b-f3236118f66d",
+        "name": "EARTHS CREATION KIDS VITAMIN C GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS VITAMIN C GUMMIES. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8XoJ94DL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "3e6c717c-58f3-48d7-8fb9-3d7f1c4ef75e",
+        "name": "EARTHS CREATION MULTIVITAMIN FOR MEN",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION MULTIVITAMIN FOR MEN. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/717-E5V6CPL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "45dc5c55-4c9b-4e8a-918f-8b1dbfecd9ee",
+        "name": "EARTHS CREATION MULTIVITAMIN FOR WOMEN",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION MULTIVITAMIN FOR WOMEN. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71I6-Nqf9hL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "015e2e0d-a5c9-45f9-849b-decffbdc250e",
+        "name": "EARTHS CREATION VITAMIN C 1000MG",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION VITAMIN C 1000MG. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y88-5qK1L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "1557b466-938f-4c09-9958-f166085880fa",
+        "name": "EARTHS CREATION VITAMIN D3 5000 IU",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION VITAMIN D3 5000 IU. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71+jE30NpsL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "b3d09efa-689a-4bcf-94cd-e2a1bbc69f2e",
+        "name": "NATURAVIT COLÁGENO HIDROLIZADO + BIOTINA",
+        "category": "Vitaminas",
+        "description": "Naturavit - NATURAVIT COLÁGENO HIDROLIZADO + BIOTINA. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61j5g2j2-zL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false
+      },
+      {
+        "id": "b72861b4-a5d5-406b-b827-0afb06659df5",
+        "name": "NATURAVIT MAGNESIO + ZINC + B6",
+        "category": "Vitaminas",
+        "description": "Naturavit - NATURAVIT MAGNESIO + ZINC + B6. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61r59D2OglL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "4d3e70da-fa71-41ef-b8ee-ef7dc511bd7d",
+        "name": "NOW FOODS IRON 18MG",
+        "category": "Vitaminas",
+        "description": "NOW Foods - NOW FOODS IRON 18MG. Suplemento deportivo premium.",
+        "price": 900,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71-2Q-z4nKL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "c470e762-eee4-4a1e-9b93-b409ace2f1b4",
+        "name": "NOW FOODS OMEGA-3 1000MG",
+        "category": "Vitaminas",
+        "description": "NOW Foods - NOW FOODS OMEGA-3 1000MG. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R31z2+1mL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false
+      },
+      {
+        "id": "8dc81481-14f9-4f79-b45c-3843ae389998",
+        "name": "NOW FOODS VITAMIN B-12 1000MCG",
+        "category": "Vitaminas",
+        "description": "NOW Foods - NOW FOODS VITAMIN B-12 1000MCG. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y0vwtL6BL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false
+      },
+      {
+        "id": "29666a26-6845-4ce9-bf19-83589e0c5bf7",
+        "name": "PATRIOT NUTRITION MULTIVITAMIN SPORT",
+        "category": "Vitaminas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION MULTIVITAMIN SPORT. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41-qSg-6LpL._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "3f0fb936-5181-4d8e-9f84-1d86183cb9cb",
+        "name": "PATRIOT NUTRITION ZMA 90 CÁPSULAS",
+        "category": "Vitaminas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION ZMA 90 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rSgO5O0BL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "9e034628-ec08-4a9a-9362-7030b3b3e2b0",
+        "name": "SWANSON ASHWAGANDHA 450MG",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON ASHWAGANDHA 450MG. Suplemento deportivo premium.",
+        "price": 900,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71V2L4+b9mL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "1470ac0b-a508-4a26-8cd9-67b70b13a8a8",
+        "name": "SWANSON COQ-10 100MG",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON COQ-10 100MG. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71I633rF56L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "a50670bc-4876-4bed-b177-b0164db0cd43",
+        "name": "SWANSON MELATONIN 3MG",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON MELATONIN 3MG. Suplemento deportivo premium.",
+        "price": 600,
+        "stock": 0,
+        "image_url": "https://www.bing.com/images/search?view=detailV2&ccid=0fki%2bZ9W&id=C9877C566747AC7C322A72381FF6960690C70A4F&thid=OIP.0fki-Z9WaqfXurZljGlJFwHaFw&mediaurl=https%3a%2f%2fwww.bodyfuelgh.com%2fwp-content%2fuploads%2f2017%2f04%2fn-mass-6lb.png&cdnurl=https%3a%2f%2fth.bing.com%2fth%2fid%2fR.d1f922f99f566aa7d7bab6658c694917%3frik%3dTwrHkAaW9h84cg%26pid%3dImgRaw%26r%3d0&exph=513&expw=660&q=ANS+PERFORMANCE+N-MASS+6+LB&FORM=IRPRST&ck=CEC28318F2C5CAAEB689BF4465195B2F&selectedIndex=0&itb=1",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false
+      },
+      {
+        "id": "3ca8d156-0614-4f50-950f-f0cec814e8cc",
+        "name": "SWANSON TURMERIC & BLACK PEPPER",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON TURMERIC & BLACK PEPPER. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71pE1y8WcAL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false
+      }
+    ],
+    "missingImages": [],
+    "qualityIssues": [
+      {
+        "id": "5f214862-8d51-4f44-bcca-db52986f4ea3",
+        "name": "ALLMAX CREATINA 80 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Allmax - ALLMAX CREATINA 80 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y0v27ZzFL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y0v27ZzFL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "c7297376-3eb6-40b6-99a2-67841add1783",
+        "name": "BPI SPORT MICRONIZED CREATINA 120 SERVICIOS",
+        "category": "Creatinas",
+        "description": "BPI Sports - BPI SPORT MICRONIZED CREATINA 120 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71GqC1-IuSL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71GqC1-IuSL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "2d4b6d89-70f4-4460-89f2-d3a8bfe179e1",
+        "name": "MUSCLE TECH 100% CREATINA 80 SERVICIOS",
+        "category": "Creatinas",
+        "description": "MuscleTech - MUSCLE TECH 100% CREATINA 80 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rI0TfVb+L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71rI0TfVb+L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "f4487809-38b9-40ae-bceb-757b32625800",
+        "name": "NUTREX CREATINA MONOHIDRATADA 200 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Nutrex - NUTREX CREATINA MONOHIDRATADA 200 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N-d-K-K4L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71N-d-K-K4L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "4832c918-bbb2-4e1b-9628-ea8c2d7bc507",
+        "name": "NUTREX CREATINA MONOHIDRATADA 60 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Nutrex - NUTREX CREATINA MONOHIDRATADA 60 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R2H2d847L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71R2H2d847L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "96c70d6e-b9b5-491b-bb50-8ca01a4802d2",
+        "name": "ON MICRONIZED CREATINE POWDER 120 SERVICIOS",
+        "category": "Creatinas",
+        "description": "Optimum Nutrition - ON MICRONIZED CREATINE POWDER 120 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N-E4d386L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71N-E4d386L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "278460cf-bfaf-4303-827f-77cce4e0df96",
+        "name": "PATRIOT CREATINE PUMP 3.4 LB",
+        "category": "Creatinas",
+        "description": "Patriot Nutrition - PATRIOT CREATINE PUMP 3.4 LB. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41-UaO-nF1S._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41-UaO-nF1S._AC_SL1000_.jpg"
+      },
+      {
+        "id": "dd6cfc89-a9e0-475b-b261-b76878f3d5d4",
+        "name": "SIMPLY CREATINA 100% PURE MONOHYDRATE",
+        "category": "Creatinas",
+        "description": "Simply - SIMPLY CREATINA 100% PURE MONOHYDRATE. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41D20Jq8WfL._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41D20Jq8WfL._AC_SL1000_.jpg"
+      },
+      {
+        "id": "b0e7e1e5-89b2-4cf2-a543-94639020b660",
+        "name": "ANS PERFORMANCE N-MASS 15 LB",
+        "category": "Mass Gainers",
+        "description": "ANS Performance - ANS PERFORMANCE N-MASS 15 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N1u85+4vL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71N1u85+4vL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "97e152be-7385-48b2-b165-c595510d6152",
+        "name": "DYMATIZE SUPER MASS GAINER 12 LB",
+        "category": "Mass Gainers",
+        "description": "Dymatize - DYMATIZE SUPER MASS GAINER 12 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41OQ9K2bNIL._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41OQ9K2bNIL._AC_SL1000_.jpg"
+      },
+      {
+        "id": "3fd365ce-c154-47bf-a016-abbb5bc00db1",
+        "name": "DYMATIZE SUPER MASS GAINER 6 LB",
+        "category": "Mass Gainers",
+        "description": "Dymatize - DYMATIZE SUPER MASS GAINER 6 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/718yGq8+OFL.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/718yGq8+OFL.jpg"
+      },
+      {
+        "id": "038a4a34-b255-4913-bef2-bff914840d65",
+        "name": "GASPARI REAL MASS 12 LB",
+        "category": "Mass Gainers",
+        "description": "Gaspari - GASPARI REAL MASS 12 LB. Suplemento deportivo premium.",
+        "price": 5200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41D5iE488UL._AC_SY780_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41D5iE488UL._AC_SY780_.jpg"
+      },
+      {
+        "id": "7ce10f6a-1a20-4851-bf30-37cce371f81f",
+        "name": "MUSCLE TECH MASS TECH EXTREME 2000 12 LB",
+        "category": "Mass Gainers",
+        "description": "MuscleTech - MUSCLE TECH MASS TECH EXTREME 2000 12 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u+f+n5WqL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71u+f+n5WqL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "39762ab6-41f3-401e-932e-8180259f9f26",
+        "name": "MUSCLE TECH MASS TECH EXTREME 6 LB",
+        "category": "Mass Gainers",
+        "description": "MuscleTech - MUSCLE TECH MASS TECH EXTREME 6 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/7178u8b-GEL._AC_SX679_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/7178u8b-GEL._AC_SX679_.jpg"
+      },
+      {
+        "id": "8a2ca889-1f40-4952-956f-7426bcd315d6",
+        "name": "MUSCLEMEDS CARNIVOR MASS 6 LB",
+        "category": "Mass Gainers",
+        "description": "MuscleMeds - MUSCLEMEDS CARNIVOR MASS 6 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y08b1UjPL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y08b1UjPL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "b5aa7998-1ad0-4cf4-858f-742c698b4557",
+        "name": "MUTANT MASS EXTREME 2500 12 LB",
+        "category": "Mass Gainers",
+        "description": "Mutant - MUTANT MASS EXTREME 2500 12 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u9sIKRzML._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71u9sIKRzML._AC_SL1500_.jpg"
+      },
+      {
+        "id": "ce9e53e1-0f5a-4d18-8943-a74a612d5dfe",
+        "name": "ON SERIOUS MASS 12 LB",
+        "category": "Mass Gainers",
+        "description": "Optimum Nutrition - ON SERIOUS MASS 12 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R3TnvF71L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71R3TnvF71L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "0fc0fd15-c891-4315-874b-8c28aa3a9703",
+        "name": "ON SERIOUS MASS 6 LB",
+        "category": "Mass Gainers",
+        "description": "Optimum Nutrition - ON SERIOUS MASS 6 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/718D+UvX-DL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/718D+UvX-DL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "7476242d-92df-4fcf-8641-e37e9705ffa9",
+        "name": "PATRIOT NUTRITION ATLAS GAINER 15 LB",
+        "category": "Mass Gainers",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION ATLAS GAINER 15 LB. Suplemento deportivo premium.",
+        "price": 4200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8S9S7f1L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y8S9S7f1L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "b139e491-0dc8-4e79-b16e-7b835883ef52",
+        "name": "SIMPLY MASS GAINER 13 LB",
+        "category": "Mass Gainers",
+        "description": "Simply - SIMPLY MASS GAINER 13 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41OQz94sWQL._AC_SX679_.jpg",
+        "created_at": "2026-02-17T14:54:55.370779+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41OQz94sWQL._AC_SX679_.jpg"
+      },
+      {
+        "id": "1e3d0b5f-bec9-43fa-8ff6-cd22700df1ef",
+        "name": "ALPHA SUPPS BETA-ALANINE 100 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Alpha Supps - ALPHA SUPPS BETA-ALANINE 100 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y+PpHG6SL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y+PpHG6SL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "4089c92b-0104-435a-99ac-59596c08997f",
+        "name": "CELLUCOR C4 SPORT RIPPED 20 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Cellucor - CELLUCOR C4 SPORT RIPPED 20 SERVICIOS. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8XoU9jQL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y8XoU9jQL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "21065cde-eddd-4505-98e7-c9034beb5fef",
+        "name": "MHP ANADROX PUMP & BURN 112 CÁPSULAS",
+        "category": "Pre-Entrenos",
+        "description": "MHP - MHP ANADROX PUMP & BURN 112 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rA0bE0NLL.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71rA0bE0NLL.jpg"
+      },
+      {
+        "id": "5d04f3c8-b67f-459c-926e-025b46ef140e",
+        "name": "PATRIOT NUTRITION MUSCLE PUMP 50 MG 120 CÁPSULAS",
+        "category": "Pre-Entrenos",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION MUSCLE PUMP 50 MG 120 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N-qO7iMHL._AC_UF894,1000_QL80_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71N-qO7iMHL._AC_UF894,1000_QL80_.jpg"
+      },
+      {
+        "id": "fb0733f6-9b61-4a08-98a3-01b71f7fb06f",
+        "name": "PATRIOT NUTRITION SUICIDE TEST PRE WORKOUT 50 SERVICIOS",
+        "category": "Pre-Entrenos",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION SUICIDE TEST PRE WORKOUT 50 SERVICIOS. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/719FvYxL3iL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/719FvYxL3iL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "1f0abe44-37b8-4065-a8ed-d8281837c59a",
+        "name": "PATRIOT NUTRITION TESTO PUMP 90 CÁPSULAS",
+        "category": "Pre-Entrenos",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION TESTO PUMP 90 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61D6s-Fj+fL.jpg",
+        "created_at": "2026-02-17T14:54:55.407693+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/61D6s-Fj+fL.jpg"
+      },
+      {
+        "id": "925128c9-6132-4efe-a39f-5f1d2471ab6e",
+        "name": "ALLMAX ISOFLEX 5 LB",
+        "category": "Proteínas",
+        "description": "Allmax - ALLMAX ISOFLEX 5 LB. Suplemento deportivo premium.",
+        "price": 4500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71p0WfI5pRL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": true,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71p0WfI5pRL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "801d652a-6b0d-49bf-ab65-77a3b6b11ad6",
+        "name": "ANS PERFORMANCE N-WHEY 5 LB",
+        "category": "Proteínas",
+        "description": "ANS Performance - ANS PERFORMANCE N-WHEY 5 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R33Y6wSCL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71R33Y6wSCL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "740c129d-2a9b-4444-a773-22fded73d6a4",
+        "name": "BODY FORTRESS 100% PREMIUM PROTEIN 1.78 LB",
+        "category": "Proteínas",
+        "description": "Body Fortress - BODY FORTRESS 100% PREMIUM PROTEIN 1.78 LB. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://i5.walmartimages.com/asr/8f107f7c-7d94-4d82-8bc7-5c5f4c4a4e1e.99723ecdbf4c9c1b3f9dbe1194ac1517.jpeg?odnHeight=612&odnWidth=612&odnBg=FFFFFF",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://i5.walmartimages.com/asr/8f107f7c-7d94-4d82-8bc7-5c5f4c4a4e1e.99723ecdbf4c9c1b3f9dbe1194ac1517.jpeg?odnHeight=612&odnWidth=612&odnBg=FFFFFF"
+      },
+      {
+        "id": "78f76106-b710-411c-9c98-390d74a9e333",
+        "name": "DYMATIZE ISO 100 HYDROLYZED 1.6 LB",
+        "category": "Proteínas",
+        "description": "Dymatize - DYMATIZE ISO 100 HYDROLYZED 1.6 LB. Suplemento deportivo premium.",
+        "price": 3200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71r9d6m-mFL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71r9d6m-mFL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "62170926-f5df-4ab1-bb9e-ebef7225c6e9",
+        "name": "DYMATIZE ISO 100 HYDROLYZED 6 LB",
+        "category": "Proteínas",
+        "description": "Dymatize - DYMATIZE ISO 100 HYDROLYZED 6 LB. Suplemento deportivo premium.",
+        "price": 7500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71YyP9f8iIL.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71YyP9f8iIL.jpg"
+      },
+      {
+        "id": "4bab69ec-58bb-4ed9-af8a-41c781f66fee",
+        "name": "GOLIATH 100% WHEY PROTEIN 5 LB",
+        "category": "Proteínas",
+        "description": "Goliath - GOLIATH 100% WHEY PROTEIN 5 LB. Suplemento deportivo premium.",
+        "price": 3500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u-g2kZf7L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71u-g2kZf7L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "37f7afd5-331f-470b-8229-f1e18986d44b",
+        "name": "ISOPURE INFUSIONS 14.1 OZ",
+        "category": "Proteínas",
+        "description": "Isopure - ISOPURE INFUSIONS 14.1 OZ. Suplemento deportivo premium.",
+        "price": 2800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u9sWpQOUL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71u9sWpQOUL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "9139f242-64a8-4dc9-b1d1-94e81ae17bd2",
+        "name": "ISOPURE ZERO CARB PROTEIN 4.5 LB",
+        "category": "Proteínas",
+        "description": "Isopure - ISOPURE ZERO CARB PROTEIN 4.5 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rB3Xp2JVL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71rB3Xp2JVL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "bfa517e3-bf70-4a35-af16-cc3552903569",
+        "name": "MUSCLE TECH 100% GRASS FED WHEY PROTEIN 1.80 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH 100% GRASS FED WHEY PROTEIN 1.80 LB. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R3A6L42FL.jpg",
+        "created_at": "2026-02-17T14:54:55.242266+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71R3A6L42FL.jpg"
+      },
+      {
+        "id": "51332aa5-3f3d-480a-84f6-e13b1964e316",
+        "name": "MUSCLE TECH NITRO TECH 100% WHEY GOLD 2 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH NITRO TECH 100% WHEY GOLD 2 LB. Suplemento deportivo premium.",
+        "price": 3000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71u+qD-10KL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71u+qD-10KL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "93970897-d9f0-4d5a-a488-e7aa755bd4ad",
+        "name": "MUSCLE TECH NITRO TECH 100% WHEY GOLD 5 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH NITRO TECH 100% WHEY GOLD 5 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71pE1Geqf-L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71pE1Geqf-L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "f9334b44-c6fd-4142-8927-adf36ccc328d",
+        "name": "MUSCLE TECH NITRO TECH CLASSIC WHEY PROTEIN 4 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH NITRO TECH CLASSIC WHEY PROTEIN 4 LB. Suplemento deportivo premium.",
+        "price": 4200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/718y6J1mSCL._AC_SY300_SX300_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/718y6J1mSCL._AC_SY300_SX300_.jpg"
+      },
+      {
+        "id": "f04dd12a-f368-4720-a3a6-8a7c74fe9aa7",
+        "name": "MUSCLE TECH PLATINUM WHEY + MUSCLE BUILDER 1.80 LB",
+        "category": "Proteínas",
+        "description": "MuscleTech - MUSCLE TECH PLATINUM WHEY + MUSCLE BUILDER 1.80 LB. Suplemento deportivo premium.",
+        "price": 2800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8F-V8g-L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y8F-V8g-L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "e622ecc3-cba4-4727-8d33-d2376b3cb008",
+        "name": "NUTREX 100% WHEY 5 LB",
+        "category": "Proteínas",
+        "description": "Nutrex - NUTREX 100% WHEY 5 LB. Suplemento deportivo premium.",
+        "price": 3800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71N73l6844L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71N73l6844L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "3d3b9198-08b3-470b-851f-2f899c54635d",
+        "name": "ON GOLD STANDARD 100% WHEY 1.47 LB",
+        "category": "Proteínas",
+        "description": "Optimum Nutrition - ON GOLD STANDARD 100% WHEY 1.47 LB. Suplemento deportivo premium.",
+        "price": 2200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71q3N7i0RUL.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71q3N7i0RUL.jpg"
+      },
+      {
+        "id": "813d332c-b688-4ffc-a009-47c52ef87275",
+        "name": "ON GOLD STANDARD 100% WHEY 5 LB",
+        "category": "Proteínas",
+        "description": "Optimum Nutrition - ON GOLD STANDARD 100% WHEY 5 LB. Suplemento deportivo premium.",
+        "price": 5500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71B+N6z02DL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71B+N6z02DL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "5d325178-fc76-441d-90bd-c05c947034aa",
+        "name": "ON GOLD STANDARD 100% WHEY 5.47 LB",
+        "category": "Proteínas",
+        "description": "Optimum Nutrition - ON GOLD STANDARD 100% WHEY 5.47 LB. Suplemento deportivo premium.",
+        "price": 5800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71YQjW-OQCL._AC_SY879_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71YQjW-OQCL._AC_SY879_.jpg"
+      },
+      {
+        "id": "e8009fce-a99a-4169-8adf-7e59e80aaed8",
+        "name": "PATRIOT NUTRITION ISO WHEY 1.38 LB",
+        "category": "Proteínas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION ISO WHEY 1.38 LB. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41Dq78gP8nL._AC_SY780_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41Dq78gP8nL._AC_SY780_.jpg"
+      },
+      {
+        "id": "d1a4a8f9-be0b-4572-8369-92946164a15c",
+        "name": "PATRIOT NUTRITION SKIRLA WHEY CONCENTRATE 2 LB",
+        "category": "Proteínas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION SKIRLA WHEY CONCENTRATE 2 LB. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y-3m3YVpL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.29334+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y-3m3YVpL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "97a2145e-f584-42a7-9d72-a6c23265af5d",
+        "name": "RONNIE COLEMAN KING MASS 3 LB",
+        "category": "Proteínas",
+        "description": "Ronnie Coleman - RONNIE COLEMAN KING MASS 3 LB. Suplemento deportivo premium.",
+        "price": 2500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rJg24a4PL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.335802+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71rJg24a4PL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "fcbd09b5-3453-4c42-9f2e-b8073aba8942",
+        "name": "BALKAN PHARMACEUTICALS OMEGA-3",
+        "category": "Vitaminas",
+        "description": "Balkan Pharmaceuticals - BALKAN PHARMACEUTICALS OMEGA-3. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61bWcZ-Y-mL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/61bWcZ-Y-mL.jpg"
+      },
+      {
+        "id": "f5fbfef0-08e5-4d2e-8627-c194a2282e72",
+        "name": "COUNTRY LIFE ZINC PICOLINATE 25MG",
+        "category": "Vitaminas",
+        "description": "Country Life - COUNTRY LIFE ZINC PICOLINATE 25MG. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rIe7pC3vL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71rIe7pC3vL.jpg"
+      },
+      {
+        "id": "acbb7e92-bbb4-48cd-9219-0802111b8c76",
+        "name": "EARTHS CREATION APPLE CIDER VINEGAR GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION APPLE CIDER VINEGAR GUMMIES. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41D8k+t+PBL._AC_SY300_SX300_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41D8k+t+PBL._AC_SY300_SX300_.jpg"
+      },
+      {
+        "id": "224682f9-43b1-4ba8-83e6-a7735c9fd8fc",
+        "name": "EARTHS CREATION BIOTIN 10,000 MCG",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION BIOTIN 10,000 MCG. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71r5g81hGUL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71r5g81hGUL.jpg"
+      },
+      {
+        "id": "667586dc-768e-48f8-847a-2230f0a4097d",
+        "name": "EARTHS CREATION CALCIUM MAGNESIUM ZINC + D3",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION CALCIUM MAGNESIUM ZINC + D3. Suplemento deportivo premium.",
+        "price": 900,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y+R4jK1nL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y+R4jK1nL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "915373c8-f051-404f-8bc7-a48eb8b237fc",
+        "name": "EARTHS CREATION KIDS CALCIUM + D3 GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS CALCIUM + D3 GUMMIES. Suplemento deportivo premium.",
+        "price": 750,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Yf1E-14OL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Yf1E-14OL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "fbac7749-6d2c-4319-aac8-bed662ec15ac",
+        "name": "EARTHS CREATION KIDS MULTIVITAMIN GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS MULTIVITAMIN GUMMIES. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71+D+Vq80JL.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71+D+Vq80JL.jpg"
+      },
+      {
+        "id": "7ec66bc1-3b2c-4b63-a79e-cd412683feaf",
+        "name": "EARTHS CREATION KIDS OMEGA-3 GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS OMEGA-3 GUMMIES. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61M6K5W786L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/61M6K5W786L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "c40181ab-cb3b-4c3c-ab3b-f3236118f66d",
+        "name": "EARTHS CREATION KIDS VITAMIN C GUMMIES",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION KIDS VITAMIN C GUMMIES. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y8XoJ94DL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y8XoJ94DL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "3e6c717c-58f3-48d7-8fb9-3d7f1c4ef75e",
+        "name": "EARTHS CREATION MULTIVITAMIN FOR MEN",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION MULTIVITAMIN FOR MEN. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/717-E5V6CPL.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/717-E5V6CPL.jpg"
+      },
+      {
+        "id": "45dc5c55-4c9b-4e8a-918f-8b1dbfecd9ee",
+        "name": "EARTHS CREATION MULTIVITAMIN FOR WOMEN",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION MULTIVITAMIN FOR WOMEN. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71I6-Nqf9hL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71I6-Nqf9hL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "015e2e0d-a5c9-45f9-849b-decffbdc250e",
+        "name": "EARTHS CREATION VITAMIN C 1000MG",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION VITAMIN C 1000MG. Suplemento deportivo premium.",
+        "price": 700,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y88-5qK1L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y88-5qK1L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "1557b466-938f-4c09-9958-f166085880fa",
+        "name": "EARTHS CREATION VITAMIN D3 5000 IU",
+        "category": "Vitaminas",
+        "description": "Earth's Creation - EARTHS CREATION VITAMIN D3 5000 IU. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71+jE30NpsL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71+jE30NpsL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "b3d09efa-689a-4bcf-94cd-e2a1bbc69f2e",
+        "name": "NATURAVIT COLÁGENO HIDROLIZADO + BIOTINA",
+        "category": "Vitaminas",
+        "description": "Naturavit - NATURAVIT COLÁGENO HIDROLIZADO + BIOTINA. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61j5g2j2-zL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/61j5g2j2-zL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "b72861b4-a5d5-406b-b827-0afb06659df5",
+        "name": "NATURAVIT MAGNESIO + ZINC + B6",
+        "category": "Vitaminas",
+        "description": "Naturavit - NATURAVIT MAGNESIO + ZINC + B6. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/61r59D2OglL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/61r59D2OglL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "4d3e70da-fa71-41ef-b8ee-ef7dc511bd7d",
+        "name": "NOW FOODS IRON 18MG",
+        "category": "Vitaminas",
+        "description": "NOW Foods - NOW FOODS IRON 18MG. Suplemento deportivo premium.",
+        "price": 900,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71-2Q-z4nKL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71-2Q-z4nKL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "c470e762-eee4-4a1e-9b93-b409ace2f1b4",
+        "name": "NOW FOODS OMEGA-3 1000MG",
+        "category": "Vitaminas",
+        "description": "NOW Foods - NOW FOODS OMEGA-3 1000MG. Suplemento deportivo premium.",
+        "price": 1800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71R31z2+1mL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71R31z2+1mL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "8dc81481-14f9-4f79-b45c-3843ae389998",
+        "name": "NOW FOODS VITAMIN B-12 1000MCG",
+        "category": "Vitaminas",
+        "description": "NOW Foods - NOW FOODS VITAMIN B-12 1000MCG. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71Y0vwtL6BL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.456853+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71Y0vwtL6BL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "29666a26-6845-4ce9-bf19-83589e0c5bf7",
+        "name": "PATRIOT NUTRITION MULTIVITAMIN SPORT",
+        "category": "Vitaminas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION MULTIVITAMIN SPORT. Suplemento deportivo premium.",
+        "price": 1200,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/41-qSg-6LpL._AC_SL1000_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/41-qSg-6LpL._AC_SL1000_.jpg"
+      },
+      {
+        "id": "3f0fb936-5181-4d8e-9f84-1d86183cb9cb",
+        "name": "PATRIOT NUTRITION ZMA 90 CÁPSULAS",
+        "category": "Vitaminas",
+        "description": "Patriot Nutrition - PATRIOT NUTRITION ZMA 90 CÁPSULAS. Suplemento deportivo premium.",
+        "price": 1000,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71rSgO5O0BL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71rSgO5O0BL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "9e034628-ec08-4a9a-9362-7030b3b3e2b0",
+        "name": "SWANSON ASHWAGANDHA 450MG",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON ASHWAGANDHA 450MG. Suplemento deportivo premium.",
+        "price": 900,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71V2L4+b9mL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71V2L4+b9mL._AC_SL1500_.jpg"
+      },
+      {
+        "id": "1470ac0b-a508-4a26-8cd9-67b70b13a8a8",
+        "name": "SWANSON COQ-10 100MG",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON COQ-10 100MG. Suplemento deportivo premium.",
+        "price": 1500,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71I633rF56L._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.492688+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71I633rF56L._AC_SL1500_.jpg"
+      },
+      {
+        "id": "3ca8d156-0614-4f50-950f-f0cec814e8cc",
+        "name": "SWANSON TURMERIC & BLACK PEPPER",
+        "category": "Vitaminas",
+        "description": "Swanson - SWANSON TURMERIC & BLACK PEPPER. Suplemento deportivo premium.",
+        "price": 800,
+        "stock": 0,
+        "image_url": "https://m.media-amazon.com/images/I/71pE1y8WcAL._AC_SL1500_.jpg",
+        "created_at": "2026-02-17T14:54:55.53161+00:00",
+        "featured": false,
+        "issue": "External URL (Amazon/Walmart) - likely to break",
+        "currentUrl": "https://m.media-amazon.com/images/I/71pE1y8WcAL._AC_SL1500_.jpg"
+      }
+    ],
+    "recommendations": [
+      {
+        "category": "Proteínas",
+        "productCount": 20,
+        "products": [
+          {
+            "id": "925128c9-6132-4efe-a39f-5f1d2471ab6e",
+            "name": "ALLMAX ISOFLEX 5 LB"
+          },
+          {
+            "id": "801d652a-6b0d-49bf-ab65-77a3b6b11ad6",
+            "name": "ANS PERFORMANCE N-WHEY 5 LB"
+          },
+          {
+            "id": "740c129d-2a9b-4444-a773-22fded73d6a4",
+            "name": "BODY FORTRESS 100% PREMIUM PROTEIN 1.78 LB"
+          },
+          {
+            "id": "78f76106-b710-411c-9c98-390d74a9e333",
+            "name": "DYMATIZE ISO 100 HYDROLYZED 1.6 LB"
+          },
+          {
+            "id": "62170926-f5df-4ab1-bb9e-ebef7225c6e9",
+            "name": "DYMATIZE ISO 100 HYDROLYZED 6 LB"
+          },
+          {
+            "id": "4bab69ec-58bb-4ed9-af8a-41c781f66fee",
+            "name": "GOLIATH 100% WHEY PROTEIN 5 LB"
+          },
+          {
+            "id": "37f7afd5-331f-470b-8229-f1e18986d44b",
+            "name": "ISOPURE INFUSIONS 14.1 OZ"
+          },
+          {
+            "id": "9139f242-64a8-4dc9-b1d1-94e81ae17bd2",
+            "name": "ISOPURE ZERO CARB PROTEIN 4.5 LB"
+          },
+          {
+            "id": "bfa517e3-bf70-4a35-af16-cc3552903569",
+            "name": "MUSCLE TECH 100% GRASS FED WHEY PROTEIN 1.80 LB"
+          },
+          {
+            "id": "51332aa5-3f3d-480a-84f6-e13b1964e316",
+            "name": "MUSCLE TECH NITRO TECH 100% WHEY GOLD 2 LB"
+          },
+          {
+            "id": "93970897-d9f0-4d5a-a488-e7aa755bd4ad",
+            "name": "MUSCLE TECH NITRO TECH 100% WHEY GOLD 5 LB"
+          },
+          {
+            "id": "f9334b44-c6fd-4142-8927-adf36ccc328d",
+            "name": "MUSCLE TECH NITRO TECH CLASSIC WHEY PROTEIN 4 LB"
+          },
+          {
+            "id": "f04dd12a-f368-4720-a3a6-8a7c74fe9aa7",
+            "name": "MUSCLE TECH PLATINUM WHEY + MUSCLE BUILDER 1.80 LB"
+          },
+          {
+            "id": "e622ecc3-cba4-4727-8d33-d2376b3cb008",
+            "name": "NUTREX 100% WHEY 5 LB"
+          },
+          {
+            "id": "3d3b9198-08b3-470b-851f-2f899c54635d",
+            "name": "ON GOLD STANDARD 100% WHEY 1.47 LB"
+          },
+          {
+            "id": "813d332c-b688-4ffc-a009-47c52ef87275",
+            "name": "ON GOLD STANDARD 100% WHEY 5 LB"
+          },
+          {
+            "id": "5d325178-fc76-441d-90bd-c05c947034aa",
+            "name": "ON GOLD STANDARD 100% WHEY 5.47 LB"
+          },
+          {
+            "id": "e8009fce-a99a-4169-8adf-7e59e80aaed8",
+            "name": "PATRIOT NUTRITION ISO WHEY 1.38 LB"
+          },
+          {
+            "id": "d1a4a8f9-be0b-4572-8369-92946164a15c",
+            "name": "PATRIOT NUTRITION SKIRLA WHEY CONCENTRATE 2 LB"
+          },
+          {
+            "id": "97a2145e-f584-42a7-9d72-a6c23265af5d",
+            "name": "RONNIE COLEMAN KING MASS 3 LB"
+          }
+        ],
+        "imageSpecs": {
+          "style": "Container prominently displayed",
+          "background": "Pure white",
+          "props": "Optional: protein shake or powder scoop",
+          "angle": "45-degree angle showing front and side"
+        },
+        "standards": {
+          "size": "800x800px",
+          "backgroundType": "White background (RGB: 255,255,255)",
+          "format": "PNG/WEBP",
+          "quality": "High resolution (min 300dpi)",
+          "style": "Professional product photography",
+          "lighting": "Soft, even lighting",
+          "angle": "Front-facing with slight angle for depth",
+          "shadows": "Subtle drop shadow or none",
+          "margin": "10-15% padding around product"
+        },
+        "priority": "ALTA",
+        "estimatedCost": {
+          "professional": 300,
+          "diy": 100,
+          "ai": 40
+        },
+        "suggestedFilenames": [
+          {
+            "productId": "925128c9-6132-4efe-a39f-5f1d2471ab6e",
+            "suggested": "allmax-isoflex-5-lb.webp",
+            "alternative": "proteínas-allmax-isoflex-5-lb.webp"
+          },
+          {
+            "productId": "801d652a-6b0d-49bf-ab65-77a3b6b11ad6",
+            "suggested": "ans-performance-n-whey-5-lb.webp",
+            "alternative": "proteínas-ans-performance-n-whey-5-lb.webp"
+          },
+          {
+            "productId": "740c129d-2a9b-4444-a773-22fded73d6a4",
+            "suggested": "body-fortress-100-premium-protein-178-lb.webp",
+            "alternative": "proteínas-body-fortress-100-premium-protein-178-lb.webp"
+          },
+          {
+            "productId": "78f76106-b710-411c-9c98-390d74a9e333",
+            "suggested": "dymatize-iso-100-hydrolyzed-16-lb.webp",
+            "alternative": "proteínas-dymatize-iso-100-hydrolyzed-16-lb.webp"
+          },
+          {
+            "productId": "62170926-f5df-4ab1-bb9e-ebef7225c6e9",
+            "suggested": "dymatize-iso-100-hydrolyzed-6-lb.webp",
+            "alternative": "proteínas-dymatize-iso-100-hydrolyzed-6-lb.webp"
+          },
+          {
+            "productId": "4bab69ec-58bb-4ed9-af8a-41c781f66fee",
+            "suggested": "goliath-100-whey-protein-5-lb.webp",
+            "alternative": "proteínas-goliath-100-whey-protein-5-lb.webp"
+          },
+          {
+            "productId": "37f7afd5-331f-470b-8229-f1e18986d44b",
+            "suggested": "isopure-infusions-141-oz.webp",
+            "alternative": "proteínas-isopure-infusions-141-oz.webp"
+          },
+          {
+            "productId": "9139f242-64a8-4dc9-b1d1-94e81ae17bd2",
+            "suggested": "isopure-zero-carb-protein-45-lb.webp",
+            "alternative": "proteínas-isopure-zero-carb-protein-45-lb.webp"
+          },
+          {
+            "productId": "bfa517e3-bf70-4a35-af16-cc3552903569",
+            "suggested": "muscle-tech-100-grass-fed-whey-protein-180-lb.webp",
+            "alternative": "proteínas-muscle-tech-100-grass-fed-whey-protein-180-lb.webp"
+          },
+          {
+            "productId": "51332aa5-3f3d-480a-84f6-e13b1964e316",
+            "suggested": "muscle-tech-nitro-tech-100-whey-gold-2-lb.webp",
+            "alternative": "proteínas-muscle-tech-nitro-tech-100-whey-gold-2-lb.webp"
+          },
+          {
+            "productId": "93970897-d9f0-4d5a-a488-e7aa755bd4ad",
+            "suggested": "muscle-tech-nitro-tech-100-whey-gold-5-lb.webp",
+            "alternative": "proteínas-muscle-tech-nitro-tech-100-whey-gold-5-lb.webp"
+          },
+          {
+            "productId": "f9334b44-c6fd-4142-8927-adf36ccc328d",
+            "suggested": "muscle-tech-nitro-tech-classic-whey-protein-4-lb.webp",
+            "alternative": "proteínas-muscle-tech-nitro-tech-classic-whey-protein-4-lb.webp"
+          },
+          {
+            "productId": "f04dd12a-f368-4720-a3a6-8a7c74fe9aa7",
+            "suggested": "muscle-tech-platinum-whey-muscle-builder-180-lb.webp",
+            "alternative": "proteínas-muscle-tech-platinum-whey-muscle-builder-180-lb.webp"
+          },
+          {
+            "productId": "e622ecc3-cba4-4727-8d33-d2376b3cb008",
+            "suggested": "nutrex-100-whey-5-lb.webp",
+            "alternative": "proteínas-nutrex-100-whey-5-lb.webp"
+          },
+          {
+            "productId": "3d3b9198-08b3-470b-851f-2f899c54635d",
+            "suggested": "on-gold-standard-100-whey-147-lb.webp",
+            "alternative": "proteínas-on-gold-standard-100-whey-147-lb.webp"
+          },
+          {
+            "productId": "813d332c-b688-4ffc-a009-47c52ef87275",
+            "suggested": "on-gold-standard-100-whey-5-lb.webp",
+            "alternative": "proteínas-on-gold-standard-100-whey-5-lb.webp"
+          },
+          {
+            "productId": "5d325178-fc76-441d-90bd-c05c947034aa",
+            "suggested": "on-gold-standard-100-whey-547-lb.webp",
+            "alternative": "proteínas-on-gold-standard-100-whey-547-lb.webp"
+          },
+          {
+            "productId": "e8009fce-a99a-4169-8adf-7e59e80aaed8",
+            "suggested": "patriot-nutrition-iso-whey-138-lb.webp",
+            "alternative": "proteínas-patriot-nutrition-iso-whey-138-lb.webp"
+          },
+          {
+            "productId": "d1a4a8f9-be0b-4572-8369-92946164a15c",
+            "suggested": "patriot-nutrition-skirla-whey-concentrate-2-lb.webp",
+            "alternative": "proteínas-patriot-nutrition-skirla-whey-concentrate-2-lb.webp"
+          },
+          {
+            "productId": "97a2145e-f584-42a7-9d72-a6c23265af5d",
+            "suggested": "ronnie-coleman-king-mass-3-lb.webp",
+            "alternative": "proteínas-ronnie-coleman-king-mass-3-lb.webp"
+          }
+        ]
+      },
+      {
+        "category": "Creatinas",
+        "productCount": 8,
+        "products": [
+          {
+            "id": "5f214862-8d51-4f44-bcca-db52986f4ea3",
+            "name": "ALLMAX CREATINA 80 SERVICIOS"
+          },
+          {
+            "id": "c7297376-3eb6-40b6-99a2-67841add1783",
+            "name": "BPI SPORT MICRONIZED CREATINA 120 SERVICIOS"
+          },
+          {
+            "id": "2d4b6d89-70f4-4460-89f2-d3a8bfe179e1",
+            "name": "MUSCLE TECH 100% CREATINA 80 SERVICIOS"
+          },
+          {
+            "id": "f4487809-38b9-40ae-bceb-757b32625800",
+            "name": "NUTREX CREATINA MONOHIDRATADA 200 SERVICIOS"
+          },
+          {
+            "id": "4832c918-bbb2-4e1b-9628-ea8c2d7bc507",
+            "name": "NUTREX CREATINA MONOHIDRATADA 60 SERVICIOS"
+          },
+          {
+            "id": "96c70d6e-b9b5-491b-bb50-8ca01a4802d2",
+            "name": "ON MICRONIZED CREATINE POWDER 120 SERVICIOS"
+          },
+          {
+            "id": "278460cf-bfaf-4303-827f-77cce4e0df96",
+            "name": "PATRIOT CREATINE PUMP 3.4 LB"
+          },
+          {
+            "id": "dd6cfc89-a9e0-475b-b261-b76878f3d5d4",
+            "name": "SIMPLY CREATINA 100% PURE MONOHYDRATE"
+          }
+        ],
+        "imageSpecs": {
+          "style": "Powder or capsule container",
+          "background": "Clean white with minimal shadow",
+          "props": "Measuring scoop if powder",
+          "angle": "Straight front view or slight angle"
+        },
+        "standards": {
+          "size": "800x800px",
+          "backgroundType": "White background (RGB: 255,255,255)",
+          "format": "PNG/WEBP",
+          "quality": "High resolution (min 300dpi)",
+          "style": "Professional product photography",
+          "lighting": "Soft, even lighting",
+          "angle": "Front-facing with slight angle for depth",
+          "shadows": "Subtle drop shadow or none",
+          "margin": "10-15% padding around product"
+        },
+        "priority": "MEDIA",
+        "estimatedCost": {
+          "professional": 120,
+          "diy": 40,
+          "ai": 16
+        },
+        "suggestedFilenames": [
+          {
+            "productId": "5f214862-8d51-4f44-bcca-db52986f4ea3",
+            "suggested": "allmax-creatina-80-servicios.webp",
+            "alternative": "creatinas-allmax-creatina-80-servicios.webp"
+          },
+          {
+            "productId": "c7297376-3eb6-40b6-99a2-67841add1783",
+            "suggested": "bpi-sport-micronized-creatina-120-servicios.webp",
+            "alternative": "creatinas-bpi-sport-micronized-creatina-120-servicios.webp"
+          },
+          {
+            "productId": "2d4b6d89-70f4-4460-89f2-d3a8bfe179e1",
+            "suggested": "muscle-tech-100-creatina-80-servicios.webp",
+            "alternative": "creatinas-muscle-tech-100-creatina-80-servicios.webp"
+          },
+          {
+            "productId": "f4487809-38b9-40ae-bceb-757b32625800",
+            "suggested": "nutrex-creatina-monohidratada-200-servicios.webp",
+            "alternative": "creatinas-nutrex-creatina-monohidratada-200-servicios.webp"
+          },
+          {
+            "productId": "4832c918-bbb2-4e1b-9628-ea8c2d7bc507",
+            "suggested": "nutrex-creatina-monohidratada-60-servicios.webp",
+            "alternative": "creatinas-nutrex-creatina-monohidratada-60-servicios.webp"
+          },
+          {
+            "productId": "96c70d6e-b9b5-491b-bb50-8ca01a4802d2",
+            "suggested": "on-micronized-creatine-powder-120-servicios.webp",
+            "alternative": "creatinas-on-micronized-creatine-powder-120-servicios.webp"
+          },
+          {
+            "productId": "278460cf-bfaf-4303-827f-77cce4e0df96",
+            "suggested": "patriot-creatine-pump-34-lb.webp",
+            "alternative": "creatinas-patriot-creatine-pump-34-lb.webp"
+          },
+          {
+            "productId": "dd6cfc89-a9e0-475b-b261-b76878f3d5d4",
+            "suggested": "simply-creatina-100-pure-monohydrate.webp",
+            "alternative": "creatinas-simply-creatina-100-pure-monohydrate.webp"
+          }
+        ]
+      },
+      {
+        "category": "Mass Gainers",
+        "productCount": 12,
+        "products": [
+          {
+            "id": "b0e7e1e5-89b2-4cf2-a543-94639020b660",
+            "name": "ANS PERFORMANCE N-MASS 15 LB"
+          },
+          {
+            "id": "97e152be-7385-48b2-b165-c595510d6152",
+            "name": "DYMATIZE SUPER MASS GAINER 12 LB"
+          },
+          {
+            "id": "3fd365ce-c154-47bf-a016-abbb5bc00db1",
+            "name": "DYMATIZE SUPER MASS GAINER 6 LB"
+          },
+          {
+            "id": "038a4a34-b255-4913-bef2-bff914840d65",
+            "name": "GASPARI REAL MASS 12 LB"
+          },
+          {
+            "id": "7ce10f6a-1a20-4851-bf30-37cce371f81f",
+            "name": "MUSCLE TECH MASS TECH EXTREME 2000 12 LB"
+          },
+          {
+            "id": "39762ab6-41f3-401e-932e-8180259f9f26",
+            "name": "MUSCLE TECH MASS TECH EXTREME 6 LB"
+          },
+          {
+            "id": "8a2ca889-1f40-4952-956f-7426bcd315d6",
+            "name": "MUSCLEMEDS CARNIVOR MASS 6 LB"
+          },
+          {
+            "id": "b5aa7998-1ad0-4cf4-858f-742c698b4557",
+            "name": "MUTANT MASS EXTREME 2500 12 LB"
+          },
+          {
+            "id": "ce9e53e1-0f5a-4d18-8943-a74a612d5dfe",
+            "name": "ON SERIOUS MASS 12 LB"
+          },
+          {
+            "id": "0fc0fd15-c891-4315-874b-8c28aa3a9703",
+            "name": "ON SERIOUS MASS 6 LB"
+          },
+          {
+            "id": "7476242d-92df-4fcf-8641-e37e9705ffa9",
+            "name": "PATRIOT NUTRITION ATLAS GAINER 15 LB"
+          },
+          {
+            "id": "b139e491-0dc8-4e79-b16e-7b835883ef52",
+            "name": "SIMPLY MASS GAINER 13 LB"
+          }
+        ],
+        "imageSpecs": {
+          "style": "Product in use context",
+          "background": "White with lifestyle elements",
+          "props": "Contextual usage props",
+          "angle": "Usage-focused angle"
+        },
+        "standards": {
+          "size": "800x800px",
+          "backgroundType": "White background (RGB: 255,255,255)",
+          "format": "PNG/WEBP",
+          "quality": "High resolution (min 300dpi)",
+          "style": "Professional product photography",
+          "lighting": "Soft, even lighting",
+          "angle": "Front-facing with slight angle for depth",
+          "shadows": "Subtle drop shadow or none",
+          "margin": "10-15% padding around product"
+        },
+        "priority": "MEDIA",
+        "estimatedCost": {
+          "professional": 180,
+          "diy": 60,
+          "ai": 24
+        },
+        "suggestedFilenames": [
+          {
+            "productId": "b0e7e1e5-89b2-4cf2-a543-94639020b660",
+            "suggested": "ans-performance-n-mass-15-lb.webp",
+            "alternative": "mass gainers-ans-performance-n-mass-15-lb.webp"
+          },
+          {
+            "productId": "97e152be-7385-48b2-b165-c595510d6152",
+            "suggested": "dymatize-super-mass-gainer-12-lb.webp",
+            "alternative": "mass gainers-dymatize-super-mass-gainer-12-lb.webp"
+          },
+          {
+            "productId": "3fd365ce-c154-47bf-a016-abbb5bc00db1",
+            "suggested": "dymatize-super-mass-gainer-6-lb.webp",
+            "alternative": "mass gainers-dymatize-super-mass-gainer-6-lb.webp"
+          },
+          {
+            "productId": "038a4a34-b255-4913-bef2-bff914840d65",
+            "suggested": "gaspari-real-mass-12-lb.webp",
+            "alternative": "mass gainers-gaspari-real-mass-12-lb.webp"
+          },
+          {
+            "productId": "7ce10f6a-1a20-4851-bf30-37cce371f81f",
+            "suggested": "muscle-tech-mass-tech-extreme-2000-12-lb.webp",
+            "alternative": "mass gainers-muscle-tech-mass-tech-extreme-2000-12-lb.webp"
+          },
+          {
+            "productId": "39762ab6-41f3-401e-932e-8180259f9f26",
+            "suggested": "muscle-tech-mass-tech-extreme-6-lb.webp",
+            "alternative": "mass gainers-muscle-tech-mass-tech-extreme-6-lb.webp"
+          },
+          {
+            "productId": "8a2ca889-1f40-4952-956f-7426bcd315d6",
+            "suggested": "musclemeds-carnivor-mass-6-lb.webp",
+            "alternative": "mass gainers-musclemeds-carnivor-mass-6-lb.webp"
+          },
+          {
+            "productId": "b5aa7998-1ad0-4cf4-858f-742c698b4557",
+            "suggested": "mutant-mass-extreme-2500-12-lb.webp",
+            "alternative": "mass gainers-mutant-mass-extreme-2500-12-lb.webp"
+          },
+          {
+            "productId": "ce9e53e1-0f5a-4d18-8943-a74a612d5dfe",
+            "suggested": "on-serious-mass-12-lb.webp",
+            "alternative": "mass gainers-on-serious-mass-12-lb.webp"
+          },
+          {
+            "productId": "0fc0fd15-c891-4315-874b-8c28aa3a9703",
+            "suggested": "on-serious-mass-6-lb.webp",
+            "alternative": "mass gainers-on-serious-mass-6-lb.webp"
+          },
+          {
+            "productId": "7476242d-92df-4fcf-8641-e37e9705ffa9",
+            "suggested": "patriot-nutrition-atlas-gainer-15-lb.webp",
+            "alternative": "mass gainers-patriot-nutrition-atlas-gainer-15-lb.webp"
+          },
+          {
+            "productId": "b139e491-0dc8-4e79-b16e-7b835883ef52",
+            "suggested": "simply-mass-gainer-13-lb.webp",
+            "alternative": "mass gainers-simply-mass-gainer-13-lb.webp"
+          }
+        ]
+      },
+      {
+        "category": "Pre-Entrenos",
+        "productCount": 6,
+        "products": [
+          {
+            "id": "1e3d0b5f-bec9-43fa-8ff6-cd22700df1ef",
+            "name": "ALPHA SUPPS BETA-ALANINE 100 SERVICIOS"
+          },
+          {
+            "id": "4089c92b-0104-435a-99ac-59596c08997f",
+            "name": "CELLUCOR C4 SPORT RIPPED 20 SERVICIOS"
+          },
+          {
+            "id": "21065cde-eddd-4505-98e7-c9034beb5fef",
+            "name": "MHP ANADROX PUMP & BURN 112 CÁPSULAS"
+          },
+          {
+            "id": "5d04f3c8-b67f-459c-926e-025b46ef140e",
+            "name": "PATRIOT NUTRITION MUSCLE PUMP 50 MG 120 CÁPSULAS"
+          },
+          {
+            "id": "fb0733f6-9b61-4a08-98a3-01b71f7fb06f",
+            "name": "PATRIOT NUTRITION SUICIDE TEST PRE WORKOUT 50 SERVICIOS"
+          },
+          {
+            "id": "1f0abe44-37b8-4065-a8ed-d8281837c59a",
+            "name": "PATRIOT NUTRITION TESTO PUMP 90 CÁPSULAS"
+          }
+        ],
+        "imageSpecs": {
+          "style": "Dynamic container design emphasized",
+          "background": "White with subtle energy elements",
+          "props": "Shaker bottle optional",
+          "angle": "Action-oriented angle"
+        },
+        "standards": {
+          "size": "800x800px",
+          "backgroundType": "White background (RGB: 255,255,255)",
+          "format": "PNG/WEBP",
+          "quality": "High resolution (min 300dpi)",
+          "style": "Professional product photography",
+          "lighting": "Soft, even lighting",
+          "angle": "Front-facing with slight angle for depth",
+          "shadows": "Subtle drop shadow or none",
+          "margin": "10-15% padding around product"
+        },
+        "priority": "MEDIA",
+        "estimatedCost": {
+          "professional": 90,
+          "diy": 30,
+          "ai": 12
+        },
+        "suggestedFilenames": [
+          {
+            "productId": "1e3d0b5f-bec9-43fa-8ff6-cd22700df1ef",
+            "suggested": "alpha-supps-beta-alanine-100-servicios.webp",
+            "alternative": "pre-entrenos-alpha-supps-beta-alanine-100-servicios.webp"
+          },
+          {
+            "productId": "4089c92b-0104-435a-99ac-59596c08997f",
+            "suggested": "cellucor-c4-sport-ripped-20-servicios.webp",
+            "alternative": "pre-entrenos-cellucor-c4-sport-ripped-20-servicios.webp"
+          },
+          {
+            "productId": "21065cde-eddd-4505-98e7-c9034beb5fef",
+            "suggested": "mhp-anadrox-pump-burn-112-cpsulas.webp",
+            "alternative": "pre-entrenos-mhp-anadrox-pump-burn-112-cpsulas.webp"
+          },
+          {
+            "productId": "5d04f3c8-b67f-459c-926e-025b46ef140e",
+            "suggested": "patriot-nutrition-muscle-pump-50-mg-120-cpsulas.webp",
+            "alternative": "pre-entrenos-patriot-nutrition-muscle-pump-50-mg-120-cpsulas.webp"
+          },
+          {
+            "productId": "fb0733f6-9b61-4a08-98a3-01b71f7fb06f",
+            "suggested": "patriot-nutrition-suicide-test-pre-workout-50-serv.webp",
+            "alternative": "pre-entrenos-patriot-nutrition-suicide-test-pre-workout-50-serv.webp"
+          },
+          {
+            "productId": "1f0abe44-37b8-4065-a8ed-d8281837c59a",
+            "suggested": "patriot-nutrition-testo-pump-90-cpsulas.webp",
+            "alternative": "pre-entrenos-patriot-nutrition-testo-pump-90-cpsulas.webp"
+          }
+        ]
+      },
+      {
+        "category": "Vitaminas",
+        "productCount": 23,
+        "products": [
+          {
+            "id": "fcbd09b5-3453-4c42-9f2e-b8073aba8942",
+            "name": "BALKAN PHARMACEUTICALS OMEGA-3"
+          },
+          {
+            "id": "f5fbfef0-08e5-4d2e-8627-c194a2282e72",
+            "name": "COUNTRY LIFE ZINC PICOLINATE 25MG"
+          },
+          {
+            "id": "acbb7e92-bbb4-48cd-9219-0802111b8c76",
+            "name": "EARTHS CREATION APPLE CIDER VINEGAR GUMMIES"
+          },
+          {
+            "id": "224682f9-43b1-4ba8-83e6-a7735c9fd8fc",
+            "name": "EARTHS CREATION BIOTIN 10,000 MCG"
+          },
+          {
+            "id": "667586dc-768e-48f8-847a-2230f0a4097d",
+            "name": "EARTHS CREATION CALCIUM MAGNESIUM ZINC + D3"
+          },
+          {
+            "id": "915373c8-f051-404f-8bc7-a48eb8b237fc",
+            "name": "EARTHS CREATION KIDS CALCIUM + D3 GUMMIES"
+          },
+          {
+            "id": "fbac7749-6d2c-4319-aac8-bed662ec15ac",
+            "name": "EARTHS CREATION KIDS MULTIVITAMIN GUMMIES"
+          },
+          {
+            "id": "7ec66bc1-3b2c-4b63-a79e-cd412683feaf",
+            "name": "EARTHS CREATION KIDS OMEGA-3 GUMMIES"
+          },
+          {
+            "id": "c40181ab-cb3b-4c3c-ab3b-f3236118f66d",
+            "name": "EARTHS CREATION KIDS VITAMIN C GUMMIES"
+          },
+          {
+            "id": "3e6c717c-58f3-48d7-8fb9-3d7f1c4ef75e",
+            "name": "EARTHS CREATION MULTIVITAMIN FOR MEN"
+          },
+          {
+            "id": "45dc5c55-4c9b-4e8a-918f-8b1dbfecd9ee",
+            "name": "EARTHS CREATION MULTIVITAMIN FOR WOMEN"
+          },
+          {
+            "id": "015e2e0d-a5c9-45f9-849b-decffbdc250e",
+            "name": "EARTHS CREATION VITAMIN C 1000MG"
+          },
+          {
+            "id": "1557b466-938f-4c09-9958-f166085880fa",
+            "name": "EARTHS CREATION VITAMIN D3 5000 IU"
+          },
+          {
+            "id": "b3d09efa-689a-4bcf-94cd-e2a1bbc69f2e",
+            "name": "NATURAVIT COLÁGENO HIDROLIZADO + BIOTINA"
+          },
+          {
+            "id": "b72861b4-a5d5-406b-b827-0afb06659df5",
+            "name": "NATURAVIT MAGNESIO + ZINC + B6"
+          },
+          {
+            "id": "4d3e70da-fa71-41ef-b8ee-ef7dc511bd7d",
+            "name": "NOW FOODS IRON 18MG"
+          },
+          {
+            "id": "c470e762-eee4-4a1e-9b93-b409ace2f1b4",
+            "name": "NOW FOODS OMEGA-3 1000MG"
+          },
+          {
+            "id": "8dc81481-14f9-4f79-b45c-3843ae389998",
+            "name": "NOW FOODS VITAMIN B-12 1000MCG"
+          },
+          {
+            "id": "29666a26-6845-4ce9-bf19-83589e0c5bf7",
+            "name": "PATRIOT NUTRITION MULTIVITAMIN SPORT"
+          },
+          {
+            "id": "3f0fb936-5181-4d8e-9f84-1d86183cb9cb",
+            "name": "PATRIOT NUTRITION ZMA 90 CÁPSULAS"
+          },
+          {
+            "id": "9e034628-ec08-4a9a-9362-7030b3b3e2b0",
+            "name": "SWANSON ASHWAGANDHA 450MG"
+          },
+          {
+            "id": "1470ac0b-a508-4a26-8cd9-67b70b13a8a8",
+            "name": "SWANSON COQ-10 100MG"
+          },
+          {
+            "id": "3ca8d156-0614-4f50-950f-f0cec814e8cc",
+            "name": "SWANSON TURMERIC & BLACK PEPPER"
+          }
+        ],
+        "imageSpecs": {
+          "style": "Clean bottle/container",
+          "background": "Medical-grade clean white",
+          "props": "Pills spilled out (few)",
+          "angle": "Professional, clinical angle"
+        },
+        "standards": {
+          "size": "800x800px",
+          "backgroundType": "White background (RGB: 255,255,255)",
+          "format": "PNG/WEBP",
+          "quality": "High resolution (min 300dpi)",
+          "style": "Professional product photography",
+          "lighting": "Soft, even lighting",
+          "angle": "Front-facing with slight angle for depth",
+          "shadows": "Subtle drop shadow or none",
+          "margin": "10-15% padding around product"
+        },
+        "priority": "MEDIA",
+        "estimatedCost": {
+          "professional": 345,
+          "diy": 115,
+          "ai": 46
+        },
+        "suggestedFilenames": [
+          {
+            "productId": "fcbd09b5-3453-4c42-9f2e-b8073aba8942",
+            "suggested": "balkan-pharmaceuticals-omega-3.webp",
+            "alternative": "vitaminas-balkan-pharmaceuticals-omega-3.webp"
+          },
+          {
+            "productId": "f5fbfef0-08e5-4d2e-8627-c194a2282e72",
+            "suggested": "country-life-zinc-picolinate-25mg.webp",
+            "alternative": "vitaminas-country-life-zinc-picolinate-25mg.webp"
+          },
+          {
+            "productId": "acbb7e92-bbb4-48cd-9219-0802111b8c76",
+            "suggested": "earths-creation-apple-cider-vinegar-gummies.webp",
+            "alternative": "vitaminas-earths-creation-apple-cider-vinegar-gummies.webp"
+          },
+          {
+            "productId": "224682f9-43b1-4ba8-83e6-a7735c9fd8fc",
+            "suggested": "earths-creation-biotin-10000-mcg.webp",
+            "alternative": "vitaminas-earths-creation-biotin-10000-mcg.webp"
+          },
+          {
+            "productId": "667586dc-768e-48f8-847a-2230f0a4097d",
+            "suggested": "earths-creation-calcium-magnesium-zinc-d3.webp",
+            "alternative": "vitaminas-earths-creation-calcium-magnesium-zinc-d3.webp"
+          },
+          {
+            "productId": "915373c8-f051-404f-8bc7-a48eb8b237fc",
+            "suggested": "earths-creation-kids-calcium-d3-gummies.webp",
+            "alternative": "vitaminas-earths-creation-kids-calcium-d3-gummies.webp"
+          },
+          {
+            "productId": "fbac7749-6d2c-4319-aac8-bed662ec15ac",
+            "suggested": "earths-creation-kids-multivitamin-gummies.webp",
+            "alternative": "vitaminas-earths-creation-kids-multivitamin-gummies.webp"
+          },
+          {
+            "productId": "7ec66bc1-3b2c-4b63-a79e-cd412683feaf",
+            "suggested": "earths-creation-kids-omega-3-gummies.webp",
+            "alternative": "vitaminas-earths-creation-kids-omega-3-gummies.webp"
+          },
+          {
+            "productId": "c40181ab-cb3b-4c3c-ab3b-f3236118f66d",
+            "suggested": "earths-creation-kids-vitamin-c-gummies.webp",
+            "alternative": "vitaminas-earths-creation-kids-vitamin-c-gummies.webp"
+          },
+          {
+            "productId": "3e6c717c-58f3-48d7-8fb9-3d7f1c4ef75e",
+            "suggested": "earths-creation-multivitamin-for-men.webp",
+            "alternative": "vitaminas-earths-creation-multivitamin-for-men.webp"
+          },
+          {
+            "productId": "45dc5c55-4c9b-4e8a-918f-8b1dbfecd9ee",
+            "suggested": "earths-creation-multivitamin-for-women.webp",
+            "alternative": "vitaminas-earths-creation-multivitamin-for-women.webp"
+          },
+          {
+            "productId": "015e2e0d-a5c9-45f9-849b-decffbdc250e",
+            "suggested": "earths-creation-vitamin-c-1000mg.webp",
+            "alternative": "vitaminas-earths-creation-vitamin-c-1000mg.webp"
+          },
+          {
+            "productId": "1557b466-938f-4c09-9958-f166085880fa",
+            "suggested": "earths-creation-vitamin-d3-5000-iu.webp",
+            "alternative": "vitaminas-earths-creation-vitamin-d3-5000-iu.webp"
+          },
+          {
+            "productId": "b3d09efa-689a-4bcf-94cd-e2a1bbc69f2e",
+            "suggested": "naturavit-colgeno-hidrolizado-biotina.webp",
+            "alternative": "vitaminas-naturavit-colgeno-hidrolizado-biotina.webp"
+          },
+          {
+            "productId": "b72861b4-a5d5-406b-b827-0afb06659df5",
+            "suggested": "naturavit-magnesio-zinc-b6.webp",
+            "alternative": "vitaminas-naturavit-magnesio-zinc-b6.webp"
+          },
+          {
+            "productId": "4d3e70da-fa71-41ef-b8ee-ef7dc511bd7d",
+            "suggested": "now-foods-iron-18mg.webp",
+            "alternative": "vitaminas-now-foods-iron-18mg.webp"
+          },
+          {
+            "productId": "c470e762-eee4-4a1e-9b93-b409ace2f1b4",
+            "suggested": "now-foods-omega-3-1000mg.webp",
+            "alternative": "vitaminas-now-foods-omega-3-1000mg.webp"
+          },
+          {
+            "productId": "8dc81481-14f9-4f79-b45c-3843ae389998",
+            "suggested": "now-foods-vitamin-b-12-1000mcg.webp",
+            "alternative": "vitaminas-now-foods-vitamin-b-12-1000mcg.webp"
+          },
+          {
+            "productId": "29666a26-6845-4ce9-bf19-83589e0c5bf7",
+            "suggested": "patriot-nutrition-multivitamin-sport.webp",
+            "alternative": "vitaminas-patriot-nutrition-multivitamin-sport.webp"
+          },
+          {
+            "productId": "3f0fb936-5181-4d8e-9f84-1d86183cb9cb",
+            "suggested": "patriot-nutrition-zma-90-cpsulas.webp",
+            "alternative": "vitaminas-patriot-nutrition-zma-90-cpsulas.webp"
+          },
+          {
+            "productId": "9e034628-ec08-4a9a-9362-7030b3b3e2b0",
+            "suggested": "swanson-ashwagandha-450mg.webp",
+            "alternative": "vitaminas-swanson-ashwagandha-450mg.webp"
+          },
+          {
+            "productId": "1470ac0b-a508-4a26-8cd9-67b70b13a8a8",
+            "suggested": "swanson-coq-10-100mg.webp",
+            "alternative": "vitaminas-swanson-coq-10-100mg.webp"
+          },
+          {
+            "productId": "3ca8d156-0614-4f50-950f-f0cec814e8cc",
+            "suggested": "swanson-turmeric-black-pepper.webp",
+            "alternative": "vitaminas-swanson-turmeric-black-pepper.webp"
+          }
+        ]
+      }
+    ]
+  }
+}

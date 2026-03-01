@@ -478,6 +478,39 @@ export type Database = {
           },
         ]
       }
+      fiscal_sequences: {
+        Row: {
+          id: string
+          series: string
+          type_code: string
+          current_sequence: number
+          end_sequence: number
+          expiration_date: string
+          is_active: boolean | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          series: string
+          type_code: string
+          current_sequence?: number
+          end_sequence: number
+          expiration_date: string
+          is_active?: boolean | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          series?: string
+          type_code?: string
+          current_sequence?: number
+          end_sequence?: number
+          expiration_date?: string
+          is_active?: boolean | null
+          created_at?: string
+        }
+        Relationships: []
+      }
       invoice_lines: {
         Row: {
           id: string
@@ -531,6 +564,12 @@ export type Database = {
           total: number
           updated_at: string
           user_id: string
+          ncf: string | null
+          ncf_expiration_date: string | null
+          security_code: string | null
+          electronic_sign: string | null
+          track_id: string | null
+          messaje_date: string | null
         }
         Insert: {
           billing_address?: string | null
@@ -549,6 +588,12 @@ export type Database = {
           total: number
           updated_at?: string
           user_id: string
+          ncf?: string | null
+          ncf_expiration_date?: string | null
+          security_code?: string | null
+          electronic_sign?: string | null
+          track_id?: string | null
+          messaje_date?: string | null
         }
         Update: {
           billing_address?: string | null
@@ -567,6 +612,12 @@ export type Database = {
           total?: number
           updated_at?: string
           user_id?: string
+          ncf?: string | null
+          ncf_expiration_date?: string | null
+          security_code?: string | null
+          electronic_sign?: string | null
+          track_id?: string | null
+          messaje_date?: string | null
         }
         Relationships: [
           {
@@ -825,6 +876,10 @@ export type Database = {
           subtotal: number | null
           total: number
           user_id: string
+          rnc_cedula: string | null
+          company_name: string | null
+          ncf_type: string | null
+          ncf_generated: string | null
         }
         Insert: {
           created_at?: string
@@ -836,6 +891,10 @@ export type Database = {
           subtotal?: number | null
           total: number
           user_id: string
+          rnc_cedula?: string | null
+          company_name?: string | null
+          ncf_type?: string | null
+          ncf_generated?: string | null
         }
         Update: {
           created_at?: string
@@ -847,6 +906,10 @@ export type Database = {
           subtotal?: number | null
           total?: number
           user_id?: string
+          rnc_cedula?: string | null
+          company_name?: string | null
+          ncf_type?: string | null
+          ncf_generated?: string | null
         }
         Relationships: [
           {
@@ -1384,6 +1447,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_next_ncf: {
+        Args: {
+          seq_series: string
+          seq_type: string
+        }
+        Returns: string | null
+      }
       generate_invoice_number: { Args: never; Returns: string }
       has_role: {
         Args: {

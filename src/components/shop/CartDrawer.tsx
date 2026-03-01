@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -9,24 +10,28 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
+  SheetFooter
 } from "@/components/ui/sheet";
-import { ShoppingCart, Minus, Plus, Trash2, Building2, Loader2, CreditCard } from "lucide-react";
+import { ShoppingCart, Minus, Plus, Trash2, ArrowRight, ShoppingBag, X } from "lucide-react";
 import { useCartStore } from "@/stores/cartStore";
 import { Separator } from "@/components/ui/separator";
+import { normalizeImageUrl } from "@/lib/image-url";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 export function CartDrawer() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
   const {
     items,
-    isLoading,
     updateQuantity,
     removeItem,
     getTotalItems,
-    getTotalPrice
+    getSubtotal
   } = useCartStore();
 
   const totalItems = getTotalItems();
-  const totalPrice = getTotalPrice();
+  const subtotal = getSubtotal();
 
   // Listen for custom event to open cart drawer
   useEffect(() => {
@@ -37,137 +42,147 @@ export function CartDrawer() {
 
   const handleCheckout = () => {
     setIsOpen(false);
-    window.location.href = '/checkout/transferencia';
+    navigate('/checkout/transferencia');
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative hover:bg-secondary/50 transition-all duration-300">
           <ShoppingCart className="h-5 w-5" />
           {totalItems > 0 && (
-            <Badge className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs">
+            <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-primary text-[10px] font-bold text-primary-foreground flex items-center justify-center animate-in zoom-in duration-300">
               {totalItems}
-            </Badge>
+            </span>
           )}
         </Button>
       </SheetTrigger>
 
-      <SheetContent className="w-full sm:max-w-lg flex flex-col h-full">
-        <SheetHeader className="flex-shrink-0">
-          <SheetTitle>Tu Carrito</SheetTitle>
-          <SheetDescription>
-            {totalItems === 0 ? "Tu carrito está vacío" : `${totalItems} producto${totalItems !== 1 ? 's' : ''} en tu carrito`}
-          </SheetDescription>
-        </SheetHeader>
-
-        <div className="flex flex-col flex-1 pt-6 min-h-0">
-          {items.length === 0 ? (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <ShoppingCart className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <p className="text-muted-foreground">Tu carrito está vacío</p>
-                <Button asChild className="mt-4">
-                  <Link to="/shop" onClick={() => setIsOpen(false)}>Ver Tienda</Link>
-                </Button>
+      <SheetContent className="w-full sm:max-w-[400px] flex flex-col p-0 gap-0 border-l shadow-2xl z-[100]">
+         <div className="flex flex-col h-full bg-background"> 
+            
+            {/* Header */}
+            <SheetHeader className="px-6 py-5 border-b sticky top-0 bg-background/80 backdrop-blur-xl z-10">
+              <div className="flex items-center justify-between">
+                <SheetTitle className="flex items-center gap-2 text-lg font-bold">
+                    <ShoppingBag className="h-5 w-5 text-primary" />
+                    Tu Carrito
+                    <Badge variant="secondary" className="ml-2 h-5 min-w-[1.25rem] px-1 rounded-full text-xs font-normal">
+                        {totalItems}
+                    </Badge>
+                </SheetTitle>
               </div>
-            </div>
-          ) : (
-            <>
-              {/* Scrollable items area */}
-              <div className="flex-1 overflow-y-auto pr-2 min-h-0">
-                <div className="space-y-4">
-                  {items.map((item) => (
-                    <div key={item.product.id} className="flex gap-3 p-2 rounded-lg border">
-                      <div className="w-16 h-16 bg-secondary/20 rounded-md overflow-hidden flex-shrink-0">
-                        {item.product.image_url && (
-                          <img
-                            src={item.product.image_url}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
-                      </div>
+            </SheetHeader>
 
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm truncate">{item.product.name}</h4>
-                        <p className="text-xs text-muted-foreground">{item.product.category}</p>
-                        <p className="font-semibold text-sm mt-1">
-                          DOP {item.product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-                        </p>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => removeItem(item.product.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-
-                        <div className="flex items-center gap-1">
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-6 text-center text-sm">{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
-                            disabled={item.quantity >= item.product.stock}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
+            {/* Content */}
+            <div className="flex-1 overflow-hidden relative">
+                {items.length === 0 ? (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center animate-in fade-in zoom-in duration-300">
+                        <div className="h-20 w-20 bg-secondary/30 rounded-full flex items-center justify-center mb-6">
+                            <ShoppingCart className="h-10 w-10 text-muted-foreground/50" />
                         </div>
-                      </div>
+                        <h3 className="text-xl font-bold tracking-tight mb-2">Tu carrito está vacío</h3>
+                        <p className="text-muted-foreground text-sm mb-8 max-w-[200px]">
+                            Parece que aún no has agregado productos.
+                        </p>
+                        <Button 
+                            variant="default" 
+                            size="lg" 
+                            className="w-full gap-2 shadow-lg hover:shadow-primary/25" 
+                            onClick={() => setIsOpen(false)}
+                            asChild
+                        >
+                            <Link to="/shop">
+                               Explorar Tienda <ArrowRight className="h-4 w-4" />
+                            </Link>
+                        </Button>
                     </div>
-                  ))}
-                </div>
-              </div>
+                ) : (
+                    <ScrollArea className="h-full px-6 py-4">
+                        <div className="space-y-6 pb-4">
+                            {items.map((item) => (
+                                <div key={item.product.id} className="group relative flex gap-4 animate-in slide-in-from-right-4 duration-500">
+                                    <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border bg-secondary/10">
+                                         {item.product.image_url ? (
+                                            <img
+                                                src={normalizeImageUrl(item.product.image_url)}
+                                                alt={item.product.name}
+                                                className="h-full w-full object-cover mix-blend-multiply transition-transform group-hover:scale-110 duration-500"
+                                            />
+                                         ) : (
+                                            <div className="h-full w-full flex items-center justify-center">
+                                                <ShoppingBag className="h-8 w-8 text-muted-foreground/30" />
+                                            </div>
+                                         )}
+                                    </div>
+                                    <div className="flex flex-1 flex-col justify-between py-1">
+                                        <div className="space-y-1">
+                                            <h4 className="font-medium text-sm leading-tight line-clamp-2 pr-6">
+                                                {item.product.name}
+                                            </h4>
+                                            <p className="text-xs text-muted-foreground font-medium">
+                                                RD$ {item.product.price.toLocaleString()}
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center justify-between border rounded-lg p-1 w-fit bg-secondary/10">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 rounded-md hover:bg-background hover:shadow-sm"
+                                                onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                                                disabled={item.quantity <= 1}
+                                            >
+                                                <Minus className="h-3 w-3" />
+                                            </Button>
+                                            <span className="w-8 text-center text-xs font-semibold tabular-nums">
+                                                {item.quantity}
+                                            </span>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 rounded-md hover:bg-background hover:shadow-sm"
+                                                onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                                                disabled={item.quantity >= (item.product.stock || 99)}
+                                            >
+                                                <Plus className="h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => removeItem(item.product.id)}
+                                        className="absolute top-0 right-0 p-1 text-muted-foreground hover:text-destructive transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </ScrollArea>
+                )}
+            </div>
 
-              {/* Fixed checkout section */}
-              <div className="flex-shrink-0 space-y-4 pt-4 border-t bg-background">
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-semibold">Total</span>
-                  <span className="text-xl font-bold">
-                    DOP {totalPrice.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-                  </span>
-                </div>
-
-                <Separator />
-
-                <div className="grid grid-cols-1 gap-2">
-                  <Button
-                    onClick={handleCheckout}
-                    className="w-full"
-                    size="lg"
-                    disabled={items.length === 0 || isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Procesando...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-4 h-4 mr-2" />
+            {/* Footer */}
+            {items.length > 0 && (
+                <div className="p-6 bg-muted/10 border-t space-y-4">
+                    <div className="space-y-2">
+                        <div className="flex items-center justify-between text-base">
+                            <span className="text-muted-foreground">Subtotal</span>
+                            <span className="font-semibold tabular-nums">RD$ {subtotal.toLocaleString()}</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground text-center px-4">
+                            Impuestos y envíos calculados en el checkout
+                        </p>
+                    </div>
+                    <Button 
+                        size="lg" 
+                        className="w-full text-base font-semibold shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all" 
+                        onClick={handleCheckout}
+                    >
                         Proceder al Pago
-                      </>
-                    )}
-                  </Button>
+                    </Button>
                 </div>
-              </div>
-            </>
-          )}
-        </div>
+            )}
+         </div>
       </SheetContent>
     </Sheet>
   );

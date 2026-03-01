@@ -1,8 +1,9 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -21,14 +22,25 @@ import {
   Copy,
   Check,
   Building2,
-  Loader2,
   FileImage,
   Trash2,
   Eye,
   ShoppingBag,
-  Truck
+  Truck,
+  ImageIcon,
+  Receipt,
+  Download,
+  AlertTriangle,
+  ShieldCheck,
+  MapPin,
+  Mail,
+  Phone
 } from 'lucide-react';
+import { normalizeImageUrl } from '@/lib/image-url';
+import { Spinner } from '@/components/ui/spinner';
+import { cn } from '@/lib/utils';
 
+// Types
 interface PaymentMethod {
   id: string;
   name: string;
@@ -45,6 +57,9 @@ interface OrderItem {
   product_name: string;
   quantity: number;
   price: number;
+  products?: {
+    image_url: string | null;
+  } | null;
 }
 
 interface OrderPayment {
@@ -69,6 +84,79 @@ interface Order {
   order_payments?: OrderPayment[];
 }
 
+// Timeline Component
+function OrderTimeline({ status }: { status: string }) {
+    const steps = [
+        { id: 'pending', label: 'Pedido Recibido', icon: FileImage },
+        { id: 'payment_pending', label: 'Confirmando Pago', icon: CreditCard },
+        { id: 'processing', label: 'Preparando', icon: Package },
+        { id: 'shipped', label: 'Enviado', icon: Truck },
+        { id: 'delivered', label: 'Entregado', icon: CheckCircle },
+    ];
+
+    // Map status to step index
+    const statusMap: Record<string, number> = {
+        'pending': 0,
+        'payment_pending': 1,
+        'verified': 2,
+        'processing': 2,
+        'packed': 2,
+        'shipped': 3,
+        'delivered': 4,
+        'cancelled': -1,
+        'refunded': -1
+    };
+
+    const currentStepIndex = statusMap[status] ?? 0;
+    const isCancelled = status === 'cancelled' || status === 'refunded';
+
+    if (isCancelled) {
+        return (
+            <div className="w-full bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 rounded-lg p-4 text-center text-red-600 dark:text-red-400 font-medium flex items-center justify-center gap-2">
+                <AlertTriangle className="h-5 w-5" />
+                Pedido Cancelado
+            </div>
+        );
+    }
+
+    return (
+        <div className="w-full relative px-4">
+            <div className="flex justify-between items-center relative z-10">
+                {steps.map((step, idx) => {
+                    const isActive = idx <= currentStepIndex;
+                    const isCurrent = idx === currentStepIndex;
+                    const Icon = step.icon;
+
+                    return (
+                        <div key={step.id} className="flex flex-col items-center gap-2">
+                            <div className={cn(
+                                "w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center border-2 transition-all duration-500",
+                                isActive ? "bg-primary border-primary text-primary-foreground shadow-lg scale-110" : "bg-background border-muted-foreground/30 text-muted-foreground"
+                            )}>
+                                <Icon className={cn("h-4 w-4 md:h-5 md:w-5", isActive && "animate-pulse-subtle")} />
+                            </div>
+                            <span className={cn(
+                                "text-[10px] md:text-xs font-medium text-center max-w-[80px]",
+                                isActive ? "text-primary" : "text-muted-foreground"
+                            )}>
+                                {step.label}
+                            </span>
+                        </div>
+                    );
+                })}
+            </div>
+            {/* Progress Bar Background */}
+            <div className="absolute top-4 md:top-5 left-0 w-full h-0.5 bg-muted -z-0" />
+            
+            {/* Active Progress Bar */}
+             <div 
+                className="absolute top-4 md:top-5 left-0 h-0.5 bg-primary transition-all duration-1000 -z-0 origin-left" 
+                style={{ width: `${(currentStepIndex / (steps.length - 1)) * 100}%` }}
+             />
+        </div>
+    );
+}
+
 export default function OrderConfirmation() {
   const { orderId } = useParams();
   const navigate = useNavigate();
@@ -85,6 +173,7 @@ export default function OrderConfirmation() {
   const [referenceNumber, setReferenceNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [existingPayment, setExistingPayment] = useState<OrderPayment | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -113,7 +202,7 @@ export default function OrderConfirmation() {
       .from('orders')
       .select(`
         *,
-        order_items(*),
+        order_items(*, products(image_url)),
         order_payments(*)
       `)
       .eq('id', orderId)
@@ -136,44 +225,57 @@ export default function OrderConfirmation() {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     setCopied(label);
-    toast.success('Copiado al portapapeles');
+    toast.success('Copiado');
     setTimeout(() => setCopied(null), 2000);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    processFile(file);
+  };
+
+  const processFile = (file?: File) => {
     if (file) {
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error('El archivo es muy grande (máximo 10MB)');
-        return;
-      }
-      setProofFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setProofPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
+        if (!file.type.startsWith('image/')) {
+            toast.error('Solo se permiten imágenes');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+          toast.error('El archivo es muy grande (máximo 10MB)');
+          return;
+        }
+        setProofFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setProofPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
     }
   };
 
-  const removeFile = () => {
+  const handleDrop = (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
+      const file = e.dataTransfer.files?.[0];
+      processFile(file);
+  };
+
+  const cleanUpload = () => {
     setProofFile(null);
     setProofPreview(null);
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+        fileInputRef.current.value = '';
     }
   };
 
   const handleSubmitProof = async () => {
     if (!proofFile || !order) {
-      toast.error('Por favor adjunta el comprobante de transferencia');
+      toast.error('Adjunta una imagen primero');
       return;
     }
 
     setUploading(true);
-
     try {
-      // Upload proof image
       const fileExt = proofFile.name.split('.').pop();
       const fileName = `${order.id}-${Date.now()}.${fileExt}`;
 
@@ -187,7 +289,6 @@ export default function OrderConfirmation() {
         .from('order-proofs')
         .getPublicUrl(fileName);
 
-      // Create payment record
       const { error: paymentError } = await supabase
         .from('order_payments')
         .insert({
@@ -202,423 +303,305 @@ export default function OrderConfirmation() {
 
       if (paymentError) throw paymentError;
 
-      // Update order status
       await supabase
         .from('orders')
         .update({ status: 'payment_pending' })
         .eq('id', order.id);
 
-      toast.success('¡Comprobante enviado!', {
-        description: 'Tu pago será verificado pronto'
+      toast.success('¡Comprobante Subido!', {
+        description: 'Hemos recibido tu comprobante. Te notificaremos cuando sea validado.'
       });
 
       await fetchOrder();
     } catch (error) {
       console.error('Error uploading proof:', error);
-      toast.error('Error al enviar comprobante');
+      toast.error('Error al subir comprobante', { description: 'Intenta nuevamente' });
     } finally {
       setUploading(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline"; icon: React.ReactNode }> = {
-      'pending': { label: 'Pendiente de Pago', variant: 'secondary', icon: <Clock className="h-3 w-3" /> },
-      'payment_pending': { label: 'Verificando Pago', variant: 'outline', icon: <CreditCard className="h-3 w-3" /> },
-      'processing': { label: 'Procesando', variant: 'default', icon: <Package className="h-3 w-3" /> },
-      'shipped': { label: 'Enviado', variant: 'default', icon: <Truck className="h-3 w-3" /> },
-      'completed': { label: 'Completado', variant: 'default', icon: <CheckCircle className="h-3 w-3" /> },
-      'cancelled': { label: 'Cancelado', variant: 'destructive', icon: <Trash2 className="h-3 w-3" /> }
-    };
-    const config = statusConfig[status] || { label: status, variant: 'secondary' as const, icon: null };
-    return (
-      <Badge variant={config.variant} className="gap-1.5 px-3 py-1.5">
-        {config.icon}
-        {config.label}
-      </Badge>
-    );
-  };
-
   if (loading) {
     return (
       <Layout>
-        <div className="container py-20 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="min-h-screen flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+                <Spinner className="h-8 w-8 text-primary" />
+                <p className="text-muted-foreground animate-pulse">Cargando pedido...</p>
+            </div>
         </div>
       </Layout>
     );
   }
 
-  if (!order) {
-    return (
-      <Layout>
-        <div className="container py-20 text-center">
-          <ShoppingBag className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="font-display text-2xl font-bold mb-2">Pedido no encontrado</h1>
-          <Button asChild><Link to="/orders">Ver mis pedidos</Link></Button>
-        </div>
-      </Layout>
-    );
-  }
+  if (!order) return null;
 
   const showUploadSection = order.status === 'pending' && !existingPayment;
-  const showPaymentStatus = existingPayment;
+  // If payment exists or status implies payment started
+  const showPaymentStatus = existingPayment || (order.status !== 'pending' && order.status !== 'cancelled');
 
   return (
     <Layout>
-      <div className="container py-8 max-w-5xl">
-        {/* Header */}
-        <div className="mb-8">
-          <Button variant="ghost" asChild className="mb-4">
-            <Link to="/orders">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Mis Pedidos
-            </Link>
-          </Button>
-
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <CheckCircle className="h-8 w-8 text-green-500" />
-                <h1 className="text-2xl md:text-3xl font-bold">
-                  ¡Pedido Creado!
-                </h1>
-              </div>
-              <p className="text-muted-foreground">
-                Pedido #{order.id.slice(0, 8).toUpperCase()} • Creado el {new Date(order.created_at).toLocaleDateString('es-DO', {
-                  day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
-                })}
-              </p>
+      <div className="min-h-screen bg-muted/5 pb-20">
+        <div className="bg-background border-b shadow-sm sticky top-0 z-20">
+            <div className="container py-4 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                     <Button variant="ghost" size="icon" asChild className="mr-2">
+                        <Link to="/orders"><ArrowLeft className="h-5 w-5" /></Link>
+                     </Button>
+                     <div className="flex flex-col">
+                        <span className="font-bold text-sm">Pedido #{order.id.slice(0, 8).toUpperCase()}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(order.created_at).toLocaleDateString()}</span>
+                     </div>
+                </div>
+                <div className="flex gap-2">
+                     <Button variant="outline" size="sm" asChild>
+                        <Link to="/shop">Ir a Tienda</Link>
+                     </Button>
+                </div>
             </div>
-            {getStatusBadge(order.status)}
-          </div>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          {/* Left Column - Order Details */}
-          <div className="space-y-6">
-            {/* Order Items */}
-            <Card className="shadow-lg border-0">
-              <CardHeader className="pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="h-5 w-5" />
-                  Productos
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {order.order_items?.map((item) => (
-                  <div key={item.id} className="flex justify-between items-center py-2">
-                    <div>
-                      <p className="font-medium">{item.product_name}</p>
-                      <p className="text-sm text-muted-foreground">Cantidad: {item.quantity}</p>
-                    </div>
-                    <p className="font-semibold">
-                      DOP {(item.price * item.quantity).toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-                    </p>
-                  </div>
-                ))}
-
-                <Separator className="my-4" />
-
-                <div className="space-y-2">
-                  {order.subtotal && (
-                    <div className="flex justify-between text-sm">
-                      <span>Subtotal</span>
-                      <span>DOP {order.subtotal.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  )}
-                  {order.discount_amount && order.discount_amount > 0 && (
-                    <div className="flex justify-between text-sm text-green-600">
-                      <span>Descuento</span>
-                      <span>-DOP {order.discount_amount.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between text-xl font-bold pt-2">
-                    <span>Total</span>
-                    <span>DOP {order.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}</span>
-                  </div>
+        <div className="container max-w-5xl py-8 space-y-8">
+            
+            {/* Status Header */}
+            <div className="flex flex-col items-center justify-center text-center space-y-4 py-8 bg-card rounded-2xl border shadow-sm animate-fade-in relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 p-24 bg-secondary/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+                
+                <div className={cn(
+                    "h-20 w-20 rounded-full flex items-center justify-center mb-2 shadow-lg",
+                    order.status === 'pending' ? 'bg-amber-100 text-amber-600' : 'bg-green-100 text-green-600'
+                )}>
+                    {order.status === 'pending' ? <Clock className="h-10 w-10" /> : <CheckCircle className="h-10 w-10" />}
                 </div>
-              </CardContent>
-            </Card>
+                
+                <div className="z-10 relative">
+                     <h1 className="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+                        {order.status === 'pending' ? 'Pedido Recibido' : '¡Gracias por tu compra!'}
+                     </h1>
+                     <p className="text-muted-foreground max-w-lg mx-auto">
+                        {order.status === 'pending' 
+                            ? 'Tu pedido ha sido creado. Por favor realiza el pago para procesar el envío.'
+                            : 'Hemos recibido tu pago y estamos preparando tu orden.'}
+                     </p>
+                </div>
 
-            {/* Bank Accounts */}
-            {showUploadSection && (
-              <Card className="shadow-lg border-0">
-                <CardHeader className="pb-4">
-                  <CardTitle className="flex items-center gap-2">
-                    <Building2 className="h-5 w-5" />
-                    Datos para Transferencia
-                  </CardTitle>
-                  <CardDescription>
-                    Realiza la transferencia a cualquiera de estas cuentas
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {paymentMethods.map((method) => (
-                    <div key={method.id} className="p-4 bg-muted/50 rounded-xl space-y-2">
-                      <p className="font-semibold">{method.bank_name || method.name}</p>
-                      <div className="grid gap-1 text-sm">
-                        {method.account_type && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Tipo:</span>
-                            <span>{method.account_type}</span>
-                          </div>
-                        )}
-                        {method.account_number && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Número:</span>
-                            <div className="flex items-center gap-2">
-                              <span className="font-mono">{method.account_number}</span>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => copyToClipboard(method.account_number!, `acc-${method.id}`)}
-                              >
-                                {copied === `acc-${method.id}` ? (
-                                  <Check className="h-3 w-3 text-green-500" />
-                                ) : (
-                                  <Copy className="h-3 w-3" />
-                                )}
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                        {method.account_holder && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-muted-foreground">Titular:</span>
-                            <span>{method.account_holder}</span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            )}
-          </div>
+                <div className="w-full max-w-2xl mt-8 pt-8 border-t border-border/50">
+                    <OrderTimeline status={order.status} />
+                </div>
+            </div>
 
-          {/* Right Column - Upload Proof */}
-          <div className="space-y-6">
-            {showUploadSection && (
-              <Card className="shadow-lg border-0 bg-gradient-to-br from-primary/5 to-primary/10">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Upload className="h-5 w-5" />
-                    Adjuntar Comprobante
-                  </CardTitle>
-                  <CardDescription>
-                    Sube el comprobante de tu transferencia para agilizar la verificación
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* File Upload Area */}
-                  <div
-                    className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer hover:border-primary hover:bg-primary/5 ${proofPreview ? 'border-primary bg-primary/5' : 'border-muted-foreground/30'
-                      }`}
-                    onClick={() => fileInputRef.current?.click()}
-                  >
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleFileChange}
-                    />
-
-                    {proofPreview ? (
-                      <div className="space-y-4">
-                        <div className="relative inline-block">
-                          <img
-                            src={proofPreview}
-                            alt="Comprobante"
-                            className="max-h-48 mx-auto rounded-lg shadow-md"
-                          />
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            className="absolute -top-2 -right-2 h-8 w-8"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeFile();
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{proofFile?.name}</p>
-                      </div>
-                    ) : (
-                      <>
-                        <FileImage className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                        <p className="font-medium mb-1">Arrastra o haz clic para subir</p>
-                        <p className="text-sm text-muted-foreground">PNG, JPG hasta 10MB</p>
-                      </>
-                    )}
-                  </div>
-
-                  {/* Reference Number */}
-                  <div className="space-y-2">
-                    <Label htmlFor="reference">Número de Referencia (opcional)</Label>
-                    <Input
-                      id="reference"
-                      placeholder="Ej: 123456789"
-                      value={referenceNumber}
-                      onChange={(e) => setReferenceNumber(e.target.value)}
-                    />
-                  </div>
-
-                  {/* Notes */}
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notas adicionales (opcional)</Label>
-                    <Textarea
-                      id="notes"
-                      placeholder="Información adicional sobre la transferencia..."
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="resize-none"
-                      rows={3}
-                    />
-                  </div>
-
-                  {/* Submit Button */}
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    onClick={handleSubmitProof}
-                    disabled={!proofFile || uploading}
-                  >
-                    {uploading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        <Upload className="h-4 w-4 mr-2" />
-                        Enviar Comprobante
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Payment Status */}
-            {showPaymentStatus && (
-              <Card className="shadow-lg border-0">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <CreditCard className="h-5 w-5" />
-                    Estado del Pago
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-muted-foreground">Estado:</span>
-                    <Badge
-                      variant={existingPayment?.status === 'verified' ? 'default' : existingPayment?.status === 'rejected' ? 'destructive' : 'secondary'}
-                      className={existingPayment?.status === 'verified' ? 'bg-emerald-500' : existingPayment?.status === 'rejected' ? '' : 'bg-orange-500'}
-                    >
-                      {existingPayment?.status === 'verified'
-                        ? '✓ Verificado'
-                        : existingPayment?.status === 'rejected'
-                          ? '✗ Rechazado'
-                          : '⏳ Pendiente de verificación'}
-                    </Badge>
-                  </div>
-
-                  {existingPayment?.reference_number && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-muted-foreground">Referencia:</span>
-                      <span className="font-mono">{existingPayment.reference_number}</span>
-                    </div>
-                  )}
-
-                  {existingPayment?.proof_url && (
-                    <div className="pt-4">
-                      <p className="text-sm text-muted-foreground mb-2">Comprobante enviado:</p>
-                      <div className="relative bg-muted/30 rounded-lg overflow-hidden">
-                        <img
-                          src={existingPayment.proof_url}
-                          alt="Comprobante de transferencia"
-                          className="w-full max-h-64 object-contain rounded-lg"
-                          loading="lazy"
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const parent = target.parentElement;
-                            if (parent) {
-                              parent.innerHTML = `
-                                <div class="flex flex-col items-center justify-center p-8 text-muted-foreground">
-                                  <svg class="h-12 w-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                  </svg>
-                                  <p class="text-sm">Error al cargar imagen</p>
-                                  <a href="${existingPayment.proof_url}" target="_blank" class="text-xs text-primary underline mt-2">Ver en nueva pestaña</a>
+            <div className="grid lg:grid-cols-12 gap-8 items-start">
+                 {/* Left Column: Upload & Payment Info */}
+                 <div className="lg:col-span-7 space-y-6">
+                     
+                     {showUploadSection && (
+                         <Card className="border-2 border-primary/20 shadow-md">
+                            <CardHeader className="bg-primary/5 border-b border-primary/10">
+                                <CardTitle className="flex items-center gap-2 text-primary">
+                                    <Upload className="h-5 w-5" />
+                                    Confirmar Pago
+                                </CardTitle>
+                                <CardDescription>
+                                    Sube una captura de tu transferencia para verificar tu pago rápidamente.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6 pt-6">
+                                <div 
+                                    className={cn(
+                                        "border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer relative overflow-hidden",
+                                        isDragOver ? "border-primary bg-primary/10" : "border-muted-foreground/20 hover:border-primary/50 hover:bg-muted/5",
+                                        proofPreview ? "border-solid border-border p-2" : ""
+                                    )}
+                                    onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
+                                    onDragLeave={() => setIsDragOver(false)}
+                                    onDrop={handleDrop}
+                                    onClick={() => !proofPreview && fileInputRef.current?.click()}
+                                >
+                                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
+                                    
+                                    {proofPreview ? (
+                                        <div className="relative group">
+                                            <img src={proofPreview} alt="Preview" className="w-full h-64 object-contain rounded-lg bg-black/5" />
+                                            <div className="absolute top-2 right-2 flex gap-2">
+                                                <Button size="icon" variant="destructive" className="h-8 w-8 shadow-md" onClick={(e) => { e.stopPropagation(); cleanUpload(); }}>
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                            <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/60 text-white text-xs truncate">
+                                                {proofFile?.name}
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-4 py-4">
+                                            <div className="bg-primary/10 w-16 h-16 rounded-full flex items-center justify-center mx-auto">
+                                                <ImageIcon className="h-8 w-8 text-primary" />
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-lg">Arrastra tu comprobante aquí</p>
+                                                <p className="text-sm text-muted-foreground mt-1">O haz clic para buscar en tus archivos</p>
+                                            </div>
+                                            <div className="text-xs text-muted-foreground bg-muted/50 inline-block px-3 py-1 rounded-full border">
+                                                Soporta JPG, PNG (Max 10MB)
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
-                              `;
-                            }
-                          }}
-                        />
-                        <Button
-                          size="sm"
-                          variant="secondary"
-                          className="absolute top-2 right-2 shadow-lg"
-                          onClick={() => window.open(existingPayment.proof_url!, '_blank')}
-                        >
-                          <Eye className="h-4 w-4 mr-1" />
-                          Ver completo
+
+                                <div className="grid gap-4 sm:grid-cols-2">
+                                    <div className="space-y-2">
+                                        <Label>Referencia (Opcional)</Label>
+                                        <Input placeholder="Ej: 000123456" value={referenceNumber} onChange={(e) => setReferenceNumber(e.target.value)} />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Notas (Opcional)</Label>
+                                        <Input placeholder="Comentario adicional..." value={notes} onChange={(e) => setNotes(e.target.value)} />
+                                    </div>
+                                </div>
+                            </CardContent>
+                            <CardFooter className="bg-muted/5 border-t p-4 flex justify-end">
+                                <Button size="lg" onClick={handleSubmitProof} disabled={!proofFile || uploading} className="w-full sm:w-auto min-w-[200px] shadow-lg">
+                                    {uploading ? <><Spinner className="mr-2 h-4 w-4" /> Subiendo...</> : <><Upload className="mr-2 h-4 w-4" /> Enviar Comprobante</>}
+                                </Button>
+                            </CardFooter>
+                         </Card>
+                     )}
+
+                     {existingPayment && (
+                        <Card className="border-l-4 border-l-primary shadow-sm bg-gradient-to-r from-background to-secondary/10">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2 text-base">
+                                    <Receipt className="h-5 w-5" />
+                                    Estado del Pago
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center gap-3 mb-4">
+                                    <Badge 
+                                        variant={existingPayment.status === 'verified' ? 'default' : existingPayment.status === 'rejected' ? 'destructive' : 'secondary'}
+                                        className="h-7 px-3 text-sm"
+                                    >
+                                        {existingPayment.status === 'verified' ? 'Confirmado' : existingPayment.status === 'rejected' ? 'Rechazado' : 'En Revisión'}
+                                    </Badge>
+                                    <span className="text-sm text-muted-foreground">
+                                        Subido el {new Date(existingPayment.created_at).toLocaleString()}
+                                    </span>
+                                </div>
+                                {existingPayment.proof_url && (
+                                    <div className="flex items-center gap-2">
+                                        <Button variant="outline" size="sm" onClick={() => window.open(existingPayment.proof_url!, '_blank')}>
+                                            <Eye className="h-3 w-3 mr-2" />
+                                            Ver Comprobante
+                                        </Button>
+                                        {existingPayment.reference_number && (
+                                            <span className="text-xs font-mono bg-muted px-2 py-1 rounded">Ref: {existingPayment.reference_number}</span>
+                                        )}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                     )}
+
+                     <div className="space-y-4">
+                         <h3 className="font-semibold text-lg flex items-center gap-2">
+                            <Building2 className="h-5 w-5 text-primary" />
+                            Cuentas para Transferencia
+                         </h3>
+                         <div className="grid gap-4 sm:grid-cols-2">
+                             {paymentMethods.map((method, idx) => (
+                                <div key={method.id} className="bg-card border rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow relative group">
+                                    <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <Copy className="h-4 w-4 text-muted-foreground cursor-pointer hover:text-primary" onClick={() => copyToClipboard(method.account_number || '', `acc-${idx}`)} />
+                                    </div>
+                                    <p className="font-bold text-base mb-1">{method.bank_name || method.name}</p>
+                                    <p className="text-xs text-muted-foreground mb-3">{method.account_type}</p>
+                                    
+                                    <div className="bg-muted/50 p-2 rounded border font-mono text-sm font-semibold flex justify-between items-center cursor-pointer hover:bg-muted" onClick={() => copyToClipboard(method.account_number || '', `acc-${idx}`)}>
+                                        {method.account_number}
+                                        {copied === `acc-${idx}` && <Check className="h-3 w-3 text-green-600" />}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-2 truncate">Titular: {method.account_holder}</p>
+                                </div>
+                             ))}
+                         </div>
+                     </div>
+                 </div>
+
+                 {/* Right Column: Order Summary */}
+                 <div className="lg:col-span-5 space-y-6">
+                     <Card className="shadow-lg border-0 bg-card overflow-hidden">
+                        <CardHeader className="bg-muted/30 border-b">
+                            <CardTitle className="text-base">Resumen del Pedido</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <div className="max-h-[300px] overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                                {order.order_items?.map((item) => {
+                                    const img = normalizeImageUrl(item.products?.image_url);
+                                    return (
+                                        <div key={item.id} className="flex gap-3 items-center">
+                                            <div className="h-12 w-12 bg-muted/50 rounded-md border overflow-hidden shrink-0">
+                                                {img ? <img src={img} alt="" className="h-full w-full object-cover mix-blend-multiply" /> : <div className="h-full flex items-center justify-center"><ImageIcon className="h-4 w-4 opacity-30" /></div>}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium truncate">{item.product_name}</p>
+                                                <p className="text-xs text-muted-foreground">{item.quantity} x RD$ {item.price.toLocaleString()}</p>
+                                            </div>
+                                            <div className="font-medium text-sm">
+                                                RD$ {(item.price * item.quantity).toLocaleString()}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                            <Separator />
+                            <div className="p-4 space-y-2 bg-muted/5">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Subtotal</span>
+                                    <span>RD$ {order.subtotal?.toLocaleString()}</span>
+                                </div>
+                                {order.discount_amount && order.discount_amount > 0 && (
+                                    <div className="flex justify-between text-sm text-green-600">
+                                        <span>Descuento</span>
+                                        <span>- RD$ {order.discount_amount.toLocaleString()}</span>
+                                    </div>
+                                )}
+                                <Separator className="my-2" />
+                                <div className="flex justify-between font-bold text-lg">
+                                    <span>Total</span>
+                                    <span>RD$ {order.total.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        </CardContent>
+                     </Card>
+
+                     {order.shipping_address && (
+                         <Card>
+                             <CardHeader className="pb-2">
+                                 <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                     <Truck className="h-4 w-4" /> Envío
+                                 </CardTitle>
+                             </CardHeader>
+                             <CardContent>
+                                 <div className="text-sm leading-relaxed p-3 bg-muted/20 rounded-lg border">
+                                     {order.shipping_address.split('\n').map((line, i) => (
+                                         <p key={i} className="mb-1 last:mb-0">{line}</p>
+                                     ))}
+                                 </div>
+                             </CardContent>
+                         </Card>
+                     )}
+
+                     <div className="text-center">
+                        <p className="text-xs text-muted-foreground mb-4">
+                            ¿Necesitas ayuda con tu pedido?
+                        </p>
+                        <Button variant="outline" size="sm" className="w-full gap-2">
+                           <Phone className="h-3 w-3" /> Contactar Soporte
                         </Button>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status-specific messages */}
-                  {existingPayment?.status === 'pending' && (
-                    <div className="pt-4 p-4 bg-orange-500/10 border border-orange-500/20 rounded-lg">
-                      <p className="text-sm">
-                        <strong className="text-orange-600 dark:text-orange-400">⏳ En verificación</strong>
-                        <br />
-                        Estamos revisando tu comprobante. Te notificaremos por correo cuando sea verificado.
-                      </p>
-                    </div>
-                  )}
-
-                  {existingPayment?.status === 'verified' && (
-                    <div className="pt-4 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                      <p className="text-sm">
-                        <strong className="text-emerald-600 dark:text-emerald-400">✓ Pago confirmado</strong>
-                        <br />
-                        Tu pago ha sido verificado. Pronto comenzaremos a preparar tu pedido.
-                      </p>
-                    </div>
-                  )}
-
-                  {existingPayment?.status === 'rejected' && (
-                    <div className="pt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-lg">
-                      <p className="text-sm">
-                        <strong className="text-red-600 dark:text-red-400">✗ Pago rechazado</strong>
-                        <br />
-                        El comprobante enviado no pudo ser verificado. Por favor, envía un nuevo comprobante o contáctanos para más información.
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Help Card */}
-            <Card className="border-amber-500/30 bg-amber-500/5">
-              <CardContent className="pt-6">
-                <p className="text-sm">
-                  <strong className="text-amber-700 dark:text-amber-400">¿Necesitas ayuda?</strong>
-                  <br />
-                  Si tienes alguna pregunta sobre tu pedido, contáctanos por WhatsApp o correo electrónico.
-                </p>
-              </CardContent>
-            </Card>
-          </div>
+                     </div>
+                 </div>
+            </div>
         </div>
       </div>
     </Layout>

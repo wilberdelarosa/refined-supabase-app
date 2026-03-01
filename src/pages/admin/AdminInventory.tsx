@@ -31,13 +31,14 @@ import {
   ArrowLeft,
   Package,
   Boxes,
-  Loader2,
   Plus,
   Minus,
   AlertTriangle,
   CheckCircle2,
   XCircle
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { normalizeImageUrl } from '@/lib/image-url';
 import type { Product } from '@/types/product';
 
 export default function AdminInventory() {
@@ -152,7 +153,7 @@ export default function AdminInventory() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );
@@ -282,18 +283,31 @@ export default function AdminInventory() {
                   filteredProducts.map((product) => (
                     <TableRow key={product.id} className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0">
                       <TableCell>
-                        <div className="h-12 w-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200">
-                          {product.image_url ? (
-                            <img
-                              src={product.image_url}
-                              alt={product.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center">
-                              <Package className="h-6 w-6 text-slate-400" />
-                            </div>
-                          )}
+                        <div className="h-12 w-12 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 relative">
+                          {(() => {
+                            const imgUrl = normalizeImageUrl(product.image_url);
+                            return imgUrl ? (
+                              <>
+                                <img
+                                  src={imgUrl}
+                                  alt={product.name}
+                                  className="h-full w-full object-cover"
+                                  loading="lazy"
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                                  }}
+                                />
+                                <div className="hidden h-full w-full flex items-center justify-center absolute top-0 left-0 bg-slate-100">
+                                  <Package className="h-6 w-6 text-slate-400" />
+                                </div>
+                              </>
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center">
+                                <Package className="h-6 w-6 text-slate-400" />
+                              </div>
+                            );
+                          })()}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -434,7 +448,7 @@ export default function AdminInventory() {
             <Button onClick={handleAdjustInventory} disabled={saving || !adjustmentValue} className="bg-[#2b8cee] hover:bg-[#206bc4] text-white">
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner className="h-4 w-4 mr-2" />
                   Guardando...
                 </>
               ) : 'Guardar'}

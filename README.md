@@ -1,6 +1,15 @@
-# Welcome to your Lovable project
+# Barbaro Nutrition — Ecommerce de suplementos
 
-## Project info
+Tienda online de suplementos deportivos con panel de administración. Stack: Vite, React, TypeScript, Supabase (Auth, Postgres, Storage, Edge Functions).
+
+## Documentación para el cliente
+
+**Todo lo que se puede hacer en la plataforma (cliente y administrador):**  
+[docs/PRESENTACION-CLIENTE-BARBARO-NUTRITION.md](docs/PRESENTACION-CLIENTE-BARBARO-NUTRITION.md)
+
+Incluye: tienda con búsqueda y filtros, recomendaciones IA por producto, checkout por transferencia, subida de comprobantes, pedidos y facturas, exportación CSV, y todas las funciones del panel admin (productos, inventario, pedidos, facturas, descuentos, métodos de pago, usuarios).
+
+## Project info (Lovable)
 
 **URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
 
@@ -54,11 +63,11 @@ npm run dev
 
 This project is built with:
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- Vite, TypeScript, React
+- shadcn-ui, Tailwind CSS, Framer Motion
+- Supabase (Auth, Postgres, RLS, Storage, Edge Functions)
+- Zustand (carrito), TanStack Query, Sonner (toasts)
+- PWA (vite-plugin-pwa)
 
 ## Architecture
 

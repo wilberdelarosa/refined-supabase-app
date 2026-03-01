@@ -43,12 +43,12 @@ import {
   Trash2,
   Building2,
   CreditCard,
-  Loader2,
   GripVertical,
   Check,
   X,
   ArrowLeft
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface PaymentMethod {
   id: string;
@@ -234,7 +234,7 @@ export default function AdminPaymentMethods() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );
@@ -471,7 +471,7 @@ export default function AdminPaymentMethods() {
             <Button onClick={handleSave} disabled={saving} className="bg-[#2b8cee] hover:bg-[#206bc4] text-white">
               {saving ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Spinner className="h-4 w-4 mr-2" />
                   Guardando...
                 </>
               ) : (

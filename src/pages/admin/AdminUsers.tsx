@@ -28,6 +28,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Search, ArrowLeft, Shield, Users } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface UserWithRoles {
   id: string;
@@ -180,7 +181,7 @@ export default function AdminUsers() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );

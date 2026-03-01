@@ -167,8 +167,9 @@ Comportamiento:
 - Email:
   - Invoca `supabase.functions.invoke('send-order-email', { type: 'order_created', ... })`.
 
-Nota importante:
-- La pantalla tiene `BANK_ACCOUNTS` hardcode aunque existe `payment_methods` en DB.
+Nota:
+- La pantalla obtiene cuentas bancarias desde `payment_methods` (activos, orden por `display_order`). Si no hay métodos configurados se muestra un mensaje indicando que los datos estarán en la página de confirmación.
+- Se valida stock antes de crear el pedido; si no hay suficiente se muestra error y no se crea la orden.
 
 ### 4.6 Confirmación de pedido + comprobante
 
@@ -248,26 +249,21 @@ Auditoría:
 ### 4.9.3 Tienda (`/shop`) — `Shop`
 
 - Header: título “Tienda” y subtítulo.
-- Filtro por categoría (chips/botones):
-  - **Todos** (resetea filtro).
-  - Botones por categoría (toggle visual `default` vs `outline`).
-- Estados:
-  - Loading: grilla de skeletons.
-  - Error: tarjeta con “Error al cargar productos”.
-  - Empty: “No hay productos disponibles”.
-- Listado: grilla de `ProductCard`.
+- **Búsqueda** con debounce (250 ms) sobre nombre, descripción y marca (`ilike` multi-campo).
+- **Ordenamiento** (Select): Más recientes, Precio asc/desc, Nombre A–Z, Con descuento primero, Destacados primero.
+- **Filtros**: categoría (chips), rango de precio (mín/máx), “Solo en stock”, “Solo destacados”. En móvil los filtros van en panel colapsable.
+- **Vista**: grid o lista (`ProductCard` con variante `grid`/`list`).
+- Contador de resultados y botón “Limpiar filtros”.
+- Estados: Loading (skeletons), Error, Empty (con mensaje distinto si hay filtros activos).
+- Listado: grilla o lista de `ProductCard`.
 
 ### 4.9.4 Detalle de producto (`/producto/:handle`) — `ProductDetail`
 
-- Badges/estados:
-  - Stock: “En stock” vs “Agotado” (y bloqueo de compra si 0).
-  - Descuento: badge cuando hay `original_price > price`.
-- Controles:
-  - Selector de cantidad `- / +` (respeta stock; `+` se deshabilita al alcanzar stock).
-  - Botón **Agregar al Carrito**:
-    - Deshabilitado si no hay stock.
-    - Toasts: éxito al agregar; error si excede stock.
-  - Wishlist (ícono corazón): toggle agregar/quitar de favoritos.
+- Galería de imágenes (`ProductGallery`), tabla nutricional (`NutritionTable`) cuando existe `product_nutrition`.
+- **Recomendación con IA** (`AIRecommendation`): botón “Generar recomendación” que llama a Edge Function `ai-recommendation`. La IA puede devolver JSON estructurado (momento, combinar, perfil); el componente muestra secciones con iconos (Clock, Package2, User) o texto plano como fallback. Estados: loading (skeleton), error con reintentar.
+- **Productos relacionados** (`RelatedProducts`): mismos categoría, enlace a `/producto/:id`.
+- Badges/estados: Stock (“En stock” / “Agotado” / “Últimas unidades”), descuento cuando `original_price > price`.
+- Controles: selector de cantidad `- / +`, **Agregar al Carrito** (deshabilitado sin stock, toasts), Wishlist (corazón).
 
 ### 4.9.5 Carrito (Drawer) — `CartDrawer`
 
@@ -316,10 +312,8 @@ Nota (consistencia de rutas): aquí aparece un link tipo `/product/:id` en algun
 
 - Secciones:
   - Resumen de carrito.
-  - Cupón:
-    - Input + botón **Aplicar**.
-    - Si aplicado: muestra descuento y botón **Quitar**.
-  - “Cuentas bancarias” (en esta pantalla hay un set hardcodeado) con botones **Copiar**.
+  - Cupón: input + **Aplicar** / **Quitar**; muestra descuento aplicado.
+  - “Datos para Transferencia”: cuentas desde `payment_methods` (activos, orden); botones **Copiar**. Si no hay métodos configurados se muestra mensaje indicando que estarán en la página de confirmación.
   - Formulario de envío/facturación:
     - Campos mínimos (nombre/email/teléfono/dirección/ciudad/notas).
 - Acción principal:
@@ -366,6 +360,7 @@ Nota (consistencia de rutas): aquí aparece un link tipo `/product/:id` en algun
   - Acciones:
     - **Ver Pedido** → `/order/:id` (cuando status `pending` o `payment_pending`).
     - **Ver Factura** (cuando status `paid|processing|shipped|delivered`) → busca `invoices` por `order_id` y navega a `/orders/invoice/:invoiceId`.
+- **Exportar CSV**: descarga listado de pedidos del usuario (número, fecha, estado, total, productos). Errores/aviso “factura no disponible” vía toast (sin `alert`).
 
 ### 4.9.12 Factura cliente (`/orders/invoice/:invoiceId`) — `InvoiceDetail`
 
@@ -387,7 +382,7 @@ Nota (consistencia de rutas): aquí aparece un link tipo `/product/:id` en algun
 
 ### 4.10.2 Pedidos (`/admin/orders`) — `AdminOrders`
 
-- Tabla/listado de pedidos + filtros/búsqueda (según UI actual).
+- Tabla/listado de pedidos + búsqueda por ID + filtro por estado + **Exportar CSV** (pedidos filtrados: número, fecha, estado, total, cliente, email).
 - Modal/Drawer de detalle del pedido:
   - Items del pedido, total/subtotal/descuento, shipping, perfil cliente.
   - Pagos (`order_payments`) con comprobante.
@@ -745,10 +740,12 @@ Funcionalidades ecommerce a implementar:
 
 11) Edge Functions
 - `send-order-email`:
-  - Deno function.
-  - Usa Resend (`RESEND_API_KEY`).
-  - Acepta payload `type: 'order_created' | 'status_changed'`.
-  - Plantillas HTML simples con lista de items y total.
+  - Deno function. Usa Resend (`RESEND_API_KEY`).
+  - Acepta payload `type: 'order_created' | 'status_changed'`; opcional `orderUrl` para enlace en email de confirmación.
+  - Etiquetas de estado incluyen `payment_pending` (Verificando Pago).
+  - Plantillas HTML con items, total y (si se pasa) botón “Ver pedido y subir comprobante”.
+- `ai-recommendation`:
+  - Recomendación por producto (mejor momento, combinar con, perfil ideal). Responde en JSON `{ momento, combinar, perfil }` o texto plano como fallback.
 - `ai-nutrition` (opcional):
   - permite a admin generar nutrición del producto y guardar en `product_nutrition`.
   - NO crear nada de consultas/nutricionistas.

@@ -18,7 +18,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { 
   Sparkles, 
-  Loader2, 
   Beaker, 
   AlertTriangle,
   X,
@@ -27,6 +26,7 @@ import {
   Info,
   Zap
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface NutritionData {
   serving_size: string;
@@ -277,7 +277,7 @@ export default function ProductNutritionDialog({
                 >
                   {aiLoading ? (
                     <>
-                      <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                      <Spinner className="h-5 w-5 mr-2" />
                       Buscando...
                     </>
                   ) : (
@@ -518,7 +518,7 @@ export default function ProductNutritionDialog({
           <Button onClick={handleSave} disabled={loading} size="lg">
             {loading ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Spinner className="h-4 w-4 mr-2" />
                 Guardando...
               </>
             ) : (

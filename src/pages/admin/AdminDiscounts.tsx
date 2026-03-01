@@ -40,13 +40,13 @@ import {
   ArrowLeft,
   Percent,
   Copy,
-  Loader2,
   Pencil,
   Tag,
   CheckCircle2,
   XCircle,
   Calendar
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import type { Tables } from '@/integrations/supabase/types';
 
 type DiscountCode = Tables<'discount_codes'>;
@@ -232,7 +232,7 @@ export default function AdminDiscounts() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );
@@ -530,7 +530,7 @@ export default function AdminDiscounts() {
               <Button type="submit" disabled={saving} className="bg-[#2b8cee] hover:bg-[#206bc4] text-white">
                 {saving ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Spinner className="h-4 w-4 mr-2" />
                     Guardando...
                   </>
                 ) : editingDiscount ? 'Guardar Cambios' : 'Crear Código'}

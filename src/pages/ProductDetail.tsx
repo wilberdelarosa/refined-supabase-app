@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Minus, Plus, ShoppingCart, Loader2, Heart, Package } from 'lucide-react';
+import { ArrowLeft, Minus, Plus, ShoppingCart, Heart, Package } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +12,7 @@ import { useProductNutrition } from '@/hooks/useProductNutrition';
 import { useCartStore } from '@/stores/cartStore';
 import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/lib/format-currency';
 import { FadeInUp } from '@/components/animations/ScrollAnimations';
 import ProductGallery from '@/components/product/ProductGallery';
 import NutritionTable from '@/components/product/NutritionTable';
@@ -29,7 +31,7 @@ export default function ProductDetail() {
     return (
       <Layout>
         <div className="container py-20 flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
+          <Spinner className="h-8 w-8" />
         </div>
       </Layout>
     );
@@ -103,11 +105,11 @@ export default function ProductDetail() {
 
                 <div className="flex items-center gap-3 mt-3">
                   <p className="text-2xl font-bold">
-                    DOP {product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                    {formatCurrency(product.price)}
                   </p>
                   {hasDiscount && (
                     <p className="text-lg text-muted-foreground line-through">
-                      DOP {product.original_price!.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                      {formatCurrency(product.original_price!)}
                     </p>
                   )}
                 </div>
@@ -173,7 +175,7 @@ export default function ProductDetail() {
           {/* Left: Nutrition */}
           <div>
             {nutritionLoading ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin" /></div>
+              <div className="flex justify-center py-8"><Spinner className="h-6 w-6" /></div>
             ) : nutrition ? (
               <NutritionTable nutrition={nutrition} usageInstructions={extProduct.usage_instructions} />
             ) : null}

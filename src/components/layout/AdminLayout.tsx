@@ -21,6 +21,7 @@ import {
     UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { NotificationCenter } from '@/modules/notifications/presentation/NotificationCenter';
 
 interface AdminLayoutProps {
     children: ReactNode;
@@ -154,10 +155,7 @@ export function AdminLayout({ children, showSearch = true }: AdminLayoutProps) {
 
                             {/* Actions */}
                             <div className="flex items-center gap-3">
-                                <button className="relative p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
-                                    <Bell className="h-[22px] w-[22px]" />
-                                    <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full"></span>
-                                </button>
+                                <NotificationCenter isAdmin />
                                 <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
                                     <Settings className="h-[22px] w-[22px]" />
                                 </button>

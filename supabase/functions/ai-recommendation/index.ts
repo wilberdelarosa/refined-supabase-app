@@ -5,6 +5,16 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const SYSTEM_PROMPT = `Eres un asesor de nutrición deportiva. Responde ÚNICAMENTE con un objeto JSON válido, sin markdown ni texto adicional. El formato debe ser exactamente:
+
+{
+  "momento": "1-2 oraciones sobre el mejor momento para tomar el producto (ej: antes/después del entrenamiento, en ayunas, etc.)",
+  "combinar": "1-2 oraciones sobre con qué otros suplementos o alimentos combinarlo para mejores resultados",
+  "perfil": "1-2 oraciones sobre el perfil ideal del usuario (objetivos, tipo de entrenamiento, nivel)"
+}
+
+Cada campo debe ser un string en español. No incluyas llaves de más ni comillas escapadas.`;
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -25,14 +35,11 @@ serve(async (req) => {
       body: JSON.stringify({
         model: "google/gemini-2.5-flash-lite",
         messages: [
-          {
-            role: "system",
-            content: "Eres un asesor de nutrición deportiva. Da recomendaciones breves (máximo 3 párrafos) sobre cómo usar el producto, con qué complementarlo, y para quién es ideal. Responde en español."
-          },
+          { role: "system", content: SYSTEM_PROMPT },
           {
             role: "user",
-            content: `Dame una recomendación personalizada para el producto "${productName}" de la categoría "${productCategory}". Incluye: mejor momento para tomarlo, con qué otros suplementos combinarlo, y perfil ideal del usuario.`
-          }
+            content: `Genera una recomendación para el producto "${productName}" de la categoría "${productCategory}". Responde solo con el JSON.`,
+          },
         ],
       }),
     });
@@ -52,15 +59,34 @@ serve(async (req) => {
     }
 
     const data = await response.json();
-    const recommendation = data.choices?.[0]?.message?.content || '';
+    const rawContent = (data.choices?.[0]?.message?.content || '').trim();
 
-    return new Response(JSON.stringify({ recommendation }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    // Try to parse as JSON for structured response
+    let sections: { momento?: string; combinar?: string; perfil?: string } | null = null;
+    try {
+      const parsed = JSON.parse(rawContent.replace(/```json?\s*|\s*```/g, ''));
+      if (parsed && typeof parsed === 'object') {
+        sections = {
+          momento: typeof parsed.momento === 'string' ? parsed.momento : undefined,
+          combinar: typeof parsed.combinar === 'string' ? parsed.combinar : undefined,
+          perfil: typeof parsed.perfil === 'string' ? parsed.perfil : undefined,
+        };
+      }
+    } catch {
+      // Not valid JSON - use as plain text fallback
+    }
+
+    const body = sections
+      ? { recommendation: rawContent, sections }
+      : { recommendation: rawContent || 'No se pudo generar una recomendación.' };
+
+    return new Response(JSON.stringify(body), {
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   } catch (error) {
     console.error("ai-recommendation error:", error);
     return new Response(JSON.stringify({ error: error instanceof Error ? error.message : "Error" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 });

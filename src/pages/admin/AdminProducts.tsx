@@ -44,9 +44,10 @@ import {
   Package,
   Beaker,
   Download,
-  Upload,
-  Loader2
+  Upload
 } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { normalizeImageUrl } from '@/lib/image-url';
 import { Link } from 'react-router-dom';
 import ProductNutritionDialog from '@/components/admin/ProductNutritionDialog';
 
@@ -420,7 +421,7 @@ export default function AdminProducts() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );
@@ -455,7 +456,7 @@ export default function AdminProducts() {
               disabled={seeding}
               className="text-xs"
             >
-              {seeding ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Package className="h-4 w-4 mr-1" />}
+              {seeding ? <Spinner className="h-4 w-4 mr-1" /> : <Package className="h-4 w-4 mr-1" />}
               {seeding ? 'Poblando...' : 'Poblar Catálogo'}
             </Button>
             <Button variant="outline" size="sm" onClick={handleExportJSON} className="text-xs">
@@ -529,7 +530,7 @@ export default function AdminProducts() {
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-12">
                       <div className="flex flex-col items-center">
-                        <Package className="h-8 w-8 animate-spin mx-auto text-slate-400" />
+                        <Spinner className="h-8 w-8 mx-auto text-slate-400" />
                         <p className="text-sm text-slate-500 mt-2">Cargando productos...</p>
                       </div>
                     </TableCell>
@@ -549,17 +550,30 @@ export default function AdminProducts() {
                       className="hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0"
                     >
                       <TableCell className="text-center">
-                        {product.image_url ? (
-                          <img
-                            src={product.image_url}
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded-md mx-auto border border-slate-200 shadow-sm"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 bg-slate-100 rounded-md mx-auto flex items-center justify-center border border-slate-200">
-                            <Package className="h-5 w-5 text-slate-400" />
-                          </div>
-                        )}
+                        {(() => {
+                           const imgUrl = normalizeImageUrl(product.image_url);
+                           return imgUrl ? (
+                             <img
+                               src={imgUrl}
+                               alt={product.name}
+                               className="w-12 h-12 object-cover rounded-md mx-auto border border-slate-200 shadow-sm"
+                               loading="lazy"
+                               onError={(e) => {
+                                 e.currentTarget.style.display = 'none';
+                                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                               }}
+                             />
+                           ) : (
+                             <div className="w-12 h-12 bg-slate-100 rounded-md mx-auto flex items-center justify-center border border-slate-200">
+                               <Package className="h-5 w-5 text-slate-400" />
+                             </div>
+                           );
+                        })()}
+                        {/* Fallback hidden by default, shown on error if needed, though the above logic handles nulls. 
+                            For a cleaner approach with fallback on error: */}
+                        <div className="hidden w-12 h-12 bg-slate-100 rounded-md mx-auto flex items-center justify-center border border-slate-200">
+                           <Package className="h-5 w-5 text-slate-400" />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
@@ -672,7 +686,7 @@ export default function AdminProducts() {
               </Button>
               {tableLoading && (
                 <div className="flex items-center gap-2 text-xs text-slate-400">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-slate-400"></div>
+                  <Spinner className="h-4 w-4 text-slate-400" />
                   <span>Actualizando</span>
                 </div>
               )}
@@ -778,12 +792,31 @@ export default function AdminProducts() {
                 <Label htmlFor="image" className="text-slate-700">Imagen del producto</Label>
                 <div className="flex gap-4">
                   {(formData.image_url || imageFile) && (
-                    <div className="h-20 w-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200">
-                      <img
-                        src={imageFile ? URL.createObjectURL(imageFile) : formData.image_url}
-                        alt="Preview"
-                        className="h-full w-full object-cover"
-                      />
+                    <div className="h-20 w-20 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0 border border-slate-200 relative">
+                       {(() => {
+                         const previewSrc = imageFile 
+                           ? URL.createObjectURL(imageFile) 
+                           : normalizeImageUrl(formData.image_url);
+                         
+                         return previewSrc ? (
+                           <img
+                             src={previewSrc}
+                             alt="Preview"
+                             className="h-full w-full object-cover"
+                             onError={(e) => {
+                               e.currentTarget.style.display = 'none';
+                               e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                             }}
+                           />
+                         ) : (
+                           <div className="h-full w-full flex items-center justify-center bg-slate-50">
+                             <span className="text-xs text-slate-400">Inválida</span>
+                           </div>
+                         );
+                       })()}
+                       <div className="hidden h-full w-full flex items-center justify-center absolute top-0 left-0 bg-slate-50">
+                         <span className="text-xs text-slate-400">Error</span>
+                       </div>
                     </div>
                   )}
                   <div className="flex-1">

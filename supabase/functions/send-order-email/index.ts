@@ -22,10 +22,12 @@ interface OrderEmailRequest {
   newStatus?: string;
   oldStatus?: string;
   shippingAddress?: string;
+  orderUrl?: string;
 }
 
 const statusLabels: Record<string, string> = {
   pending: "Pendiente",
+  payment_pending: "Verificando Pago",
   paid: "Pagado",
   processing: "Procesando",
   packed: "Empacado",
@@ -105,9 +107,18 @@ function generateOrderCreatedEmail(data: OrderEmailRequest): string {
             
             <div style="background-color: #fef3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px;">
               <p style="margin: 0; color: #856404; font-size: 14px;">
-                <strong>Importante:</strong> Si realizaste el pago por transferencia, tu pedido será procesado una vez verifiquemos el pago.
+                <strong>Importante:</strong> Si realizaste el pago por transferencia, tu pedido será procesado una vez verifiquemos el pago. Puedes subir tu comprobante en el enlace siguiente.
               </p>
             </div>
+            ${
+              data.orderUrl
+                ? `
+            <div style="text-align: center; margin-top: 25px;">
+              <a href="${data.orderUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Ver pedido y subir comprobante</a>
+            </div>
+            `
+                : ""
+            }
           </div>
           
           <!-- Footer -->
@@ -130,6 +141,10 @@ function generateStatusChangeEmail(data: OrderEmailRequest): string {
   let statusColor = "#333";
 
   switch (data.newStatus) {
+    case "payment_pending":
+      statusMessage = "Hemos recibido tu comprobante de pago. Lo estamos verificando.";
+      statusColor = "#fd7e14";
+      break;
     case "paid":
       statusMessage = "Hemos confirmado tu pago. Tu pedido está siendo preparado.";
       statusColor = "#28a745";

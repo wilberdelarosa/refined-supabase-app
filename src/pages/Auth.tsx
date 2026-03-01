@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import barbaroLogo from '@/assets/barbaro-logo.png';
-import { Loader2, LogIn, UserPlus, Mail, Lock, User } from 'lucide-react';
+import { LogIn, UserPlus, Mail, Lock, User } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 const authSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -211,7 +212,7 @@ export default function Auth() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Spinner className="h-4 w-4 mr-2" />
                     Cargando...
                   </>
                 ) : isLogin ? (

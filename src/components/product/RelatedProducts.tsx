@@ -1,81 +1,74 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Product } from '@/types/product';
-import { Link } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { normalizeImageUrl, getProductImageFallback } from '@/lib/image-url';
+import { ProductCard } from '@/components/shop/ProductCard';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface RelatedProductsProps {
   currentProductId: string;
-  category: string;
+  category?: string;
 }
 
 export default function RelatedProducts({ currentProductId, category }: RelatedProductsProps) {
   const [products, setProducts] = useState<Product[]>([]);
-  const [failedImageIds, setFailedImageIds] = useState<Set<string>>(() => new Set());
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetch() {
-      const { data } = await supabase
-        .from('products')
-        .select('*')
-        .eq('category', category)
-        .neq('id', currentProductId)
-        .limit(4);
+    async function fetchRelated() {
+      setLoading(true);
+      try {
+        let query = supabase
+          .from('products')
+          .select('*')
+          .neq('id', currentProductId)
+          .limit(4);
 
-      if (data) setProducts(data);
+        if (category) {
+            query = query.eq('category', category);
+        }
+
+        const { data } = await query;
+        if (data) {
+            setProducts(data);
+        }
+      } catch (error) {
+        console.error('Error fetching related products:', error);
+      } finally {
+        setLoading(false);
+      }
     }
-    fetch();
+
+    if (currentProductId) {
+        fetchRelated();
+    }
   }, [currentProductId, category]);
+
+  if (loading) {
+    return (
+        <div className="space-y-6">
+            <h3 className="text-2xl font-bold tracking-tight">Productos Relacionados</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="space-y-3">
+                        <Skeleton className="aspect-square rounded-xl w-full" />
+                        <Skeleton className="h-4 w-2/3" />
+                         <Skeleton className="h-4 w-1/3" />
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+  }
 
   if (products.length === 0) return null;
 
   return (
-    <div className="space-y-4">
-      <h3 className="text-xl font-bold">Productos Relacionados</h3>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="space-y-6">
+      <h3 className="text-2xl font-bold tracking-tight">Productos Relacionados</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
         {products.map((product) => (
-          <Link key={product.id} to={`/product/${product.id}`}>
-            <Card className="hover:shadow-md transition-shadow h-full">
-              <CardContent className="p-3 space-y-2">
-                <div className="aspect-square bg-muted rounded-md overflow-hidden">
-                  {(() => {
-                    const normalizedUrl = normalizeImageUrl(product.image_url);
-                    const fallbackUrl = normalizedUrl || getProductImageFallback(product.name);
-                    return (fallbackUrl && !failedImageIds.has(product.id)) ? (
-                      <img
-                        src={fallbackUrl}
-                        alt={product.name}
-                        className="w-full h-full object-contain p-2"
-                        loading="lazy"
-                        decoding="async"
-                        referrerPolicy="no-referrer"
-                        onError={() => {
-                          setFailedImageIds((prev) => {
-                            const next = new Set(prev);
-                            next.add(product.id);
-                            return next;
-                          });
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                        Sin imagen
-                      </div>
-                    );
-                  })()}
-                </div>
-                <p className="text-sm font-medium line-clamp-2">{product.name}</p>
-                <p className="text-sm font-bold text-primary">
-                  DOP {product.price.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
-                </p>
-                {product.stock <= 0 && (
-                  <Badge variant="destructive" className="text-xs">Agotado</Badge>
-                )}
-              </CardContent>
-            </Card>
-          </Link>
+          <ProductCard key={product.id} product={product} />
         ))}
       </div>
     </div>

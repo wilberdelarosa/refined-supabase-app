@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { FileText, MoreHorizontal, ArrowLeft, Download, Eye, XCircle, Search } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -12,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect, useState } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { formatCurrency } from '@/lib/format-currency';
 
 interface Invoice {
   id: string;
@@ -102,7 +104,7 @@ export default function AdminInvoices() {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );
@@ -151,7 +153,7 @@ export default function AdminInvoices() {
         <CardContent className="p-0">
           {loading ? (
             <div className="flex h-40 items-center justify-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-300"></div>
+              <Spinner className="h-8 w-8 text-muted-foreground" />
             </div>
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-12">
@@ -201,7 +203,7 @@ export default function AdminInvoices() {
                           {invoice.billing_name || 'Sin nombre'}
                         </TableCell>
                         <TableCell className="text-right font-medium text-slate-900">
-                          RD$ {invoice.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                          {formatCurrency(invoice.total)}
                         </TableCell>
                         <TableCell className="text-center">
                           <Badge variant="outline" className={`${status.color} font-medium border`}>

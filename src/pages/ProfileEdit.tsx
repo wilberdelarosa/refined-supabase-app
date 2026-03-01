@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Camera, Loader2, User, Save, Upload } from 'lucide-react';
+import { Camera, User, Save, Upload } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
 
 interface Profile {
   full_name: string | null;
@@ -139,7 +140,7 @@ export default function ProfileEdit() {
     return (
       <ProfileLayout>
         <div className="flex h-[50vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </ProfileLayout>
     );
@@ -177,7 +178,7 @@ export default function ProfileEdit() {
                       disabled={uploading}
                     />
                     {uploading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Spinner className="h-4 w-4" />
                     ) : (
                       <Camera className="h-4 w-4" />
                     )}
@@ -282,7 +283,7 @@ export default function ProfileEdit() {
                   </Button>
                   <Button type="submit" disabled={saving} className="min-w-[120px]">
                     {saving ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      <Spinner className="h-4 w-4 mr-2" />
                     ) : (
                       <Save className="h-4 w-4 mr-2" />
                     )}

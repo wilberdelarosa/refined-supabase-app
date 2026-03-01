@@ -14,8 +14,10 @@ import {
   FileText
 } from 'lucide-react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
+import { Spinner } from '@/components/ui/spinner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { formatCurrency } from '@/lib/format-currency';
 
 interface DashboardStats {
   totalSales: number;
@@ -143,7 +145,7 @@ export default function Admin() {
     return (
       <AdminLayout>
         <div className="flex h-[80vh] items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2b8cee]"></div>
+          <Spinner className="h-8 w-8 text-primary" />
         </div>
       </AdminLayout>
     );
@@ -172,7 +174,7 @@ export default function Admin() {
             </div>
             <p className="text-slate-500 text-sm font-medium mb-1">Ventas Totales (Completadas)</p>
             <p className="text-slate-900 text-2xl font-bold tracking-tight">
-              RD$ {stats.totalSales.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+              {formatCurrency(stats.totalSales)}
             </p>
           </div>
 
@@ -331,7 +333,7 @@ export default function Admin() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right text-slate-900 font-medium">
-                      RD$ {order.total.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+                      {formatCurrency(order.total)}
                     </td>
                     <td className="px-6 py-4 text-center">
                       <Link

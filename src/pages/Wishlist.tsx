@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Heart, ShoppingCart, Trash2, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
+import { normalizeImageUrl } from '@/lib/image-url';
+import { Spinner } from '@/components/ui/spinner';
+import { Empty, EmptyIcon, EmptyTitle, EmptyDescription, EmptyAction } from '@/components/ui/empty';
 
 export default function Wishlist() {
   const { user } = useAuth();
@@ -38,7 +41,7 @@ export default function Wishlist() {
       <ProfileLayout>
         <div className="container py-12">
           <div className="flex items-center justify-center min-h-[400px]">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground"></div>
+            <Spinner className="h-8 w-8 text-foreground" />
           </div>
         </div>
       </ProfileLayout>
@@ -79,37 +82,47 @@ export default function Wishlist() {
         </div>
 
         {items.length === 0 ? (
-          <Card className="border-dashed border-slate-300 shadow-none bg-slate-50/50">
-            <CardContent className="py-16 text-center">
-              <div className="mx-auto w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                <Heart className="h-8 w-8 text-slate-400" />
-              </div>
-              <h3 className="text-lg font-medium text-slate-900 mb-1">Tu lista está vacía</h3>
-              <p className="text-slate-500 mb-6 max-w-sm mx-auto">
-                Guarda los productos que te gustan para comprarlos más tarde.
-              </p>
-              <Link to="/shop">
-                <Button>Explorar Productos</Button>
-              </Link>
-            </CardContent>
-          </Card>
+          <Empty className="py-16">
+            <EmptyIcon>
+              <Heart className="h-8 w-8 text-muted-foreground" />
+            </EmptyIcon>
+            <EmptyTitle>Tu lista está vacía</EmptyTitle>
+            <EmptyDescription>
+              Guarda los productos que te gustan para comprarlos más tarde.
+            </EmptyDescription>
+            <EmptyAction>
+              <Button asChild>
+                <Link to="/shop">Explorar Productos</Link>
+              </Button>
+            </EmptyAction>
+          </Empty>
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {items.map((item) => (
               <Card key={item.id} className="overflow-hidden group border-slate-200 hover:shadow-md transition-all hover:border-primary/20">
                 <Link to={`/product/${item.shopify_product_id}`}>
                   <div className="aspect-[4/5] bg-slate-50 overflow-hidden relative">
-                    {item.product_image_url ? (
-                      <img
-                        src={item.product_image_url}
-                        alt={item.product_name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                        Sin imagen
-                      </div>
-                    )}
+                    {(() => {
+                      const imgUrl = normalizeImageUrl(item.product_image_url);
+                      return imgUrl ? (
+                        <img
+                          src={imgUrl}
+                          alt={item.product_name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                            e.currentTarget.nextElementSibling?.classList.remove('hidden');
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                          Sin imagen
+                        </div>
+                      );
+                    })()}
+                    <div className="hidden w-full h-full flex items-center justify-center text-muted-foreground absolute top-0 left-0 bg-slate-50">
+                       Sin imagen
+                    </div>
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button
                         variant="secondary"
