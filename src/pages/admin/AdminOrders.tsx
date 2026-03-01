@@ -257,7 +257,6 @@ export default function AdminOrders() {
     try {
       const newPaymentStatus = approved ? 'verified' : 'rejected';
 
-      // Update payment record
       const { error: paymentError } = await supabase
         .from('order_payments')
         .update({
@@ -269,7 +268,6 @@ export default function AdminOrders() {
 
       if (paymentError) throw paymentError;
 
-      // Update order status
       const newOrderStatus = approved ? 'paid' : 'pending';
       const { error: orderError } = await supabase
         .from('orders')
@@ -278,7 +276,6 @@ export default function AdminOrders() {
 
       if (orderError) throw orderError;
 
-      // Log audit
       await supabase.rpc('log_audit', {
         p_action: approved ? 'VERIFY_PAYMENT' : 'REJECT_PAYMENT',
         p_table_name: 'order_payments',
@@ -290,6 +287,35 @@ export default function AdminOrders() {
       // If approved, create invoice
       if (approved) {
         await createInvoiceForOrder(selectedOrder, orderItems);
+      }
+
+      // Notify user in-app + email
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+      const customerInfo = parseCustomerInfo(selectedOrder.shipping_address);
+
+      notificationAdapter.sendToUser({
+        userId: selectedOrder.user_id,
+        title: approved ? 'Pago Verificado' : 'Pago Rechazado',
+        message: approved
+          ? `Tu pago para el pedido #${selectedOrder.id.slice(0, 8).toUpperCase()} ha sido verificado. ¡Tu pedido está siendo preparado!`
+          : `El comprobante del pedido #${selectedOrder.id.slice(0, 8).toUpperCase()} no pudo ser verificado. Por favor sube un nuevo comprobante.`,
+        type: 'ORDER_UPDATE',
+        priority: 'HIGH',
+        linkUrl: `/order/${selectedOrder.id}`
+      }).catch(err => console.error("User notification failed:", err));
+
+      // Email to user
+      const emailLine = customerInfo.email;
+      if (emailLine) {
+        supabase.functions.invoke('send-order-email', {
+          body: {
+            type: approved ? 'payment_verified' : 'payment_rejected',
+            customerEmail: emailLine.trim(),
+            customerName: customerInfo.name,
+            orderId: selectedOrder.id,
+            orderTotal: selectedOrder.total,
+          }
+        }).catch(err => console.error("Email to user failed:", err));
       }
 
       toast({
