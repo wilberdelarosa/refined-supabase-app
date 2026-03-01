@@ -257,7 +257,6 @@ export default function AdminOrders() {
     try {
       const newPaymentStatus = approved ? 'verified' : 'rejected';
 
-      // Update payment record
       const { error: paymentError } = await supabase
         .from('order_payments')
         .update({
@@ -269,7 +268,6 @@ export default function AdminOrders() {
 
       if (paymentError) throw paymentError;
 
-      // Update order status
       const newOrderStatus = approved ? 'paid' : 'pending';
       const { error: orderError } = await supabase
         .from('orders')
@@ -278,7 +276,6 @@ export default function AdminOrders() {
 
       if (orderError) throw orderError;
 
-      // Log audit
       await supabase.rpc('log_audit', {
         p_action: approved ? 'VERIFY_PAYMENT' : 'REJECT_PAYMENT',
         p_table_name: 'order_payments',
@@ -290,6 +287,35 @@ export default function AdminOrders() {
       // If approved, create invoice
       if (approved) {
         await createInvoiceForOrder(selectedOrder, orderItems);
+      }
+
+      // Notify user in-app + email
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+      const customerInfo = parseCustomerInfo(selectedOrder.shipping_address);
+
+      notificationAdapter.sendToUser({
+        userId: selectedOrder.user_id,
+        title: approved ? 'Pago Verificado' : 'Pago Rechazado',
+        message: approved
+          ? `Tu pago para el pedido #${selectedOrder.id.slice(0, 8).toUpperCase()} ha sido verificado. ¡Tu pedido está siendo preparado!`
+          : `El comprobante del pedido #${selectedOrder.id.slice(0, 8).toUpperCase()} no pudo ser verificado. Por favor sube un nuevo comprobante.`,
+        type: 'ORDER_UPDATE',
+        priority: 'HIGH',
+        linkUrl: `/order/${selectedOrder.id}`
+      }).catch(err => console.error("User notification failed:", err));
+
+      // Email to user
+      const emailLine = customerInfo.email;
+      if (emailLine) {
+        supabase.functions.invoke('send-order-email', {
+          body: {
+            type: approved ? 'payment_verified' : 'payment_rejected',
+            customerEmail: emailLine.trim(),
+            customerName: customerInfo.name,
+            orderId: selectedOrder.id,
+            orderTotal: selectedOrder.total,
+          }
+        }).catch(err => console.error("Email to user failed:", err));
       }
 
       toast({
@@ -335,17 +361,25 @@ export default function AdminOrders() {
         await createInvoiceForOrder(selectedOrder, orderItems);
       }
 
-      // Send status change email to customer
-      const addressLines = selectedOrder.shipping_address?.split('\n') || [];
-      const emailLine = addressLines.find(line => line.includes('@')) || '';
-      const customerName = addressLines[0] || 'Cliente';
+      // In-app notification + email to user
+      const ci = parseCustomerInfo(selectedOrder.shipping_address);
+      
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+      notificationAdapter.sendToUser({
+        userId: selectedOrder.user_id,
+        title: 'Estado Actualizado',
+        message: `Tu pedido #${selectedOrder.id.slice(0, 8).toUpperCase()} ahora está: ${ORDER_STATUSES.find(s => s.value === newStatus)?.label || newStatus}`,
+        type: 'ORDER_UPDATE',
+        priority: 'NORMAL',
+        linkUrl: `/order/${selectedOrder.id}`
+      }).catch(err => console.error("User notification failed:", err));
 
-      if (emailLine) {
+      if (ci.email) {
         supabase.functions.invoke('send-order-email', {
           body: {
             type: 'status_changed',
-            customerEmail: emailLine.trim(),
-            customerName: customerName,
+            customerEmail: ci.email.trim(),
+            customerName: ci.name,
             orderId: selectedOrder.id,
             orderTotal: selectedOrder.total,
             orderItems: orderItems.map(item => ({
@@ -356,10 +390,7 @@ export default function AdminOrders() {
             oldStatus: selectedOrder.status,
             newStatus: newStatus
           }
-        }).then(res => {
-          if (res.error) console.error('Email error:', res.error);
-          else console.log('Status change email sent');
-        });
+        }).catch(err => console.error('Email error:', err));
       }
 
       toast({ title: 'Éxito', description: 'Estado actualizado correctamente' });
@@ -438,6 +469,34 @@ export default function AdminOrders() {
       if (linesError) throw linesError;
 
       setInvoice(invoice);
+
+      // Notify user about invoice via email
+      const ci = parseCustomerInfo(order.shipping_address);
+      if (ci.email) {
+        supabase.functions.invoke('send-order-email', {
+          body: {
+            type: 'invoice_created',
+            customerEmail: ci.email.trim(),
+            customerName: ci.name,
+            orderId: order.id,
+            orderTotal: order.total,
+            invoiceNumber: invoice.invoice_number,
+          }
+        }).catch(err => console.error("Invoice email failed:", err));
+      }
+
+      // In-app notification
+      import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter').then(({ notificationAdapter }) => {
+        notificationAdapter.sendToUser({
+          userId: order.user_id,
+          title: 'Factura Generada',
+          message: `Tu factura ${invoice.invoice_number} por DOP ${order.total.toLocaleString()} ha sido generada.`,
+          type: 'ORDER_UPDATE',
+          priority: 'NORMAL',
+          linkUrl: `/order/${order.id}`
+        }).catch(err => console.error("Invoice notification failed:", err));
+      });
+
       toast({
         title: '✅ Factura creada',
         description: `Factura ${invoice.invoice_number} generada correctamente`

@@ -231,8 +231,7 @@ export default function TransferCheckout() {
            .eq('id', item.product.id);
        }
 
-       // Send email (async)
-        const orderUrl = typeof window !== 'undefined' ? `${window.location.origin}/order/${savedOrder.id}` : undefined;
+       // Send email to customer (async)
         supabase.functions.invoke('send-order-email', {
         body: {
           type: 'order_created',
@@ -246,9 +245,23 @@ export default function TransferCheckout() {
             price: item.product.price
           })),
           shippingAddress: `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}`,
-          orderUrl
         }
-      }).catch(err => console.error("Failed to send email", err));
+      }).catch(err => console.error("Failed to send customer email", err));
+
+      // Send email to admin about new order
+      supabase.functions.invoke('send-order-email', {
+        body: {
+          type: 'admin_new_order',
+          customerName: formData.fullName,
+          orderId: savedOrder.id,
+          orderTotal: totalPrice,
+          orderItems: items.map(item => ({
+            name: item.product.name,
+            quantity: item.quantity,
+            price: item.product.price
+          })),
+        }
+      }).catch(err => console.error("Failed to send admin email", err));
 
       // Audit + Notifications (fire-and-forget)
       const { logAction } = await import('@/hooks/useAuditLogger');
