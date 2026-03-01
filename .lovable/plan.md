@@ -1,160 +1,156 @@
-# Plan: Sistema Completo de Facturacion, Trazabilidad, Plantillas y Notificaciones
+
+# Plan: Catalogo Completo de Productos Barbaro Nutrition
 
 ## Resumen
 
-Implementar el sistema completo incluyendo: tabla `invoice_templates`, hook de audit logging, vistas admin (AuditLogs y Templates con live preview), integracion de notificaciones en checkout, y correccion de errores de build existentes.
+Este plan cubre: (1) corregir errores de build existentes, (2) borrar los productos actuales de la base de datos, (3) crear una edge function que use IA para buscar informacion precisa de cada producto del catalogo PDF y poblar la base de datos con ficha tecnica completa, (4) mejorar la pagina de detalle del producto con galeria de imagenes, tabla nutricional, recomendaciones IA, (5) agregar funcionalidad de exportar/importar productos en el admin, y (6) mejorar el control de stock.
 
 ---
 
-## Fase 0: Corregir errores de build existentes
+## Productos del Catalogo (extraidos del PDF)
 
-Hay 3 archivos con errores que bloquean la compilacion:
+### Proteinas (21 productos)
+ALLMAX ISOFLEX 5 LB, ANS PERFORMANCE N-WHEY 5 LB, BODY FORTRESS 100% PREMIUM PROTEIN 1.78LB, DYMATIZE ISO 100 HYDROLYZED 1.6 LB, DYMATIZE ISO 100 HYDROLYZED 6 LB, GOLIATH 100% WHEY PROTEIN 5 LB, ISOPURE INFUSIONS 14.1 OZ, ISOPURE ZERO CARB PROTEIN 3 LB, ISOPURE ZERO CARB PROTEIN 4.5 LB, MUSCLE TECH 100% GRASS WHEY PROTEIN 1.80 LB, MUSCLE TECH NITRO TECH 100% WHEY GOLD 2 LB, MUSCLE TECH NITRO TECH 100% WHEY GOLD 5 LB, MUSCLE TECH NITRO TECH CLASSIC WHEY PROTEIN 4 LB, MUSCLE TECH PLATINUM WHEY + MUSCLE BUILDER 1.80 LB, NUTREX 100% WHEY 5 LB, ON GOLD STANDARD 100% WHEY 1.47 LB, ON GOLD STANDARD 100% WHEY 5 LB, ON GOLD STANDARD 100% WHEY 5.47 LB, PATRIOT NUTRITION ISO WHEY 1.38 LB, PATRIOT NUTRITION SKIRLA WHEY CONCENTRATE 2 LB, RONNY COLEMAN KING MASS 3 LB
 
-1. `**src/components/creative/animated-card.tsx**` - Conflicto de tipos entre `motion.div` y `HTMLDivElement` por `onAnimationStart`. Solucion: eliminar el spread de `...props` y pasar solo `className` y `children`.
-2. `**src/components/product/AIRecommendation.tsx**` - Usa `{ data, err }` pero la API de Supabase devuelve `{ data, error }`. Cambiar `err` a `error`.
-3. `**src/modules/notifications/infrastructure/SupabaseNotificationAdapter.ts**` - Los `@ts-expect-error` ya no son necesarios en algunos lugares y faltan en otros. Unificar todos los accesos a `notifications` con `@ts-expect-error` consistente.
+### Mass Gainers (13 productos)
+ANS PERFORMANCE N-MASS 15 LB, ANS PERFORMANCE N-MASS 6 LB, DYMATIZE SUPER MASS GAINER 12 LB, DYMATIZE SUPER MASS GAINER 6 LB, GASPARI REAL MASS 12 LB, MUSCLE TECH MASS TECH EXTREME 2000 12 LB, MUSCLE TECH MASS TECH EXTREME 6 LB, MUSCLEMEDS CARNIVOR MASS 6 LB, MUTANT MASSS EXTREME 2500 12 LB, ON SERIOUS MASS 12 LB, ON SERIOUS MASS 6 LB, PATRIOT NUTRITION ATLAS GAINER 15 LB, SIMPLY MASS GAINER 13 LB
 
----
+### Creatinas (9 productos)
+Allmax creatina 80 servicios, BPI SPORT MICRONIZED CREATINA 120 servicios, CELL TECH CREATINA 6 LB, Muscle tech 100% creatina 80 servicios, NUTREX CREATINA MONOHIDRATADA 200 servicios, Nutrex creatina monohidratada 60 servicios, ON micronized creatina powder 120 servicios, PATRIOT CREATINE PUMP 3.4 LB, SIMPLY CREATINA 100% PURE MONOHYDRATE
 
-## Fase 1: Migracion SQL - Tabla `invoice_templates`
+### Pre-Entrenos (7 productos)
+ALPHA SUPPS BETA-ALANINE 100 servicios, CELLUCOR C4 SPORTRIPPED 20 servicios, PATRIOT NUTRITION SUICIDE TEST PRE WORKOUT 50 servicios, ON GOLD STANDARD PRE-WORKOUT 30 servicios, PATRIOT NUTRITION MUSCLE PUMP 50 MG 120 capsulas, PATRIOT NUTRITION TESTO PUMP 90 capsulas, MHP ANADROX PUMP & BURN 112 capsulas
 
-Crear la tabla `invoice_templates` con RLS para admin-only write y lectura publica del sistema:
+### Vitaminas y Minerales (24 productos)
+Todos los listados en la pagina 3 del catalogo incluyendo productos Balkan Pharmaceuticals, Country Life, Earths Creation, Naturavit, NOW, Patriot, Swanson, y la linea Kids.
 
-```text
-Columnas:
-- id (uuid, PK)
-- name (text, NOT NULL)
-- subject (text)
-- html_content (text)
-- variables (jsonb, default '[]')
-- is_active (boolean, default true)
-- created_at (timestamptz, default now())
-- updated_at (timestamptz, default now())
-
-RLS:
-- Admins: ALL (using is_admin)
-- Anyone authenticated: SELECT (for system reads)
-```
+**Total: ~74 productos**
 
 ---
 
-## Fase 2: Hook `useAuditLogger.ts`
+## Pasos de Implementacion
 
-Crear `src/hooks/useAuditLogger.ts` que exponga una funcion `logAction(action, tableName, recordId, details)`.
+### Paso 1: Corregir errores de build
+- **`src/lib/sentry.ts`**: Remover `new Sentry.Replay(...)` ya que no existe en la version instalada de `@sentry/react` v10. Usar solo `BrowserTracing`.
+- **`vite.config.ts`**: Agregar `as const` al `registerType` para que TypeScript infiera el tipo literal correcto.
 
-- Usa `supabase.rpc('log_audit', ...)` que ya existe como funcion `SECURITY DEFINER` en la DB.
-- Funcion fire-and-forget para no bloquear el flujo principal.
-- Exporta tanto el hook como una funcion standalone para uso fuera de componentes.
+### Paso 2: Crear edge function `seed-catalog`
+Una edge function que:
+1. Borra todos los productos actuales (y sus registros relacionados en `product_nutrition`, `product_images`)
+2. Inserta los ~74 productos del catalogo con datos basicos (nombre, categoria, precio DOP $0 placeholder, stock 0)
+3. Para cada producto, llama a la IA (Lovable AI) para generar la ficha tecnica completa (informacion nutricional, ingredientes, alergenos, modo de uso)
+4. Guarda la ficha tecnica en `product_nutrition`
 
----
+### Paso 3: Mejorar la tabla `products` (migracion SQL)
+Agregar columnas que faltan:
+- `brand` (text) - marca del producto
+- `weight_size` (text) - tamano/peso del producto (ej: "5 LB", "120 capsulas")
+- `sku` (text) - codigo unico
+- `usage_instructions` (text) - instrucciones de uso
+- `benefits` (jsonb) - lista de beneficios
 
-## Fase 3: Vista `AdminAuditLogs.tsx`
+### Paso 4: Mejorar pagina de detalle del producto (`ProductDetail.tsx`)
+- Galeria de imagenes con thumbnails (usando tabla `product_images`)
+- Seccion de ficha tecnica/tabla nutricional con datos de `product_nutrition`
+- Seccion de ingredientes y alergenos
+- Modo de uso recomendado
+- Recomendaciones con IA: un boton que genera sugerencias personalizadas (ej: "complementa con creatina si buscas fuerza")
+- Productos relacionados de la misma categoria
+- Mejor presentacion visual del stock disponible
 
-Nueva pagina admin en `src/pages/admin/AdminAuditLogs.tsx`:
+### Paso 5: Exportar/Importar productos en Admin
+En `AdminProducts.tsx`:
+- **Boton "Exportar CSV/JSON"**: descarga todos los productos con su ficha tecnica
+- **Boton "Importar"**: sube un archivo CSV/JSON para crear/actualizar productos en lote
+- Formato incluye: nombre, descripcion, precio, stock, categoria, marca, tamano, informacion nutricional
 
-- Tabla responsive con columnas: Fecha, Usuario, Accion, Tabla, Detalles.
-- Filtros por accion (dropdown) y rango de fechas (inputs date).
-- Paginacion (50 registros por pagina).
-- Diseno glassmorphism con cards y badges de colores por tipo de accion.
-- Registrar ruta `/admin/audit-logs` en `App.tsx`.
-- Agregar enlace en sidebar de `AdminLayout.tsx` (icono `ClipboardList`).
-
----
-
-## Fase 4: Vista `AdminTemplates.tsx`
-
-Nueva pagina admin en `src/pages/admin/AdminTemplates.tsx`:
-
-- Lista de plantillas con nombre, estado y acciones (editar/eliminar).
-- Formulario de edicion con campos: name, subject, html_content, variables.
-- **Live Preview**: Panel lateral con `Dialog` que renderiza el HTML reemplazando variables como `{{customer_name}}`, `{{total}}`, `{{order_id}}` con valores de ejemplo.
-- Al guardar, llama a `logAction('TEMPLATE_UPDATED', ...)`.
-- Registrar ruta `/admin/templates` en `App.tsx`.
-- Agregar enlace en sidebar de `AdminLayout.tsx` (icono `FileCode`).
-
----
-
-## Fase 5: Integracion Checkout + Notificaciones Hexagonales
-
-Modificar `src/pages/TransferCheckout.tsx` para que al crear un pedido:
-
-1. **Audit Log**: Llamar `logAction('ORDER_CREATED', 'orders', orderId, { total, items_count })`.
-2. **Notificacion al usuario**: Usar `notificationAdapter.sendToUser({ userId, title: 'Pedido Confirmado', message, type: 'ORDER_UPDATE', priority: 'HIGH', linkUrl: '/orders' })`.
-3. **Notificacion al admin**: Usar `notificationAdapter.sendToAdmin({ title: 'Nuevo Pedido', message, type: 'NEW_ORDER', priority: 'HIGH', linkUrl: '/admin/orders' })`.
-
-Modificar `src/pages/admin/AdminInvoices.tsx` para que al anular factura:
-
-1. Llamar `logAction('INVOICE_CANCELLED', 'invoices', invoiceId, { invoice_number })`.
-2. Notificar al usuario via `sendToUser`.
-
----
-
-## Fase 6: Tabla `notifications` en DB
-
-La tabla `notifications` no existe en el esquema actual (los adapters usan `@ts-expect-error`). Crearla via migracion:
-
-```text
-Columnas:
-- id (uuid, PK)
-- user_id (uuid, nullable, FK -> auth.users ON DELETE CASCADE)
-- title (text, NOT NULL)
-- message (text, NOT NULL)
-- type (text, NOT NULL)
-- priority (text, default 'NORMAL')
-- is_read (boolean, default false)
-- link_url (text, nullable)
-- created_at (timestamptz, default now())
-
-RLS:
-- Users can view their own notifications (user_id = auth.uid())
-- Users can update their own (mark as read)
-- Admins can view all
-- Authenticated users can insert (for system use)
-- Admin notifications (user_id IS NULL) visible to admins only
-
-Realtime: Enable for notifications table
-```
-
----
-
-## Fase 7: Robustez del NotificationCenter
-
-- Agregar `NotificationCenter` al `Navbar.tsx` del storefront (para usuarios normales, con `isAdmin={false}`).
-- Esto permite que usuarios vean notificaciones de sus pedidos en tiempo real.
-
----
-
-## Archivos a crear/modificar
-
-
-| Archivo                                                                   | Accion                                 |
-| ------------------------------------------------------------------------- | -------------------------------------- |
-| Migracion SQL (invoice_templates + notifications)                         | Crear                                  |
-| `src/hooks/useAuditLogger.ts`                                             | Crear                                  |
-| `src/pages/admin/AdminAuditLogs.tsx`                                      | Crear                                  |
-| `src/pages/admin/AdminTemplates.tsx`                                      | Crear                                  |
-| `src/App.tsx`                                                             | Modificar (2 rutas nuevas)             |
-| `src/components/layout/AdminLayout.tsx`                                   | Modificar (2 items nav)                |
-| `src/components/layout/Navbar.tsx`                                        | Modificar (agregar NotificationCenter) |
-| `src/pages/TransferCheckout.tsx`                                          | Modificar (audit + notificaciones)     |
-| `src/pages/admin/AdminInvoices.tsx`                                       | Modificar (audit + notificaciones)     |
-| `src/components/creative/animated-card.tsx`                               | Fix build error                        |
-| `src/components/product/AIRecommendation.tsx`                             | Fix build error                        |
-| `src/modules/notifications/infrastructure/SupabaseNotificationAdapter.ts` | Fix build errors                       |
-
+### Paso 6: Mejor control de stock
+- Indicador visual mejorado en la pagina de detalle (barra de progreso de stock)
+- Alerta "ultimas unidades" cuando stock < low_stock_threshold
+- Historial de movimientos de stock visible en admin (ya existe `stock_movements`)
+- Impedir agregar al carrito mas del stock disponible (ya implementado)
 
 ---
 
 ## Detalles Tecnicos
 
-- Se reutiliza la funcion existente `log_audit` (SECURITY DEFINER) via `supabase.rpc()`.
-- Las notificaciones usan la arquitectura hexagonal existente (`NotificationSender`, `NotificationService`, `SupabaseNotificationAdapter`).
-- El edge function `send-notification` ya esta preparado para enviar emails via Resend cuando se inserta en la tabla `notifications`.
-- Live Preview de templates usa `dangerouslySetInnerHTML` con reemplazo de variables en un iframe sandboxed o div aislado.
-- Todo el UI sigue el patron existente: `AdminLayout`, cards con `border-slate-200`, badges, iconos de Lucide, colores `#2b8cee`.  
-  
-  
-  
+### Edge Function `seed-catalog`
+```text
+POST /seed-catalog
+Body: { action: "seed" | "clear" }
 
-- quiero que investigues y analices como deben ser y de uqe son las notificaciones y cada cosa que genera en un ciclo completo contempla cualquier accionde manera robusta los envio enlace de los correos que lleve al panel correspondiente que se envie al correo del ususario y del admin has eso muy robusto
-- &nbsp;
+1. DELETE FROM product_nutrition
+2. DELETE FROM product_images  
+3. DELETE FROM cart_items (limpia carritos)
+4. DELETE FROM products
+5. INSERT productos del catalogo
+6. Para cada producto -> llamar ai-nutrition para generar ficha tecnica
+7. INSERT en product_nutrition
+```
+
+### Migracion SQL
+```text
+ALTER TABLE products ADD COLUMN brand text;
+ALTER TABLE products ADD COLUMN weight_size text;
+ALTER TABLE products ADD COLUMN sku text;
+ALTER TABLE products ADD COLUMN usage_instructions text;
+ALTER TABLE products ADD COLUMN benefits jsonb DEFAULT '[]'::jsonb;
+```
+
+### Pagina de Detalle Mejorada
+```text
++------------------------------------------+
+| <- Volver a la tienda                    |
++------------------------------------------+
+| [Galeria Imagenes]  | Categoria          |
+| [img1] [img2] [img3]| Nombre Producto    |
+|                      | Marca - Tamano     |
+|                      | Precio DOP         |
+|                      | Stock: 44 unidades |
+|                      | [Cantidad] [+][-]  |
+|                      | [Agregar al Carrito]|
++------------------------------------------+
+| Descripcion                              |
++------------------------------------------+
+| TABLA NUTRICIONAL                        |
+| Tamano porcion: 30g (1 scoop)            |
+| Porciones: 73                            |
+| Calorias: 120 | Proteina: 25g            |
+| Carbohidratos: 2g | Grasa: 0.5g          |
+| Aminoacidos: Leucina 5.5g, BCAA 11g      |
++------------------------------------------+
+| Ingredientes                             |
+| Alergenos: Lacteos, Soja                 |
++------------------------------------------+
+| Modo de Uso                              |
++------------------------------------------+
+| [Generar Recomendacion IA]               |
+| "Este producto complementa bien con..."  |
++------------------------------------------+
+| Productos Relacionados                   |
+| [card] [card] [card] [card]              |
++------------------------------------------+
+```
+
+### Exportar/Importar
+- Formato JSON con estructura: `{ products: [{ name, price, stock, category, brand, weight_size, nutrition: {...} }] }`
+- CSV con columnas planas para compatibilidad con Excel
+- Validacion al importar (campos requeridos, formato de precios)
+
+---
+
+## Archivos a Crear/Modificar
+
+| Archivo | Accion |
+|---------|--------|
+| `src/lib/sentry.ts` | Fix build error (quitar Replay) |
+| `vite.config.ts` | Fix build error (as const) |
+| `supabase/functions/seed-catalog/index.ts` | Crear - poblar catalogo con IA |
+| Migracion SQL | Agregar columnas brand, weight_size, sku, etc. |
+| `src/pages/ProductDetail.tsx` | Reescribir con galeria, ficha tecnica, recomendaciones IA |
+| `src/pages/admin/AdminProducts.tsx` | Agregar botones exportar/importar |
+| `src/components/product/NutritionTable.tsx` | Crear - componente tabla nutricional |
+| `src/components/product/ProductGallery.tsx` | Crear - galeria de imagenes |
+| `src/components/product/AIRecommendation.tsx` | Crear - recomendaciones IA |
+| `src/components/product/RelatedProducts.tsx` | Crear - productos relacionados |
+| `src/hooks/useProductNutrition.ts` | Crear - hook para obtener datos nutricionales |

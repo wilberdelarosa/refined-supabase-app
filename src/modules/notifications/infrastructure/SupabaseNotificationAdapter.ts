@@ -19,7 +19,6 @@ const mapToEntity = (row: any): Notification => ({
 
 export class SupabaseNotificationAdapter implements NotificationRepository, NotificationSender {
   async getNotifications(userId: string): Promise<Notification[]> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -28,11 +27,10 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
       .limit(50);
 
     if (error) throw new Error(error.message);
-    return data.map(mapToEntity);
+    return (data || []).map(mapToEntity);
   }
 
   async getAdminNotifications(): Promise<Notification[]> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -41,11 +39,10 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
       .limit(50);
 
     if (error) throw new Error(error.message);
-    return data.map(mapToEntity);
+    return (data || []).map(mapToEntity);
   }
 
   async markAsRead(notificationId: string): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
@@ -55,7 +52,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
@@ -70,13 +66,9 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
     onNotificationReceived: (notification: Notification) => void,
     isAdmin: boolean = false
   ): () => void {
-    // We listen to inserts on the notifications table
     let filter = `user_id=eq.${userId}`;
     if (isAdmin) {
-      // Admins might need to listen to their own user_id OR global (user_id=is.null)
-      // Supabase realtime filter syntax is slightly limited for OR conditions, so we might need two channels or a unified one and filter locally.
-      // For simplicity, we just listen to all and filter locally if it's admin.
-      filter = ''; 
+      filter = '';
     }
 
     const channel = supabase
@@ -87,16 +79,13 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          // If not admin, we use the filter. If admin, we don't use the filter
-          // and filter it natively in the callback if it belongs to admin globally or specifically.
-          filter: isAdmin ? undefined : filter, 
+          filter: isAdmin ? undefined : filter,
         },
         (payload) => {
           const newDoc = payload.new;
           if (isAdmin) {
-            // Re-verify it concerns this admin specifically or globally
             if (newDoc.user_id !== userId && newDoc.user_id !== null) {
-              return; // Not for this admin
+              return;
             }
           }
           onNotificationReceived(mapToEntity(newDoc));
@@ -110,7 +99,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async sendToUser(payload: UserNotificationPayload): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase.from('notifications').insert({
       user_id: payload.userId,
       title: payload.title,
@@ -123,7 +111,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async sendToAdmin(payload: AdminNotificationPayload): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase.from('notifications').insert({
       user_id: null,
       title: payload.title,
@@ -136,6 +123,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 }
 
-// Singleton instances for easy application-wide use without DI container framework
+// Singleton instances
 export const notificationAdapter = new SupabaseNotificationAdapter();
 export const notificationService = new NotificationService(notificationAdapter);

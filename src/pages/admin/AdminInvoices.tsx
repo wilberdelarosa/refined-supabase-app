@@ -77,6 +77,7 @@ export default function AdminInvoices() {
 
   const handleCancelInvoice = async (invoiceId: string) => {
     try {
+      const invoice = invoices.find(i => i.id === invoiceId);
       const { error } = await supabase
         .from('invoices')
         .update({ status: 'cancelled' })
@@ -87,6 +88,23 @@ export default function AdminInvoices() {
       setInvoices(invoices.map(inv =>
         inv.id === invoiceId ? { ...inv, status: 'cancelled' } : inv
       ));
+
+      // Audit + Notification (fire-and-forget)
+      const { logAction } = await import('@/hooks/useAuditLogger');
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+      
+      logAction('INVOICE_CANCELLED', 'invoices', invoiceId, { invoice_number: invoice?.invoice_number });
+      
+      if (invoice?.user_id) {
+        notificationAdapter.sendToUser({
+          userId: invoice.user_id,
+          title: 'Factura Anulada',
+          message: `La factura ${invoice.invoice_number} ha sido anulada. Si tienes dudas, contáctanos.`,
+          type: 'ORDER_UPDATE',
+          priority: 'HIGH',
+          linkUrl: `/orders/invoice/${invoiceId}`
+        }).catch(err => console.error("Notification failed:", err));
+      }
 
       toast({ title: 'Éxito', description: 'Factura anulada correctamente' });
     } catch (error) {

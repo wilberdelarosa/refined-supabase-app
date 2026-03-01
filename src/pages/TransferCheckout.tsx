@@ -250,6 +250,29 @@ export default function TransferCheckout() {
         }
       }).catch(err => console.error("Failed to send email", err));
 
+      // Audit + Notifications (fire-and-forget)
+      const { logAction } = await import('@/hooks/useAuditLogger');
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+      
+      logAction('ORDER_CREATED', 'orders', savedOrder.id, { total: totalPrice, items_count: items.length });
+      
+      notificationAdapter.sendToUser({
+        userId: user.id,
+        title: 'Pedido Confirmado',
+        message: `Tu pedido #${savedOrder.id.slice(0, 8).toUpperCase()} por ${formatCurrency(totalPrice)} ha sido recibido. Te notificaremos cuando sea procesado.`,
+        type: 'ORDER_UPDATE',
+        priority: 'HIGH',
+        linkUrl: `/order/${savedOrder.id}`
+      }).catch(err => console.error("Notification to user failed:", err));
+
+      notificationAdapter.sendToAdmin({
+        title: 'Nuevo Pedido Recibido',
+        message: `${formData.fullName} realizó un pedido por ${formatCurrency(totalPrice)} (${items.length} productos).`,
+        type: 'NEW_ORDER',
+        priority: 'HIGH',
+        linkUrl: '/admin/orders'
+      }).catch(err => console.error("Notification to admin failed:", err));
+
       clearCart();
       navigate(`/order/${savedOrder.id}`);
       

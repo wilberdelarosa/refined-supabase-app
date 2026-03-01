@@ -24,6 +24,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
+import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminTemplates from "./pages/admin/AdminTemplates";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
@@ -72,6 +74,8 @@ const App = () => (
               <Route path="/order/:orderId" element={<OrderConfirmation />} />
               <Route path="/admin/categories" element={<AdminCategories />} />
               <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
+              <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
+              <Route path="/admin/templates" element={<AdminTemplates />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

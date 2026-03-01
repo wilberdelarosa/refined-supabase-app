@@ -30,11 +30,11 @@ export default function AIRecommendation({ productName, productCategory }: AIRec
     setSections(null);
 
     try {
-      const { data, err } = await supabase.functions.invoke('ai-recommendation', {
+      const { data, error: fnError } = await supabase.functions.invoke('ai-recommendation', {
         body: { productName, productCategory },
       });
 
-      if (err) throw err;
+      if (fnError) throw fnError;
 
       const rec = data?.recommendation || 'No se pudo generar una recomendación.';
       setRecommendation(rec);

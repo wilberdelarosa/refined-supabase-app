@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CartDrawer } from '@/components/shop/CartDrawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { NotificationCenter } from '@/modules/notifications/presentation/NotificationCenter';
 import barbaroLogo from '@/assets/barbaro-logo.png';
 
 export function Navbar() {
@@ -51,6 +52,7 @@ export function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-1">
           <ThemeToggle />
+          {user && <NotificationCenter isAdmin={false} />}
 
           {user ? (
             <DropdownMenu>
