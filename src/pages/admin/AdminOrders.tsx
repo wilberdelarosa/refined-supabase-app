@@ -469,6 +469,34 @@ export default function AdminOrders() {
       if (linesError) throw linesError;
 
       setInvoice(invoice);
+
+      // Notify user about invoice via email
+      const ci = parseCustomerInfo(order.shipping_address);
+      if (ci.email) {
+        supabase.functions.invoke('send-order-email', {
+          body: {
+            type: 'invoice_created',
+            customerEmail: ci.email.trim(),
+            customerName: ci.name,
+            orderId: order.id,
+            orderTotal: order.total,
+            invoiceNumber: invoice.invoice_number,
+          }
+        }).catch(err => console.error("Invoice email failed:", err));
+      }
+
+      // In-app notification
+      import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter').then(({ notificationAdapter }) => {
+        notificationAdapter.sendToUser({
+          userId: order.user_id,
+          title: 'Factura Generada',
+          message: `Tu factura ${invoice.invoice_number} por DOP ${order.total.toLocaleString()} ha sido generada.`,
+          type: 'ORDER_UPDATE',
+          priority: 'NORMAL',
+          linkUrl: `/order/${order.id}`
+        }).catch(err => console.error("Invoice notification failed:", err));
+      });
+
       toast({
         title: '✅ Factura creada',
         description: `Factura ${invoice.invoice_number} generada correctamente`
