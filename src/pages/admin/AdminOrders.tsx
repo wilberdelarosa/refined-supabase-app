@@ -361,17 +361,25 @@ export default function AdminOrders() {
         await createInvoiceForOrder(selectedOrder, orderItems);
       }
 
-      // Send status change email to customer
-      const addressLines = selectedOrder.shipping_address?.split('\n') || [];
-      const emailLine = addressLines.find(line => line.includes('@')) || '';
-      const customerName = addressLines[0] || 'Cliente';
+      // In-app notification + email to user
+      const ci = parseCustomerInfo(selectedOrder.shipping_address);
+      
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+      notificationAdapter.sendToUser({
+        userId: selectedOrder.user_id,
+        title: 'Estado Actualizado',
+        message: `Tu pedido #${selectedOrder.id.slice(0, 8).toUpperCase()} ahora está: ${ORDER_STATUSES.find(s => s.value === newStatus)?.label || newStatus}`,
+        type: 'ORDER_UPDATE',
+        priority: 'NORMAL',
+        linkUrl: `/order/${selectedOrder.id}`
+      }).catch(err => console.error("User notification failed:", err));
 
-      if (emailLine) {
+      if (ci.email) {
         supabase.functions.invoke('send-order-email', {
           body: {
             type: 'status_changed',
-            customerEmail: emailLine.trim(),
-            customerName: customerName,
+            customerEmail: ci.email.trim(),
+            customerName: ci.name,
             orderId: selectedOrder.id,
             orderTotal: selectedOrder.total,
             orderItems: orderItems.map(item => ({
@@ -382,10 +390,7 @@ export default function AdminOrders() {
             oldStatus: selectedOrder.status,
             newStatus: newStatus
           }
-        }).then(res => {
-          if (res.error) console.error('Email error:', res.error);
-          else console.log('Status change email sent');
-        });
+        }).catch(err => console.error('Email error:', err));
       }
 
       toast({ title: 'Éxito', description: 'Estado actualizado correctamente' });

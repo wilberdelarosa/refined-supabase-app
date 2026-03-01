@@ -308,6 +308,30 @@ export default function OrderConfirmation() {
         .update({ status: 'payment_pending' })
         .eq('id', order.id);
 
+      // Fire-and-forget: audit + notifications + email
+      const { logAction } = await import('@/hooks/useAuditLogger');
+      const { notificationAdapter } = await import('@/modules/notifications/infrastructure/SupabaseNotificationAdapter');
+
+      logAction('PAYMENT_PROOF_UPLOADED', 'order_payments', order.id, { total: order.total });
+
+      notificationAdapter.sendToAdmin({
+        title: 'Comprobante de Pago Recibido',
+        message: `Se ha recibido un comprobante para el pedido #${order.id.slice(0, 8).toUpperCase()} por DOP ${order.total.toLocaleString()}.`,
+        type: 'ORDER_UPDATE',
+        priority: 'HIGH',
+        linkUrl: '/admin/orders'
+      }).catch(err => console.error("Admin notification failed:", err));
+
+      // Email al admin
+      supabase.functions.invoke('send-order-email', {
+        body: {
+          type: 'payment_proof_uploaded',
+          orderId: order.id,
+          orderTotal: order.total,
+          customerName: user?.user_metadata?.full_name || user?.email || 'Cliente',
+        }
+      }).catch(err => console.error("Admin email failed:", err));
+
       toast.success('¡Comprobante Subido!', {
         description: 'Hemos recibido tu comprobante. Te notificaremos cuando sea validado.'
       });
