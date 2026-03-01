@@ -74,6 +74,8 @@ const App = () => (
               <Route path="/order/:orderId" element={<OrderConfirmation />} />
               <Route path="/admin/categories" element={<AdminCategories />} />
               <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />
+              <Route path="/admin/audit-logs" element={<AdminAuditLogs />} />
+              <Route path="/admin/templates" element={<AdminTemplates />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -52,6 +52,7 @@ export function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-1">
           <ThemeToggle />
+          {user && <NotificationCenter isAdmin={false} />}
 
           {user ? (
             <DropdownMenu>
