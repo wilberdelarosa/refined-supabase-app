@@ -24,6 +24,8 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminInvoices from "./pages/admin/AdminInvoices";
 import AdminCategories from "./pages/admin/AdminCategories";
 import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
+import AdminAuditLogs from "./pages/admin/AdminAuditLogs";
+import AdminTemplates from "./pages/admin/AdminTemplates";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
