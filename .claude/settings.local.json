@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\wilbe\\\\Downloads\\\\WEB WEBNOVALAB\\\\premium-design-lab\\\\video''; npm install 2>&1 | Select-Object -Last 15\")",
+      "Bash(cp \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/public/barbaro/web-inicio.png\" \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/video/public/barbaro/\")",
+      "Bash(cp \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/public/barbaro/web-tienda.png\" \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/video/public/barbaro/\")",
+      "Bash(cp \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/public/barbaro/admin-dashboard.png\" \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/video/public/barbaro/\")",
+      "Bash(cp \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/public/barbaro/mobile-tienda.png\" \"/c/Users/wilbe/Downloads/WEB WEBNOVALAB/premium-design-lab/video/public/barbaro/\")",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\wilbe\\\\Downloads\\\\WEB WEBNOVALAB\\\\premium-design-lab\\\\video''; Start-Process -FilePath ''npm'' -ArgumentList ''run'',''start'' -NoNewWindow\")",
+      "Bash(powershell -Command \"Set-Location ''C:\\\\Users\\\\wilbe\\\\Downloads\\\\WEB WEBNOVALAB\\\\premium-design-lab\\\\video''; npx remotion studio 2>&1 &\")",
+      "Bash(cmd /c \"start cmd /k \"\"cd /d \"\"C:\\\\Users\\\\wilbe\\\\Downloads\\\\WEB WEBNOVALAB\\\\premium-design-lab\\\\video\"\" && npx remotion studio\"\"\")",
+      "Bash(powershell -Command \"Start-Process cmd -ArgumentList ''/k'', ''cd /d \"\"C:\\\\Users\\\\wilbe\\\\Downloads\\\\WEB WEBNOVALAB\\\\premium-design-lab\\\\video\"\" && npx remotion studio'' -WindowStyle Normal\")"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\wilbe\\Downloads\\WEB WEBNOVALAB\\premium-design-lab\\video"
+    ]
+  }
+}

@@ -42,7 +42,14 @@ import {
   Search,
   ArrowLeft,
   Package,
+<<<<<<< Updated upstream
   Beaker
+=======
+  Beaker,
+  Download,
+  Upload,
+  Loader2
+>>>>>>> Stashed changes
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import ProductNutritionDialog from '@/components/admin/ProductNutritionDialog';
@@ -362,10 +369,43 @@ export default function AdminProducts() {
               </p>
             </div>
           </div>
+<<<<<<< Updated upstream
           <Button onClick={openCreateDialog} className="shadow-sm hover:shadow-md bg-[#2b8cee] hover:bg-[#206bc4] text-white w-full md:w-auto">
             <Plus className="h-4 w-4 mr-2" />
             Nuevo Producto
           </Button>
+=======
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleSeedCatalog}
+              disabled={seeding}
+              className="text-xs"
+            >
+              {seeding ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Package className="h-4 w-4 mr-1" />}
+              {seeding ? 'Poblando...' : 'Poblar Catálogo'}
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportJSON} className="text-xs">
+              <Download className="h-4 w-4 mr-1" />
+              JSON
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExportCSV} className="text-xs">
+              <Download className="h-4 w-4 mr-1" />
+              CSV
+            </Button>
+            <label>
+              <input type="file" accept=".json" onChange={handleImportJSON} className="hidden" />
+              <Button variant="outline" size="sm" asChild className="text-xs cursor-pointer">
+                <span><Upload className="h-4 w-4 mr-1" />Importar</span>
+              </Button>
+            </label>
+            <Button onClick={openCreateDialog} className="shadow-sm hover:shadow-md bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Plus className="h-4 w-4 mr-2" />
+              Nuevo Producto
+            </Button>
+          </div>
+>>>>>>> Stashed changes
         </div>
       </div>
 
