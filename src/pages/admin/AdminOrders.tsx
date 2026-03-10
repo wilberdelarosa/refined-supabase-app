@@ -52,8 +52,11 @@ import {
   XCircle,
   ExternalLink,
   ImageIcon,
-  MoreVertical
+  MoreVertical,
+  ReceiptText
 } from 'lucide-react';
+import { getStoreSettingsSnapshot } from '@/lib/store-settings';
+import { calculateInvoiceTotals } from '@/lib/invoicing';
 
 interface Order {
   id: string;
@@ -381,29 +384,32 @@ export default function AdminOrders() {
         return existing;
       }
 
-      const { data: invoiceNumber, error: rpcError } = await supabase.rpc('generate_invoice_number');
+      // Load store settings for dynamic ITBIS calculation
+      const settings = await getStoreSettingsSnapshot();
+      const totals = calculateInvoiceTotals(order.total, settings.invoicing);
 
+      const { data: invoiceNumber, error: rpcError } = await supabase.rpc('generate_invoice_number');
       if (rpcError) console.error('Error generando número de factura:', rpcError);
 
       const addressLines = order.shipping_address?.split('\n') || [];
       const billingName = addressLines[0] || 'Cliente';
       const billingAddress = addressLines.slice(1, 4).join(', ');
-
-      const subtotal = order.total / 1.18;
-      const taxRate = 0.18;
-      const taxAmount = order.total - subtotal;
+      const billingEmail = addressLines.find(l => l.includes('@'))?.trim() || null;
+      const billingPhone = addressLines[3]?.trim() || null;
 
       const invoiceData = {
         invoice_number: invoiceNumber || `INV-${Date.now()}`,
         order_id: order.id,
         user_id: order.user_id,
-        subtotal: Math.round(subtotal * 100) / 100,
-        tax_rate: taxRate,
-        tax_amount: Math.round(taxAmount * 100) / 100,
-        total: order.total,
+        subtotal: totals.subtotal,
+        tax_rate: totals.taxRate,
+        tax_amount: totals.taxAmount,
+        total: totals.total,
         status: 'issued',
         billing_name: billingName,
-        billing_address: billingAddress
+        billing_address: billingAddress,
+        billing_email: billingEmail,
+        billing_phone: billingPhone,
       };
 
       const { data: invoice, error: invoiceError } = await supabase
@@ -430,7 +436,7 @@ export default function AdminOrders() {
 
       setInvoice(invoice);
       toast({
-        title: '✅ Factura creada',
+        title: 'Factura creada',
         description: `Factura ${invoice.invoice_number} generada correctamente`
       });
       return invoice as Invoice;
@@ -438,7 +444,7 @@ export default function AdminOrders() {
       console.error('Error creating invoice:', error);
       const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
       toast({
-        title: '❌ Error al crear factura',
+        title: 'Error al crear factura',
         description: errorMessage,
         variant: 'destructive'
       });

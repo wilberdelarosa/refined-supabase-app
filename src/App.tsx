@@ -27,6 +27,7 @@ import AdminPaymentMethods from "./pages/admin/AdminPaymentMethods";
 import NotFound from "./pages/NotFound";
 import ProductDetail from "./pages/ProductDetail";
 import TransferCheckout from "./pages/TransferCheckout";
+import CardCheckout from "./pages/CardCheckout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import { useSavedCart } from "./hooks/useSavedCart";
 
@@ -69,6 +70,7 @@ const App = () => (
               <Route path="/admin/invoices" element={<AdminInvoices />} />
               <Route path="/producto/:handle" element={<ProductDetail />} />
               <Route path="/checkout/transferencia" element={<TransferCheckout />} />
+              <Route path="/checkout/tarjeta" element={<CardCheckout />} />
               <Route path="/order/:orderId" element={<OrderConfirmation />} />
               <Route path="/admin/categories" element={<AdminCategories />} />
               <Route path="/admin/payment-methods" element={<AdminPaymentMethods />} />

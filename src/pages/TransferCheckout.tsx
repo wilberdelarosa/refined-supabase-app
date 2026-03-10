@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, CreditCard, Shield } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,46 +12,71 @@ import { useCartStore } from '@/stores/cartStore';
 import { useAuth } from '@/lib/auth-context';
 import { useDiscountCodes } from '@/hooks/useDiscountCodes';
 import { supabase } from '@/integrations/supabase/client';
+import { getStoreSettingsSnapshot } from '@/lib/store-settings';
+import { formatRnc } from '@/lib/invoicing';
 import { toast } from 'sonner';
 import { DiscountCode } from '@/types/product';
 
-// Bank account details
-const BANK_ACCOUNTS = [
-  {
-    bank: 'Banco Popular Dominicano',
-    accountType: 'Cuenta Corriente',
-    accountNumber: '123-456789-0',
-    holder: 'Barbaro Nutrition SRL',
-    rnc: '1-31-12345-6'
-  },
-  {
-    bank: 'Banreservas',
-    accountType: 'Cuenta de Ahorros',
-    accountNumber: '987-654321-0',
-    holder: 'Barbaro Nutrition SRL',
-    rnc: '1-31-12345-6'
-  }
-];
+interface PaymentMethodDB {
+  id: string;
+  name: string;
+  type: string;
+  bank_name: string | null;
+  account_type: string | null;
+  account_number: string | null;
+  account_holder: string | null;
+  rnc: string | null;
+  instructions: string | null;
+  is_active: boolean;
+}
 
 export default function TransferCheckout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
-  const { items, getTotalPrice, getSubtotal, clearCart } = useCartStore();
+  const { items, getSubtotal, clearCart } = useCartStore();
   const { validateCode, applyDiscount, loading: discountLoading, error: discountError, clearError } = useDiscountCodes();
-  
+
+  const [bankAccounts, setBankAccounts] = useState<PaymentMethodDB[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [discountCodeInput, setDiscountCodeInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: DiscountCode; amount: number } | null>(null);
-  
+  const [storeRnc, setStoreRnc] = useState<string>('');
+
   const [formData, setFormData] = useState({
     fullName: '',
     email: user?.email || '',
     phone: '',
     address: '',
     city: '',
-    notes: ''
+    notes: '',
+    billingRnc: ''
   });
+
+  // Load bank accounts from DB and store settings
+  useEffect(() => {
+    async function loadData() {
+      const [accountsResult, settings] = await Promise.all([
+        supabase
+          .from('payment_methods')
+          .select('*')
+          .eq('is_active', true)
+          .eq('type', 'bank_transfer')
+          .order('display_order', { ascending: true }),
+        getStoreSettingsSnapshot()
+      ]);
+
+      if (accountsResult.data) {
+        setBankAccounts(accountsResult.data);
+      }
+      if (settings.invoicing.rnc) {
+        setStoreRnc(formatRnc(settings.invoicing.rnc));
+      }
+      setLoadingAccounts(false);
+    }
+    loadData();
+  }, []);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -76,7 +101,7 @@ export default function TransferCheckout() {
     const result = await validateCode(discountCodeInput, subtotal);
     if (result) {
       setAppliedDiscount({ code: result.code, amount: result.discountAmount });
-      toast.success(`¡Descuento aplicado! Ahorraste DOP ${result.discountAmount.toLocaleString()}`);
+      toast.success(`Descuento aplicado! Ahorraste DOP ${result.discountAmount.toLocaleString()}`);
     }
   };
 
@@ -88,7 +113,7 @@ export default function TransferCheckout() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.fullName || !formData.email || !formData.phone || !formData.address) {
       toast.error('Por favor completa todos los campos requeridos');
       return;
@@ -103,7 +128,8 @@ export default function TransferCheckout() {
         return;
       }
 
-      // Create order in database
+      const shippingAddress = `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}\n${formData.email}${formData.notes ? `\nNotas: ${formData.notes}` : ''}`;
+
       const { data: order, error: orderError } = await supabase
         .from('orders')
         .insert({
@@ -113,14 +139,15 @@ export default function TransferCheckout() {
           discount_code_id: appliedDiscount?.code.id || null,
           discount_amount: discountAmount,
           status: 'pending',
-          shipping_address: `${formData.fullName}\n${formData.address}\n${formData.city}\n${formData.phone}\n${formData.email}${formData.notes ? `\nNotas: ${formData.notes}` : ''}`
+          shipping_address: shippingAddress,
+          billing_name: formData.fullName,
+          billing_rnc: formData.billingRnc || null
         })
         .select()
         .single();
 
       if (orderError) throw orderError;
 
-      // Create order items
       const orderItems = items.map(item => ({
         order_id: order.id,
         product_id: item.product.id,
@@ -135,12 +162,11 @@ export default function TransferCheckout() {
 
       if (itemsError) throw itemsError;
 
-      // Apply discount usage if discount was used
       if (appliedDiscount) {
         await applyDiscount(appliedDiscount.code.id, order.id, discountAmount);
       }
 
-      // Update product stock
+      // Update stock
       for (const item of items) {
         await supabase
           .from('products')
@@ -167,10 +193,9 @@ export default function TransferCheckout() {
         if (res.error) console.error('Email error:', res.error);
       });
 
-      // Clear cart and redirect to order confirmation
       clearCart();
-      
-      toast.success('¡Pedido creado exitosamente!', {
+
+      toast.success('Pedido creado exitosamente!', {
         description: 'Ahora puedes adjuntar tu comprobante de pago'
       });
 
@@ -236,7 +261,7 @@ export default function TransferCheckout() {
                     </p>
                   </div>
                 ))}
-                
+
                 <Separator />
 
                 {/* Discount Code */}
@@ -265,8 +290,8 @@ export default function TransferCheckout() {
                         onChange={(e) => setDiscountCodeInput(e.target.value.toUpperCase())}
                         className="uppercase"
                       />
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={handleApplyDiscount}
                         disabled={discountLoading || !discountCodeInput}
                       >
@@ -280,7 +305,7 @@ export default function TransferCheckout() {
                 </div>
 
                 <Separator />
-                
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
@@ -300,7 +325,7 @@ export default function TransferCheckout() {
               </CardContent>
             </Card>
 
-            {/* Bank Account Details */}
+            {/* Bank Account Details - Dynamic from DB */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -312,43 +337,65 @@ export default function TransferCheckout() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {BANK_ACCOUNTS.map((account, idx) => (
-                  <div key={idx} className="p-4 bg-secondary/20 rounded-lg space-y-2">
-                    <p className="font-semibold">{account.bank}</p>
-                    <div className="grid gap-1 text-sm">
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Tipo:</span>
-                        <span>{account.accountType}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Número:</span>
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono">{account.accountNumber}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={() => copyToClipboard(account.accountNumber, `account-${idx}`)}
-                          >
-                            {copied === `account-${idx}` ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">Titular:</span>
-                        <span>{account.holder}</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-muted-foreground">RNC:</span>
-                        <span>{account.rnc}</span>
-                      </div>
-                    </div>
+                {loadingAccounts ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-foreground"></div>
                   </div>
-                ))}
+                ) : bankAccounts.length === 0 ? (
+                  <div className="text-center py-6 text-muted-foreground">
+                    <p>No hay cuentas bancarias configuradas.</p>
+                    <p className="text-sm">Contacta al administrador.</p>
+                  </div>
+                ) : (
+                  bankAccounts.map((account) => (
+                    <div key={account.id} className="p-4 bg-secondary/20 rounded-lg space-y-2">
+                      <p className="font-semibold">{account.bank_name || account.name}</p>
+                      <div className="grid gap-1 text-sm">
+                        {account.account_type && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Tipo:</span>
+                            <span>{account.account_type}</span>
+                          </div>
+                        )}
+                        {account.account_number && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Número:</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-mono">{account.account_number}</span>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={() => copyToClipboard(account.account_number!, `account-${account.id}`)}
+                              >
+                                {copied === `account-${account.id}` ? (
+                                  <Check className="h-3 w-3 text-green-500" />
+                                ) : (
+                                  <Copy className="h-3 w-3" />
+                                )}
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                        {account.account_holder && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Titular:</span>
+                            <span>{account.account_holder}</span>
+                          </div>
+                        )}
+                        {(account.rnc || storeRnc) && (
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">RNC:</span>
+                            <span>{account.rnc ? formatRnc(account.rnc) : storeRnc}</span>
+                          </div>
+                        )}
+                      </div>
+                      {account.instructions && (
+                        <p className="text-xs text-muted-foreground italic mt-2">{account.instructions}</p>
+                      )}
+                    </div>
+                  ))
+                )}
 
                 <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-lg">
                   <p className="text-sm text-amber-700 dark:text-amber-400">
@@ -363,7 +410,7 @@ export default function TransferCheckout() {
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>Datos de Envío</CardTitle>
+                <CardTitle>Datos de Envío y Facturación</CardTitle>
                 <CardDescription>
                   Completa tus datos para procesar el pedido
                 </CardDescription>
@@ -443,6 +490,26 @@ export default function TransferCheckout() {
                     />
                   </div>
 
+                  <Separator />
+
+                  {/* RNC Field for fiscal invoicing */}
+                  <div className="space-y-2">
+                    <Label htmlFor="billingRnc" className="flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-muted-foreground" />
+                      RNC (opcional - para factura fiscal)
+                    </Label>
+                    <Input
+                      id="billingRnc"
+                      placeholder="000000000"
+                      value={formData.billingRnc}
+                      onChange={(e) => setFormData({ ...formData, billingRnc: e.target.value.replace(/\D/g, '').slice(0, 9) })}
+                      maxLength={9}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Si deseas factura con comprobante fiscal, ingresa tu RNC de 9 dígitos
+                    </p>
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="notes">Notas adicionales</Label>
                     <Textarea
@@ -458,7 +525,7 @@ export default function TransferCheckout() {
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    Al confirmar, recibirás un correo con los detalles del pedido. 
+                    Al confirmar, recibirás un correo con los detalles del pedido.
                     Tu pedido será procesado una vez verifiquemos la transferencia.
                   </p>
                 </form>

@@ -11,16 +11,27 @@ import {
   Tag,
   MoreVertical,
   TrendingUp,
-  FileText
+  FileText,
+  CreditCard,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Wallet,
+  ReceiptText
 } from 'lucide-react';
 import { AdminLayout } from '@/components/layout/AdminLayout';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 
 interface DashboardStats {
-  totalSales: number;
+  totalRevenue: number;
+  paidRevenue: number;
   newOrders: number;
   totalUsers: number;
+  pendingOrders: number;
+  pendingPayments: number;
+  invoiceCount: number;
+  itbisCollected: number;
 }
 
 interface RecentOrder {
@@ -40,9 +51,14 @@ export default function Admin() {
   const navigate = useNavigate();
 
   const [stats, setStats] = useState<DashboardStats>({
-    totalSales: 0,
+    totalRevenue: 0,
+    paidRevenue: 0,
     newOrders: 0,
-    totalUsers: 0
+    totalUsers: 0,
+    pendingOrders: 0,
+    pendingPayments: 0,
+    invoiceCount: 0,
+    itbisCollected: 0,
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,56 +78,65 @@ export default function Admin() {
   async function fetchDashboardData() {
     setLoading(true);
     try {
-      // 1. Total Sales (completed orders)
-      const { data: salesData, error: salesError } = await supabase
-        .from('orders')
-        .select('total')
-        .eq('status', 'completed');
-
-      const totalSales = salesData?.reduce((sum, order) => sum + order.total, 0) || 0;
-
-      // 2. New Orders (last 30 days for example, or simply count all pending)
-      // Let's count orders from the last 30 days
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-      const { count: newOrdersCount, error: ordersError } = await supabase
-        .from('orders')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', thirtyDaysAgo.toISOString());
+      const [
+        allOrdersResult,
+        recentOrdersCountResult,
+        usersCountResult,
+        recentOrdersResult,
+        pendingOrdersResult,
+        pendingPaymentsResult,
+        invoicesResult,
+      ] = await Promise.all([
+        // All orders for revenue
+        supabase.from('orders').select('total, status'),
+        // Recent orders count
+        supabase.from('orders').select('*', { count: 'exact', head: true })
+          .gte('created_at', thirtyDaysAgo.toISOString()),
+        // Users count
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        // Recent orders with profiles
+        supabase.from('orders')
+          .select('id, total, status, created_at, profiles (full_name, email)')
+          .order('created_at', { ascending: false })
+          .limit(7),
+        // Pending orders
+        supabase.from('orders').select('*', { count: 'exact', head: true })
+          .in('status', ['pending', 'payment_pending']),
+        // Pending payments
+        supabase.from('order_payments').select('*', { count: 'exact', head: true })
+          .eq('status', 'pending'),
+        // Invoice stats
+        supabase.from('invoices').select('total, tax_amount, status')
+          .neq('status', 'cancelled'),
+      ]);
 
-      // 3. Total Users
-      const { count: usersCount, error: usersError } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      const paidStatuses = ['paid', 'processing', 'packed', 'shipped', 'delivered'];
+      const allOrders = allOrdersResult.data || [];
+      const totalRevenue = allOrders.reduce((sum, o) => sum + o.total, 0);
+      const paidRevenue = allOrders
+        .filter(o => paidStatuses.includes(o.status))
+        .reduce((sum, o) => sum + o.total, 0);
 
-      // 4. Recent Orders
-      const { data: recentOrdersData, error: recentOrdersError } = await supabase
-        .from('orders')
-        .select(`
-          id,
-          total,
-          status,
-          created_at,
-          profiles (full_name, email)
-        `)
-        .order('created_at', { ascending: false })
-        .limit(5);
-
-      if (salesError || ordersError || usersError || recentOrdersError) {
-        console.error('Error fetching dashboard data');
-      }
+      const invoices = invoicesResult.data || [];
+      const itbisCollected = invoices.reduce((sum, inv) => sum + (inv.tax_amount || 0), 0);
 
       setStats({
-        totalSales,
-        newOrders: newOrdersCount || 0,
-        totalUsers: usersCount || 0
+        totalRevenue,
+        paidRevenue,
+        newOrders: recentOrdersCountResult.count || 0,
+        totalUsers: usersCountResult.count || 0,
+        pendingOrders: pendingOrdersResult.count || 0,
+        pendingPayments: pendingPaymentsResult.count || 0,
+        invoiceCount: invoices.length,
+        itbisCollected,
       });
 
-      if (recentOrdersData) {
-        setRecentOrders(recentOrdersData as unknown as RecentOrder[]);
+      if (recentOrdersResult.data) {
+        setRecentOrders(recentOrdersResult.data as unknown as RecentOrder[]);
       }
-
     } catch (error) {
       console.error('Error in dashboard fetch:', error);
     } finally {
@@ -120,21 +145,31 @@ export default function Admin() {
   }
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'completed': return 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20';
-      case 'pending': return 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20';
-      case 'cancelled': return 'bg-red-500/10 text-red-600 border-red-500/20';
-      case 'processing': return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
-      default: return 'bg-slate-100 text-slate-600 border-slate-200';
-    }
+    const colors: Record<string, string> = {
+      paid: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+      delivered: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+      pending: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20',
+      payment_pending: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+      cancelled: 'bg-red-500/10 text-red-600 border-red-500/20',
+      refunded: 'bg-orange-500/10 text-orange-600 border-orange-500/20',
+      processing: 'bg-blue-500/10 text-blue-600 border-blue-500/20',
+      packed: 'bg-purple-500/10 text-purple-600 border-purple-500/20',
+      shipped: 'bg-indigo-500/10 text-indigo-600 border-indigo-500/20',
+    };
+    return colors[status] || 'bg-slate-100 text-slate-600 border-slate-200';
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      completed: 'Completado',
+      paid: 'Pagado',
+      delivered: 'Entregado',
       pending: 'Pendiente',
+      payment_pending: 'Comprobante enviado',
       cancelled: 'Cancelado',
-      processing: 'Procesando'
+      refunded: 'Reembolsado',
+      processing: 'Procesando',
+      packed: 'Empacado',
+      shipped: 'Enviado',
     };
     return labels[status] || status;
   };
@@ -155,80 +190,119 @@ export default function Admin() {
 
   return (
     <AdminLayout>
-      {/* Stats Section */}
+      {/* Main Stats */}
       <section>
         <h3 className="sr-only">Estadísticas Principales</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Card 1 */}
-          <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <DollarSign className="text-blue-500 h-6 w-6" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-emerald-500/10 rounded-lg">
+                <DollarSign className="text-emerald-500 h-5 w-5" />
               </div>
-              <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-semibold rounded-md flex items-center gap-1">
-                <TrendingUp className="h-[14px] w-[14px]" />
-                +12%
+              <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 text-xs font-semibold rounded-md flex items-center gap-1">
+                <TrendingUp className="h-3 w-3" />
+                Pagado
               </span>
             </div>
-            <p className="text-slate-500 text-sm font-medium mb-1">Ventas Totales (Completadas)</p>
-            <p className="text-slate-900 text-2xl font-bold tracking-tight">
-              RD$ {stats.totalSales.toLocaleString('es-DO', { minimumFractionDigits: 2 })}
+            <p className="text-slate-500 text-xs font-medium mb-1">Ingresos Cobrados</p>
+            <p className="text-slate-900 text-xl font-bold tracking-tight">
+              RD$ {stats.paidRevenue.toLocaleString('es-DO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </p>
           </div>
 
-          {/* Card 2 */}
-          <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-purple-500/10 rounded-lg">
-                <ShoppingCart className="text-purple-500 h-6 w-6" />
+          <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-blue-500/10 rounded-lg">
+                <ShoppingCart className="text-blue-500 h-5 w-5" />
               </div>
-              <span className="px-2 py-1 bg-green-500/10 text-green-500 text-xs font-semibold rounded-md flex items-center gap-1">
-                <TrendingUp className="h-[14px] w-[14px]" />
-                +30 días
+              <span className="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-xs font-semibold rounded-md">
+                30 días
               </span>
             </div>
-            <p className="text-slate-500 text-sm font-medium mb-1">Pedidos Recientes</p>
-            <p className="text-slate-900 text-2xl font-bold tracking-tight">{stats.newOrders}</p>
+            <p className="text-slate-500 text-xs font-medium mb-1">Pedidos Recientes</p>
+            <p className="text-slate-900 text-xl font-bold tracking-tight">{stats.newOrders}</p>
           </div>
 
-          {/* Card 3 */}
-          <div className="rounded-xl bg-white p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-2 bg-orange-500/10 rounded-lg">
-                <UserPlus className="text-orange-500 h-6 w-6" />
+          <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-amber-500/10 rounded-lg">
+                <Clock className="text-amber-500 h-5 w-5" />
               </div>
-              <span className="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-semibold rounded-md flex items-center gap-1">
-                Total
-              </span>
+              {stats.pendingPayments > 0 && (
+                <span className="px-2 py-0.5 bg-red-500/10 text-red-500 text-xs font-semibold rounded-md flex items-center gap-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  {stats.pendingPayments}
+                </span>
+              )}
             </div>
-            <p className="text-slate-500 text-sm font-medium mb-1">Usuarios Registrados</p>
-            <p className="text-slate-900 text-2xl font-bold tracking-tight">{stats.totalUsers}</p>
+            <p className="text-slate-500 text-xs font-medium mb-1">Pedidos Pendientes</p>
+            <p className="text-slate-900 text-xl font-bold tracking-tight">{stats.pendingOrders}</p>
+          </div>
+
+          <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-purple-500/10 rounded-lg">
+                <UserPlus className="text-purple-500 h-5 w-5" />
+              </div>
+            </div>
+            <p className="text-slate-500 text-xs font-medium mb-1">Usuarios Registrados</p>
+            <p className="text-slate-900 text-xl font-bold tracking-tight">{stats.totalUsers}</p>
           </div>
         </div>
       </section>
 
-      {/* Chart & Quick Access */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Secondary Stats (Financial) */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-blue-50 rounded-xl">
+            <FileText className="text-blue-600 h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs font-medium">Facturas Emitidas</p>
+            <p className="text-slate-900 text-lg font-bold">{stats.invoiceCount}</p>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-amber-50 rounded-xl">
+            <ReceiptText className="text-amber-600 h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs font-medium">ITBIS Recolectado</p>
+            <p className="text-slate-900 text-lg font-bold">
+              RD$ {stats.itbisCollected.toLocaleString('es-DO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </p>
+          </div>
+        </div>
+        <div className="rounded-xl bg-white p-5 border border-slate-200 shadow-sm flex items-center gap-4">
+          <div className="p-3 bg-slate-50 rounded-xl">
+            <Wallet className="text-slate-600 h-6 w-6" />
+          </div>
+          <div>
+            <p className="text-slate-500 text-xs font-medium">Ingresos Totales (Bruto)</p>
+            <p className="text-slate-900 text-lg font-bold">
+              RD$ {stats.totalRevenue.toLocaleString('es-DO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+            </p>
+          </div>
+        </div>
+      </section>
 
-        {/* Chart Section - Placeholder for now as implementing a real chart library might be overkill or complex without knowing available libs. Keeping SVG but maybe updating data later. For now, keeping static visual but with updated title */}
+      {/* Quick Access + Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Activity Chart */}
         <div className="lg:col-span-2 flex flex-col rounded-xl bg-white border border-slate-200 shadow-sm">
           <div className="p-6 border-b border-slate-200 flex justify-between items-center">
             <div>
               <h3 className="text-slate-900 text-lg font-bold">Resumen de Actividad</h3>
-              <p className="text-slate-500 text-sm">Visión general del rendimiento</p>
+              <p className="text-slate-500 text-sm">Tendencia de ventas</p>
             </div>
-            {/* Removed hardcoded numbers from chart header to avoid confusion */}
           </div>
           <div className="p-6 flex-1 flex flex-col justify-end min-h-[300px]">
-            {/* Chart visual representation using SVG - purely decorative for now */}
             <div className="relative h-64 w-full">
               <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 800 200">
-                {/* Grid lines */}
                 <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="200" y2="200"></line>
                 <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="150" y2="150"></line>
                 <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="100" y2="100"></line>
                 <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="50" y2="50"></line>
-                {/* Data Line */}
                 <defs>
                   <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
                     <stop offset="0%" stopColor="#2b8dee" stopOpacity="0.2"></stop>
@@ -251,30 +325,42 @@ export default function Admin() {
         {/* Quick Access */}
         <div className="flex flex-col gap-4">
           <h3 className="text-slate-900 text-lg font-bold px-1">Accesos Rápidos</h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Link to="/admin/products" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-32">
+          <div className="grid grid-cols-2 gap-3">
+            <Link to="/admin/orders" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-28">
               <div className="p-2 rounded-full bg-[#2b8cee]/10 group-hover:bg-[#2b8cee] group-hover:text-white text-[#2b8cee] transition-colors">
-                <PlusSquare className="h-6 w-6" />
+                <ShoppingCart className="h-5 w-5" />
               </div>
-              <span className="text-slate-600 text-sm font-medium">Gestionar Productos</span>
+              <span className="text-slate-600 text-xs font-medium">Pedidos</span>
             </Link>
-            <Link to="/admin/invoices" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-32">
+            <Link to="/admin/products" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-28">
               <div className="p-2 rounded-full bg-[#2b8cee]/10 group-hover:bg-[#2b8cee] group-hover:text-white text-[#2b8cee] transition-colors">
-                <FileText className="h-6 w-6" />
+                <PlusSquare className="h-5 w-5" />
               </div>
-              <span className="text-slate-600 text-sm font-medium">Ver Facturas</span>
+              <span className="text-slate-600 text-xs font-medium">Productos</span>
             </Link>
-            <Link to="/admin/discounts" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-32">
+            <Link to="/admin/invoices" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-28">
               <div className="p-2 rounded-full bg-[#2b8cee]/10 group-hover:bg-[#2b8cee] group-hover:text-white text-[#2b8cee] transition-colors">
-                <Tag className="h-6 w-6" />
+                <FileText className="h-5 w-5" />
               </div>
-              <span className="text-slate-600 text-sm font-medium">Crear Oferta</span>
+              <span className="text-slate-600 text-xs font-medium">Facturas</span>
             </Link>
-            <Link to="/admin/users" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-32">
+            <Link to="/admin/payment-methods" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-28">
               <div className="p-2 rounded-full bg-[#2b8cee]/10 group-hover:bg-[#2b8cee] group-hover:text-white text-[#2b8cee] transition-colors">
-                <UserPlus className="h-6 w-6" />
+                <CreditCard className="h-5 w-5" />
               </div>
-              <span className="text-slate-600 text-sm font-medium">Nuevo Usuario</span>
+              <span className="text-slate-600 text-xs font-medium">Métodos de Pago</span>
+            </Link>
+            <Link to="/admin/discounts" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-28">
+              <div className="p-2 rounded-full bg-[#2b8cee]/10 group-hover:bg-[#2b8cee] group-hover:text-white text-[#2b8cee] transition-colors">
+                <Tag className="h-5 w-5" />
+              </div>
+              <span className="text-slate-600 text-xs font-medium">Descuentos</span>
+            </Link>
+            <Link to="/admin/users" className="group p-4 rounded-xl bg-white border border-slate-200 hover:border-[#2b8cee] transition-all shadow-sm flex flex-col items-center justify-center gap-2 text-center h-28">
+              <div className="p-2 rounded-full bg-[#2b8cee]/10 group-hover:bg-[#2b8cee] group-hover:text-white text-[#2b8cee] transition-colors">
+                <UserPlus className="h-5 w-5" />
+              </div>
+              <span className="text-slate-600 text-xs font-medium">Usuarios</span>
             </Link>
           </div>
         </div>
@@ -335,7 +421,7 @@ export default function Admin() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <Link
-                        to={`/orders/invoice/${order.id}`} // Or order detail link
+                        to="/admin/orders"
                         className="text-slate-400 hover:text-[#2b8cee] transition-colors inline-block"
                       >
                         <MoreVertical className="h-5 w-5" />
