@@ -480,34 +480,34 @@ export type Database = {
       }
       fiscal_sequences: {
         Row: {
-          id: string
-          series: string
-          type_code: string
-          current_sequence: number
+          created_at: string | null
+          current_sequence: number | null
           end_sequence: number
           expiration_date: string
+          id: string
           is_active: boolean | null
-          created_at: string
+          series: string
+          type_code: string
         }
         Insert: {
-          id?: string
-          series: string
-          type_code: string
-          current_sequence?: number
+          created_at?: string | null
+          current_sequence?: number | null
           end_sequence: number
           expiration_date: string
+          id?: string
           is_active?: boolean | null
-          created_at?: string
+          series: string
+          type_code: string
         }
         Update: {
-          id?: string
-          series?: string
-          type_code?: string
-          current_sequence?: number
+          created_at?: string | null
+          current_sequence?: number | null
           end_sequence?: number
           expiration_date?: string
+          id?: string
           is_active?: boolean | null
-          created_at?: string
+          series?: string
+          type_code?: string
         }
         Relationships: []
       }
@@ -546,78 +546,111 @@ export type Database = {
           },
         ]
       }
+      invoice_templates: {
+        Row: {
+          created_at: string
+          html_content: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          updated_at: string
+          variables: Json | null
+        }
+        Insert: {
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Update: {
+          created_at?: string
+          html_content?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          updated_at?: string
+          variables?: Json | null
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           billing_address: string | null
           billing_name: string | null
           billing_rnc: string | null
           created_at: string
+          electronic_sign: string | null
           id: string
           invoice_number: string
           issued_at: string
+          messaje_date: string | null
+          ncf: string | null
+          ncf_expiration_date: string | null
           order_id: string
           pdf_url: string | null
+          security_code: string | null
           status: string
           subtotal: number
           tax_amount: number
           tax_rate: number
           total: number
+          track_id: string | null
           updated_at: string
           user_id: string
-          ncf: string | null
-          ncf_expiration_date: string | null
-          security_code: string | null
-          electronic_sign: string | null
-          track_id: string | null
-          messaje_date: string | null
         }
         Insert: {
           billing_address?: string | null
           billing_name?: string | null
           billing_rnc?: string | null
           created_at?: string
+          electronic_sign?: string | null
           id?: string
           invoice_number: string
           issued_at?: string
+          messaje_date?: string | null
+          ncf?: string | null
+          ncf_expiration_date?: string | null
           order_id: string
           pdf_url?: string | null
+          security_code?: string | null
           status?: string
           subtotal: number
           tax_amount: number
           tax_rate?: number
           total: number
+          track_id?: string | null
           updated_at?: string
           user_id: string
-          ncf?: string | null
-          ncf_expiration_date?: string | null
-          security_code?: string | null
-          electronic_sign?: string | null
-          track_id?: string | null
-          messaje_date?: string | null
         }
         Update: {
           billing_address?: string | null
           billing_name?: string | null
           billing_rnc?: string | null
           created_at?: string
+          electronic_sign?: string | null
           id?: string
           invoice_number?: string
           issued_at?: string
+          messaje_date?: string | null
+          ncf?: string | null
+          ncf_expiration_date?: string | null
           order_id?: string
           pdf_url?: string | null
+          security_code?: string | null
           status?: string
           subtotal?: number
           tax_amount?: number
           tax_rate?: number
           total?: number
+          track_id?: string | null
           updated_at?: string
           user_id?: string
-          ncf?: string | null
-          ncf_expiration_date?: string | null
-          security_code?: string | null
-          electronic_sign?: string | null
-          track_id?: string | null
-          messaje_date?: string | null
         }
         Relationships: [
           {
@@ -628,6 +661,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          link_url: string | null
+          message: string
+          priority: string
+          title: string
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link_url?: string | null
+          message: string
+          priority?: string
+          title: string
+          type?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          link_url?: string | null
+          message?: string
+          priority?: string
+          title?: string
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
       }
       nutritionists: {
         Row: {
@@ -867,49 +936,49 @@ export type Database = {
       }
       orders: {
         Row: {
+          company_name: string | null
           created_at: string
           discount_amount: number | null
           discount_code_id: string | null
           id: string
+          ncf_generated: string | null
+          ncf_type: string | null
+          rnc_cedula: string | null
           shipping_address: string | null
           status: string
           subtotal: number | null
           total: number
           user_id: string
-          rnc_cedula: string | null
-          company_name: string | null
-          ncf_type: string | null
-          ncf_generated: string | null
         }
         Insert: {
+          company_name?: string | null
           created_at?: string
           discount_amount?: number | null
           discount_code_id?: string | null
           id?: string
+          ncf_generated?: string | null
+          ncf_type?: string | null
+          rnc_cedula?: string | null
           shipping_address?: string | null
           status?: string
           subtotal?: number | null
           total: number
           user_id: string
-          rnc_cedula?: string | null
-          company_name?: string | null
-          ncf_type?: string | null
-          ncf_generated?: string | null
         }
         Update: {
+          company_name?: string | null
           created_at?: string
           discount_amount?: number | null
           discount_code_id?: string | null
           id?: string
+          ncf_generated?: string | null
+          ncf_type?: string | null
+          rnc_cedula?: string | null
           shipping_address?: string | null
           status?: string
           subtotal?: number | null
           total?: number
           user_id?: string
-          rnc_cedula?: string | null
-          company_name?: string | null
-          ncf_type?: string | null
-          ncf_generated?: string | null
         }
         Relationships: [
           {
@@ -1447,14 +1516,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_next_ncf: {
-        Args: {
-          seq_series: string
-          seq_type: string
-        }
-        Returns: string | null
-      }
       generate_invoice_number: { Args: never; Returns: string }
+      get_next_ncf: {
+        Args: { seq_series: string; seq_type: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
