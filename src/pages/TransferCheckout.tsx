@@ -1,6 +1,7 @@
 
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { WhopCheckoutEmbed } from '@whop/checkout/react';
 import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, Truck, ShieldCheck, CreditCard, FileText } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import { formatCurrency } from '@/lib/format-currency';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
+import { getWhopSessionId, isWhopPayment, loadWhopSession, saveWhopSession } from '@/lib/whop-checkout';
 
 interface PaymentMethod {
   id: string;
@@ -32,10 +34,23 @@ interface PaymentMethod {
   rnc: string | null;
 }
 
+interface WhopCheckoutResponse {
+  orderId: string;
+  sessionId: string;
+  total: number;
+  environment?: 'production' | 'sandbox';
+}
+
+type PaymentMode = 'whop' | 'transfer';
+
+const DEFAULT_WHOP_ENVIRONMENT = import.meta.env.VITE_WHOP_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production';
+const IS_WHOP_ENABLED = import.meta.env.VITE_ENABLE_WHOP_CHECKOUT !== 'false';
+
 export default function TransferCheckout() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { items, getTotalPrice, getSubtotal, clearCart } = useCartStore();
+  const { items, getSubtotal, clearCart } = useCartStore();
   const { validateCode, applyDiscount, loading: discountLoading, error: discountError, clearError } = useDiscountCodes();
   const { fetchRNC, loading: rncLoading } = useRNC();
   
@@ -45,6 +60,11 @@ export default function TransferCheckout() {
   const [discountCodeInput, setDiscountCodeInput] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<{ code: DiscountCode; amount: number } | null>(null);
   const [wantsTaxReceipt, setWantsTaxReceipt] = useState(false);
+  const [paymentMode, setPaymentMode] = useState<PaymentMode>(IS_WHOP_ENABLED ? 'whop' : 'transfer');
+  const [whopSessionId, setWhopSessionId] = useState<string | null>(null);
+  const [whopOrderId, setWhopOrderId] = useState<string | null>(searchParams.get('order'));
+  const [whopEnvironment, setWhopEnvironment] = useState<'production' | 'sandbox'>(DEFAULT_WHOP_ENVIRONMENT);
+  const [restoringWhopSession, setRestoringWhopSession] = useState(false);
   
   const [formData, setFormData] = useState({
     fullName: '',
@@ -76,9 +96,81 @@ export default function TransferCheckout() {
     fetchPaymentMethods();
   }, []);
 
+  useEffect(() => {
+    if (user?.email) {
+      setFormData((prev) => ({
+        ...prev,
+        email: prev.email || user.email || '',
+      }));
+    }
+  }, [user?.email]);
+
+  useEffect(() => {
+    const orderIdFromQuery = searchParams.get('order');
+    if (!orderIdFromQuery || !user || !IS_WHOP_ENABLED) {
+      return;
+    }
+
+    let cancelled = false;
+
+    async function restoreWhopSession(orderId: string) {
+      setRestoringWhopSession(true);
+
+      try {
+        const storedSession = loadWhopSession(orderId);
+        if (storedSession) {
+          if (!cancelled) {
+            setWhopOrderId(orderId);
+            setWhopSessionId(storedSession);
+            setPaymentMode('whop');
+          }
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('order_payments')
+          .select('provider, provider_checkout_id, payment_method, reference_number, notes')
+          .eq('order_id', orderId)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) {
+          throw error;
+        }
+
+        if (data && isWhopPayment(data)) {
+          const restoredSession = getWhopSessionId(data);
+          if (restoredSession && !cancelled) {
+            saveWhopSession(orderId, restoredSession);
+            setWhopOrderId(orderId);
+            setWhopSessionId(restoredSession);
+            setPaymentMode('whop');
+          }
+        }
+      } catch (error) {
+        console.error('Error restoring Whop session:', error);
+      } finally {
+        if (!cancelled) {
+          setRestoringWhopSession(false);
+        }
+      }
+    }
+
+    restoreWhopSession(orderIdFromQuery);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams, user]);
+
   const subtotal = getSubtotal();
   const discountAmount = appliedDiscount?.amount || 0;
   const totalPrice = subtotal - discountAmount;
+  const returnStateId = searchParams.get('state_id') || undefined;
+  const whopReturnUrl = typeof window !== 'undefined' && whopOrderId
+    ? `${window.location.origin}/checkout/transferencia?order=${whopOrderId}`
+    : undefined;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -115,8 +207,104 @@ export default function TransferCheckout() {
       }
   };
 
+  const validateCheckoutForm = () => {
+    if (!formData.fullName || !formData.email || !formData.phone || !formData.address || !formData.city) {
+      toast.error('Campos incompletos', { description: 'Por favor completa todos los campos requeridos marcados con *' });
+      return false;
+    }
+
+    if (wantsTaxReceipt && !formData.rnc) {
+      toast.error('RNC requerido', { description: 'Para crédito fiscal debes ingresar el RNC o Cédula.' });
+      return false;
+    }
+
+    if (!user) {
+      toast.error('Sesión requerida', { description: 'Debes iniciar sesión para finalizar el pedido' });
+      navigate('/auth');
+      return false;
+    }
+
+    const outOfStock = items.filter((item) => {
+      const available = item.product.stock ?? 0;
+      return item.quantity > available;
+    });
+
+    if (outOfStock.length > 0) {
+      toast.error('Stock insuficiente', {
+        description: 'Algunos productos en tu carrito ya no están disponibles en la cantidad solicitada.',
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const createWhopCheckout = async () => {
+    const sourceUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+    const { data, error } = await supabase.functions.invoke<WhopCheckoutResponse>('create-whop-checkout', {
+      body: {
+        items: items.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        })),
+        sourceUrl,
+        discountCode: appliedDiscount?.code.code || null,
+        wantsTaxReceipt,
+        customer: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          notes: formData.notes,
+          rnc: wantsTaxReceipt ? formData.rnc : undefined,
+          companyName: wantsTaxReceipt ? formData.companyName : undefined,
+        },
+      },
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data?.sessionId || !data.orderId) {
+      throw new Error('La sesión de pago de Whop no fue creada correctamente.');
+    }
+
+    saveWhopSession(data.orderId, data.sessionId);
+    setWhopSessionId(data.sessionId);
+    setWhopOrderId(data.orderId);
+    setWhopEnvironment(data.environment || DEFAULT_WHOP_ENVIRONMENT);
+    setPaymentMode('whop');
+    navigate(`/checkout/transferencia?order=${data.orderId}`, { replace: true });
+
+    toast.success('Checkout seguro listo', {
+      description: 'Completa el pago con tarjeta en el bloque de Whop que aparece abajo.',
+    });
+  };
+
+  const handleWhopComplete = () => {
+    if (whopOrderId) {
+      clearCart();
+      navigate(`/order/${whopOrderId}?provider=whop`);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (paymentMode === 'whop') {
+      if (!validateCheckoutForm()) {
+        return;
+      }
+
+      if (whopSessionId) {
+        toast.message('Ya tienes una sesión de pago abierta', {
+          description: 'Completa el pago en el checkout embebido o entra a tu orden pendiente.',
+        });
+        return;
+      }
+    }
     
     if (!formData.fullName || !formData.email || !formData.phone || !formData.address || !formData.city) {
       toast.error('Campos incompletos', { description: 'Por favor completa todos los campos requeridos marcados con *' });
@@ -131,6 +319,11 @@ export default function TransferCheckout() {
     setIsSubmitting(true);
 
     try {
+      if (paymentMode === 'whop') {
+        await createWhopCheckout();
+        return;
+      }
+
       if (!user) {
         toast.error('Sesión requerida', { description: 'Debes iniciar sesión para finalizar el pedido' });
         navigate('/auth');
@@ -263,7 +456,7 @@ export default function TransferCheckout() {
     }
   };
 
-  if (items.length === 0) {
+  if (items.length === 0 && !whopSessionId) {
     return (
       <Layout>
         <div className="container py-32 text-center min-h-[60vh] flex flex-col items-center justify-center">
@@ -463,6 +656,54 @@ export default function TransferCheckout() {
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 />
                             </div>
+                            {paymentMode === 'whop' && (
+                                <div className="space-y-4">
+                                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                                        El checkout de Whop se enlaza con esta compra real y marcará la orden como pagada cuando llegue el webhook.
+                                    </div>
+
+                                    {whopSessionId ? (
+                                        <>
+                                            {whopOrderId && (
+                                                <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/20 px-4 py-3 text-sm">
+                                                    <Badge variant="secondary">Orden enlazada</Badge>
+                                                    <span className="font-mono text-muted-foreground">{whopOrderId.slice(0, 8).toUpperCase()}</span>
+                                                    <Button variant="link" size="sm" className="h-auto p-0" asChild>
+                                                        <Link to={`/order/${whopOrderId}?provider=whop`}>Ver orden pendiente</Link>
+                                                    </Button>
+                                                </div>
+                                            )}
+
+                                            <div className="rounded-xl border bg-background p-3">
+                                                <WhopCheckoutEmbed
+                                                    sessionId={whopSessionId}
+                                                    environment={whopEnvironment}
+                                                    skipRedirect
+                                                    hideAddressForm
+                                                    disableEmail={Boolean(formData.email)}
+                                                    returnUrl={whopReturnUrl}
+                                                    stateId={returnStateId}
+                                                    prefill={formData.email ? { email: formData.email } : undefined}
+                                                    onComplete={handleWhopComplete}
+                                                    fallback={
+                                                        <div className="flex min-h-[520px] items-center justify-center text-sm text-muted-foreground">
+                                                            Cargando checkout seguro...
+                                                        </div>
+                                                    }
+                                                />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="rounded-xl border border-dashed bg-muted/10 p-6 text-sm text-muted-foreground">
+                                            Completa tus datos y pulsa el botón principal para crear la sesión de pago embebida.
+                                        </div>
+                                    )}
+
+                                    {restoringWhopSession && (
+                                        <p className="text-sm text-muted-foreground">Restaurando la sesión de Whop asociada a tu orden...</p>
+                                    )}
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -474,11 +715,47 @@ export default function TransferCheckout() {
                                 Método de Pago
                             </CardTitle>
                             <CardDescription>
-                                Realiza una transferencia a una de nuestras cuentas.
+                                Elige si quieres pagar por transferencia o con tarjeta vía Whop.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid gap-4 sm:grid-cols-2">
+                            <RadioGroup value={paymentMode} onValueChange={(value) => setPaymentMode(value as PaymentMode)} className="grid gap-4 mb-6">
+                                {IS_WHOP_ENABLED && (
+                                    <label className={cn(
+                                        'flex items-start gap-4 rounded-xl border p-4 transition-colors cursor-pointer',
+                                        paymentMode === 'whop' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                                    )}>
+                                        <RadioGroupItem value="whop" className="mt-1" />
+                                        <div className="space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold">Tarjeta con Whop</span>
+                                                <Badge variant="secondary">Automático</Badge>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                                Crea una orden real y abre un checkout embebido con confirmación automática.
+                                            </p>
+                                        </div>
+                                    </label>
+                                )}
+
+                                <label className={cn(
+                                    'flex items-start gap-4 rounded-xl border p-4 transition-colors cursor-pointer',
+                                    paymentMode === 'transfer' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'
+                                )}>
+                                    <RadioGroupItem value="transfer" className="mt-1" />
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-semibold">Transferencia bancaria</span>
+                                            <Badge variant="outline">Manual</Badge>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground">
+                                            Mantiene el flujo actual de comprobante y validación manual.
+                                        </p>
+                                    </div>
+                                </label>
+                            </RadioGroup>
+
+                            <div className={cn('grid gap-4 sm:grid-cols-2', paymentMode !== 'transfer' && 'hidden')}>
                                 {paymentMethods.map((account, idx) => (
                                     <div key={account.id} className="relative rounded-xl border bg-card p-4 shadow-sm hover:shadow-md transition-shadow hover:border-primary/50">
                                         <div className="absolute top-4 right-4 text-primary/20 group-hover:text-primary/40">
@@ -514,7 +791,7 @@ export default function TransferCheckout() {
                                     </div>
                                 ))}
                             </div>
-                            <div className="mt-6 flex items-start gap-4 p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-sm">
+                            <div className={cn('mt-6 flex items-start gap-4 p-4 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-sm', paymentMode !== 'transfer' && 'hidden')}>
                                 <ShieldCheck className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
                                 <div className="space-y-1">
                                     <p className="font-semibold text-red-900 dark:text-red-300">Importante</p>
@@ -627,13 +904,15 @@ export default function TransferCheckout() {
                                 className="w-full text-lg h-12 shadow-lg hover:shadow-xl transition-all" 
                                 size="lg" 
                                 type="submit" 
-                                disabled={isSubmitting}
+                                disabled={isSubmitting || (paymentMode === 'whop' && !!whopSessionId)}
                             >
                                 {isSubmitting ? (
                                     <span className="flex items-center gap-2">
                                         <span className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin" />
                                         Procesando...
                                     </span>
+                                ) : paymentMode === 'whop' ? (
+                                    whopSessionId ? 'Checkout creado, paga arriba' : 'Crear checkout seguro'
                                 ) : 'Confirmar Pedido'}
                             </Button>
                         </CardFooter>

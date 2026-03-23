@@ -39,6 +39,7 @@ import {
 import { normalizeImageUrl } from '@/lib/image-url';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
+import { getWhopPurchaseUrl, isWhopPayment } from '@/lib/whop-checkout';
 
 // Types
 interface PaymentMethod {
@@ -69,6 +70,10 @@ interface OrderPayment {
   status: string;
   proof_url: string | null;
   reference_number: string | null;
+  notes?: string | null;
+  provider?: string | null;
+  provider_checkout_id?: string | null;
+  provider_payload?: unknown;
   created_at: string;
 }
 
@@ -80,6 +85,7 @@ interface Order {
   status: string;
   shipping_address: string | null;
   created_at: string;
+  payment_provider?: string | null;
   order_items?: OrderItem[];
   order_payments?: OrderPayment[];
 }
@@ -336,7 +342,10 @@ export default function OrderConfirmation() {
 
   if (!order) return null;
 
-  const showUploadSection = order.status === 'pending' && !existingPayment;
+  const isWhopOrder = order.payment_provider === 'whop' || isWhopPayment(existingPayment);
+  const whopResumeUrl = `/checkout/transferencia?order=${order.id}`;
+  const whopPurchaseUrl = getWhopPurchaseUrl(existingPayment);
+  const showUploadSection = !isWhopOrder && order.status === 'pending' && !existingPayment;
   // If payment exists or status implies payment started
   const showPaymentStatus = existingPayment || (order.status !== 'pending' && order.status !== 'cancelled');
 
@@ -395,6 +404,34 @@ export default function OrderConfirmation() {
             <div className="grid lg:grid-cols-12 gap-8 items-start">
                  {/* Left Column: Upload & Payment Info */}
                  <div className="lg:col-span-7 space-y-6">
+                     {isWhopOrder && order.status === 'pending' && (
+                         <Card className="border-2 border-primary/20 shadow-md">
+                            <CardHeader className="bg-primary/5 border-b border-primary/10">
+                                <CardTitle className="flex items-center gap-2 text-primary">
+                                    <CreditCard className="h-5 w-5" />
+                                    Pago con Whop pendiente
+                                </CardTitle>
+                                <CardDescription>
+                                    Esta orden usa checkout automático. Retoma el pago para completar la compra.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="pt-6 space-y-3">
+                                <p className="text-sm text-muted-foreground">
+                                    Cuando Whop confirme el cobro, esta pantalla cambiará a pagado sin subir comprobantes manuales.
+                                </p>
+                                <div className="flex flex-wrap gap-3">
+                                    <Button asChild>
+                                        <Link to={whopResumeUrl}>Continuar pago</Link>
+                                    </Button>
+                                    {whopPurchaseUrl && (
+                                        <Button variant="outline" onClick={() => window.open(whopPurchaseUrl, '_blank')}>
+                                            Abrir checkout
+                                        </Button>
+                                    )}
+                                </div>
+                            </CardContent>
+                         </Card>
+                     )}
                      
                      {showUploadSection && (
                          <Card className="border-2 border-primary/20 shadow-md">
@@ -473,7 +510,7 @@ export default function OrderConfirmation() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <Receipt className="h-5 w-5" />
-                                    Estado del Pago
+                                    {isWhopOrder ? 'Estado del cobro' : 'Estado del Pago'}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -503,7 +540,7 @@ export default function OrderConfirmation() {
                         </Card>
                      )}
 
-                     <div className="space-y-4">
+                     <div className={cn('space-y-4', isWhopOrder && 'hidden')}>
                          <h3 className="font-semibold text-lg flex items-center gap-2">
                             <Building2 className="h-5 w-5 text-primary" />
                             Cuentas para Transferencia

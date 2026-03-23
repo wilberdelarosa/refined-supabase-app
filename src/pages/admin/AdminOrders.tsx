@@ -60,6 +60,7 @@ import {
 import { normalizeImageUrl } from '@/lib/image-url';
 import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/format-currency';
+import { isWhopPayment } from '@/lib/whop-checkout';
 
 interface Order {
   id: string;
@@ -112,6 +113,7 @@ interface OrderPayment {
   proof_url: string | null;
   reference_number: string | null;
   notes: string | null;
+  provider?: string | null;
   created_at: string;
   verified_at: string | null;
   verified_by: string | null;
@@ -863,7 +865,7 @@ export default function AdminOrders() {
                     <div className="flex items-center gap-2">
                       <CreditCard className="h-4 w-4 text-slate-600" />
                       <span className="font-medium text-sm text-slate-900">
-                        Comprobantes de Pago {orderPayments.length > 0 && `(${orderPayments.length})`}
+                        Pagos {orderPayments.length > 0 && `(${orderPayments.length})`}
                       </span>
                     </div>
                     <ChevronDown className="h-4 w-4 text-slate-500 transition-transform duration-200 data-[state=open]:rotate-180" />
@@ -928,7 +930,7 @@ export default function AdminOrders() {
                             </div>
                           )}
 
-                          {payment.status === 'pending' && (
+                          {payment.status === 'pending' && !isWhopPayment(payment) && (
                             <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
                               <Button
                                 size="sm"
@@ -949,6 +951,12 @@ export default function AdminOrders() {
                                 <XCircle className="h-3.5 w-3.5 mr-1.5" />
                                 Rechazar
                               </Button>
+                            </div>
+                          )}
+
+                          {payment.status === 'pending' && isWhopPayment(payment) && (
+                            <div className="pt-2 border-t border-slate-200 text-xs text-slate-500">
+                              Este pago se confirma automáticamente desde Whop. No requiere aprobación manual.
                             </div>
                           )}
 

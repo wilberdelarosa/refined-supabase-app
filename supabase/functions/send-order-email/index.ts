@@ -10,6 +10,7 @@ const corsHeaders = {
 
 interface OrderEmailRequest {
   type: "order_created" | "status_changed";
+  paymentMethod?: "transfer" | "whop";
   customerEmail: string;
   customerName: string;
   orderId: string;
@@ -38,6 +39,7 @@ const statusLabels: Record<string, string> = {
 };
 
 function generateOrderCreatedEmail(data: OrderEmailRequest): string {
+  const isWhopPayment = data.paymentMethod === "whop";
   const itemsHtml = data.orderItems
     .map(
       (item) => `
@@ -105,16 +107,20 @@ function generateOrderCreatedEmail(data: OrderEmailRequest): string {
                 : ""
             }
             
-            <div style="background-color: #fef3cd; border: 1px solid #ffc107; border-radius: 8px; padding: 15px;">
-              <p style="margin: 0; color: #856404; font-size: 14px;">
-                <strong>Importante:</strong> Si realizaste el pago por transferencia, tu pedido será procesado una vez verifiquemos el pago. Puedes subir tu comprobante en el enlace siguiente.
+            <div style="background-color: ${isWhopPayment ? "#e8f5e9" : "#fef3cd"}; border: 1px solid ${isWhopPayment ? "#66bb6a" : "#ffc107"}; border-radius: 8px; padding: 15px;">
+              <p style="margin: 0; color: ${isWhopPayment ? "#1b5e20" : "#856404"}; font-size: 14px;">
+                ${
+                  isWhopPayment
+                    ? "<strong>Pago confirmado:</strong> Tu pago fue recibido correctamente por Whop. Ya estamos preparando tu orden y puedes revisar el estado desde el enlace siguiente."
+                    : "<strong>Importante:</strong> Si realizaste el pago por transferencia, tu pedido será procesado una vez verifiquemos el pago. Puedes subir tu comprobante en el enlace siguiente."
+                }
               </p>
             </div>
             ${
               data.orderUrl
                 ? `
             <div style="text-align: center; margin-top: 25px;">
-              <a href="${data.orderUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">Ver pedido y subir comprobante</a>
+              <a href="${data.orderUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">${isWhopPayment ? "Ver estado del pedido" : "Ver pedido y subir comprobante"}</a>
             </div>
             `
                 : ""
