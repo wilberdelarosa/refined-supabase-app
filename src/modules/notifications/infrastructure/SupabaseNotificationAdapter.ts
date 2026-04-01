@@ -19,7 +19,6 @@ const mapToEntity = (row: any): Notification => ({
 
 export class SupabaseNotificationAdapter implements NotificationRepository, NotificationSender {
   async getNotifications(userId: string): Promise<Notification[]> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
