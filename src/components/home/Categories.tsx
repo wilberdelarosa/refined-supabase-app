@@ -1,79 +1,91 @@
 import { Link } from 'react-router-dom';
-import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/animations/ScrollAnimations';
+import { ArrowUpRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { FadeInUp } from '@/components/animations/ScrollAnimations';
 
 const categories = [
   {
     name: 'Proteínas',
-    subtitle: 'Whey, Isolate, Caseína',
+    subtitle: 'Whey · Isolate · Caseína',
     slug: 'proteinas',
-    dark: false,
+    emoji: '💪',
   },
   {
     name: 'Creatina',
-    subtitle: 'Monohidrato, HCl',
+    subtitle: 'Monohidrato · HCl',
     slug: 'creatina',
-    dark: true,
+    emoji: '⚡',
   },
   {
-    name: 'Vitaminas y Minerales',
-    subtitle: 'Multivitamínicos, Omega-3',
+    name: 'Vitaminas',
+    subtitle: 'Multivitamínicos · Omega-3',
     slug: 'vitaminas',
-    dark: false,
+    emoji: '🧬',
   },
   {
     name: 'Pre-Entrenos',
-    subtitle: 'Energía y enfoque',
+    subtitle: 'Energía · Enfoque · Pump',
     slug: 'pre-entrenos',
-    dark: true,
+    emoji: '🔥',
   },
 ];
 
 export function Categories() {
   return (
-    <section className="py-16 md:py-24">
+    <section className="py-20 md:py-28">
       <div className="container">
         <FadeInUp>
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">
-            Categorías
-          </h2>
-          <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-            Explora nuestra selección de suplementos de las mejores marcas del mundo
-          </p>
+          <div className="text-center mb-14">
+            <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+              Explora por categoría
+            </span>
+            <h2 className="text-3xl md:text-5xl font-black tracking-tight">
+              Nuestras Categorías
+            </h2>
+          </div>
         </FadeInUp>
 
-        <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-          {categories.map((category) => (
-            <StaggerItem key={category.slug}>
-            <Link
-              key={category.slug}
-              to={`/shop?category=${category.slug}`}
-              className={`group relative aspect-square rounded-sm overflow-hidden flex flex-col items-center justify-center p-6 text-center transition-all hover:scale-[1.02] hover:shadow-lg ${
-                category.dark 
-                  ? 'bg-foreground text-background' 
-                  : 'bg-muted text-foreground'
-              }`}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+          {categories.map((cat, idx) => (
+            <motion.div
+              key={cat.slug}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: idx * 0.1, duration: 0.5 }}
             >
-              {/* Bottle icon placeholder */}
-              <div className="w-16 h-24 md:w-20 md:h-28 mb-4 flex items-center justify-center">
-                <svg
-                  viewBox="0 0 60 100"
-                  fill="currentColor"
-                  className={`w-full h-full ${category.dark ? 'opacity-30' : 'opacity-20'}`}
-                >
-                  <rect x="18" y="8" width="24" height="12" rx="2" />
-                  <rect x="12" y="20" width="36" height="72" rx="4" />
-                </svg>
-              </div>
-              <h3 className="font-bold text-xs md:text-sm uppercase tracking-wide">
-                {category.name}
-              </h3>
-              <p className={`text-[10px] md:text-xs mt-1 ${category.dark ? 'opacity-60' : 'text-muted-foreground'}`}>
-                {category.subtitle}
-              </p>
-            </Link>
-            </StaggerItem>
+              <Link
+                to={`/shop?category=${cat.slug}`}
+                className="group relative block aspect-[4/5] rounded-2xl overflow-hidden bg-card border border-border hover:border-foreground/20 transition-all duration-500 hover:shadow-xl"
+              >
+                {/* Background gradient */}
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-foreground/5 group-hover:to-foreground/10 transition-all duration-500" />
+                
+                {/* Emoji icon */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-6xl md:text-7xl opacity-20 group-hover:opacity-30 group-hover:scale-110 transition-all duration-500">
+                  {cat.emoji}
+                </div>
+
+                {/* Content at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 p-5 md:p-6">
+                  <div className="flex items-end justify-between">
+                    <div>
+                      <h3 className="font-black text-sm md:text-base uppercase tracking-wide mb-1">
+                        {cat.name}
+                      </h3>
+                      <p className="text-[10px] md:text-xs text-muted-foreground font-medium">
+                        {cat.subtitle}
+                      </p>
+                    </div>
+                    <div className="h-8 w-8 rounded-full bg-foreground text-background flex items-center justify-center opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                      <ArrowUpRight className="h-4 w-4" />
+                    </div>
+                  </div>
+                </div>
+              </Link>
+            </motion.div>
           ))}
-        </StaggerContainer>
+        </div>
       </div>
     </section>
   );

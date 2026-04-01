@@ -4,65 +4,72 @@ import { useNativeProducts } from '@/hooks/useNativeProducts';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { FadeInUp, StaggerContainer, StaggerItem } from '@/components/animations/ScrollAnimations';
+import { motion } from 'framer-motion';
+import { FadeInUp } from '@/components/animations/ScrollAnimations';
 
 export function FeaturedProducts() {
   const { products, loading } = useNativeProducts();
   
-  // Get only featured products or first 4
   const featuredProducts = products.filter(p => p.featured).slice(0, 4);
   const displayProducts = featuredProducts.length > 0 ? featuredProducts : products.slice(0, 4);
 
   return (
-    <section className="py-16 md:py-24 bg-muted/50">
+    <section className="py-20 md:py-28 bg-muted/30">
       <div className="container">
-        {/* Header */}
         <FadeInUp>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-14">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">
+              <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">
+                Selección curada
+              </span>
+              <h2 className="text-3xl md:text-5xl font-black tracking-tight">
                 Productos Destacados
               </h2>
-              <p className="text-muted-foreground">
-                Los favoritos de nuestros clientes
-              </p>
             </div>
-            <Button variant="ghost" className="self-start md:self-auto uppercase tracking-wide font-semibold" asChild>
+            <Button
+              variant="outline"
+              className="self-start md:self-auto uppercase tracking-wide font-bold rounded-full px-6 border-2 group"
+              asChild
+            >
               <Link to="/shop">
-                Ver todos los productos
-                <ArrowRight className="ml-2 h-4 w-4" />
+                Ver catálogo completo
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Link>
             </Button>
           </div>
         </FadeInUp>
 
-        {/* Products Grid */}
         {loading ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="space-y-4">
-                <Skeleton className="aspect-square rounded-lg" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-20" />
-                <Skeleton className="h-10 w-full" />
+                <Skeleton className="aspect-square rounded-2xl" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
               </div>
             ))}
           </div>
         ) : displayProducts.length > 0 ? (
-          <StaggerContainer className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
-            {displayProducts.map((product) => (
-              <StaggerItem key={product.id}>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+            {displayProducts.map((product, idx) => (
+              <motion.div
+                key={product.id}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: idx * 0.1, duration: 0.5 }}
+              >
                 <ProductCard product={product} />
-              </StaggerItem>
+              </motion.div>
             ))}
-          </StaggerContainer>
+          </div>
         ) : (
-          <div className="text-center py-16 bg-card rounded-lg border border-border">
-            <p className="text-muted-foreground mb-4">
-              No hay productos disponibles
+          <div className="text-center py-20 bg-card rounded-2xl border border-border">
+            <p className="text-muted-foreground mb-6 text-lg">
+              No hay productos disponibles aún
             </p>
-            <Button asChild>
-              <Link to="/shop">Ver todos los productos</Link>
+            <Button asChild className="rounded-full px-8">
+              <Link to="/shop">Explorar tienda</Link>
             </Button>
           </div>
         )}
