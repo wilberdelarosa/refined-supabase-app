@@ -221,6 +221,57 @@ export default function TransferCheckout() {
       }
   };
 
+  const syncCartWithDatabase = async () => {
+    if (validCartItems.length === 0) {
+      return [];
+    }
+
+    const productIds = [...new Set(validCartItems.map((item) => item.product.id))];
+    const { data, error } = await supabase
+      .from('products')
+      .select('id, name, description, price, original_price, stock, category, image_url, featured, created_at, updated_at')
+      .in('id', productIds);
+
+    if (error) {
+      throw new Error('No se pudieron validar los productos del carrito.');
+    }
+
+    const productMap = new Map((data || []).map((product) => [product.id, product]));
+    const syncedItems = validCartItems.flatMap((item) => {
+      const freshProduct = productMap.get(item.product.id);
+      if (!freshProduct) {
+        return [];
+      }
+
+      return [{
+        ...item,
+        product: {
+          ...item.product,
+          ...freshProduct,
+        },
+      }];
+    });
+
+    const cartChanged =
+      syncedItems.length !== items.length ||
+      syncedItems.some((item) => {
+        const originalItem = items.find((candidate) => candidate.product.id === item.product.id);
+        return !originalItem || originalItem.product.price !== item.product.price || originalItem.product.stock !== item.product.stock;
+      });
+
+    if (cartChanged) {
+      replaceItems(syncedItems);
+    }
+
+    if (syncedItems.length !== validCartItems.length) {
+      toast.warning('Actualizamos tu carrito', {
+        description: 'Quitamos productos que ya no estaban disponibles para evitar errores al pagar.',
+      });
+    }
+
+    return syncedItems;
+  };
+
   const validateCheckoutForm = () => {
     if (!formData.fullName || !formData.email || !formData.phone || !formData.address || !formData.city) {
       toast.error('Campos incompletos', { description: 'Por favor completa todos los campos requeridos marcados con *' });
@@ -261,10 +312,15 @@ export default function TransferCheckout() {
   };
 
   const createWhopCheckout = async () => {
+    const syncedItems = await syncCartWithDatabase();
+    if (syncedItems.length === 0) {
+      throw new Error('Tu carrito no tiene productos válidos para pagar.');
+    }
+
     const sourceUrl = typeof window !== 'undefined' ? window.location.href : undefined;
     const { data, error } = await supabase.functions.invoke<WhopCheckoutResponse>('create-whop-checkout', {
       body: {
-        items: validCartItems.map((item) => ({
+        items: syncedItems.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
         })),
@@ -345,6 +401,15 @@ export default function TransferCheckout() {
         return;
       }
 
+      const syncedItems = await syncCartWithDatabase();
+      if (syncedItems.length === 0) {
+        toast.error('Tu carrito está vacío', {
+          description: 'Agrega productos válidos antes de continuar.',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!user) {
         toast.error('Sesión requerida', { description: 'Debes iniciar sesión para finalizar el pedido' });
         navigate('/auth');
@@ -352,7 +417,7 @@ export default function TransferCheckout() {
       }
 
       // Validate stock
-      const outOfStock = validCartItems.filter(item => {
+      const outOfStock = syncedItems.filter(item => {
         const available = item.product.stock ?? 0;
         return item.quantity > available;
       });
@@ -418,7 +483,7 @@ export default function TransferCheckout() {
       const savedOrder = orderResult; // Alias for compatibility with rest of code
 
       // Create order items
-      const orderItems = validCartItems.map(item => ({
+      const orderItems = syncedItems.map(item => ({
         order_id: savedOrder.id,
         product_id: item.product.id,
         product_name: item.product.name,
@@ -438,7 +503,7 @@ export default function TransferCheckout() {
        }
 
        // Update stock
-       for (const item of validCartItems) {
+       for (const item of syncedItems) {
          await supabase
            .from('products')
            .update({ stock: item.product.stock - item.quantity })
