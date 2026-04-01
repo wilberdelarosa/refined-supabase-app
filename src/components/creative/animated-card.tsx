@@ -30,7 +30,8 @@ const AnimatedCard = React.forwardRef<
   >
     {children}
   </motion.div>
-));
+  );
+});
 AnimatedCard.displayName = "AnimatedCard";
 
 /**

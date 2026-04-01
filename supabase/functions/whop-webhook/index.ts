@@ -411,7 +411,7 @@ serve(async (req) => {
 
     await markWebhookProcessed(admin, event.id, {
       status: "processed",
-      order_id: event.data?.metadata?.order_id ?? null,
+      order_id: (event.data as any)?.metadata?.order_id ?? null,
     });
 
     return jsonResponse({ ok: true });

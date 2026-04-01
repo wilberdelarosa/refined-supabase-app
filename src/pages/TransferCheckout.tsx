@@ -129,7 +129,7 @@ export default function TransferCheckout() {
 
         const { data, error } = await supabase
           .from('order_payments')
-          .select('provider, provider_checkout_id, payment_method, reference_number, notes')
+          .select('payment_method, reference_number, notes')
           .eq('order_id', orderId)
           .order('created_at', { ascending: false })
           .limit(1)
