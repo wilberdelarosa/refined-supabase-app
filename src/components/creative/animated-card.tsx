@@ -11,7 +11,9 @@ import { cn } from "@/lib/utils";
 const AnimatedCard = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
->(({ className, children, ...props }, ref) => (
+>(({ className, children, ...props }, ref) => {
+  const { onAnimationStart: _, onDragStart: _d, onDragEnd: _de, onDrag: _dr, ...safeProps } = props as any;
+  return (
   <motion.div
     ref={ref}
     initial={false}
@@ -24,7 +26,7 @@ const AnimatedCard = React.forwardRef<
       "rounded-lg border border-border bg-card p-6 text-card-foreground shadow-sm transition-shadow hover:shadow-lg",
       className
     )}
-    {...props}
+    {...safeProps}
   >
     {children}
   </motion.div>
