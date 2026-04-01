@@ -292,18 +292,19 @@ serve(async (req) => {
       throw orderItemsError;
     }
 
+    const forceHttps = (url: string) => url.replace(/^http:\/\//, "https://");
     const rawSiteUrl =
       Deno.env.get("PUBLIC_SITE_URL") ??
       req.headers.get("origin") ??
       body.sourceUrl ??
       "https://barbaro-nutrition.lovable.app";
-    // Whop requires https:// URLs — force upgrade
-    const siteUrl = rawSiteUrl.replace(/^http:\/\//, "https://");
+    const siteUrl = forceHttps(rawSiteUrl);
+    const sourceUrl = forceHttps(body.sourceUrl ?? `${siteUrl}/checkout/transferencia`);
 
     const whop = getWhopClient();
     const checkoutConfiguration = await whop.checkoutConfigurations.create({
       mode: "payment",
-      source_url: body.sourceUrl ?? `${siteUrl}/checkout/transferencia`,
+      source_url: sourceUrl,
       redirect_url: `${siteUrl}/checkout/transferencia?order=${orderId}`,
       metadata: {
         app: "barbaro-nutrition",
