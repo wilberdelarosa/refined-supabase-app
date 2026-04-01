@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { User, Menu, Settings, LogOut, ShoppingBag } from 'lucide-react';
-import { useState } from 'react';
+import { User, Menu, Settings, LogOut, ShoppingBag, Bell } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
 import { Button } from '@/components/ui/button';
@@ -14,118 +14,153 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { CartDrawer } from '@/components/shop/CartDrawer';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { supabase } from '@/integrations/supabase/client';
 import barbaroLogo from '@/assets/barbaro-logo.png';
+
+function NotificationBell() {
+  const { user } = useAuth();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('is_read', false);
+      setUnreadCount(count ?? 0);
+    };
+    fetchCount();
+
+    const channel = supabase
+      .channel(`notif-badge-${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, () => fetchCount())
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'notifications',
+        filter: `user_id=eq.${user.id}`,
+      }, () => fetchCount())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
+  if (!user) return null;
+
+  return (
+    <Button variant="ghost" size="icon" asChild className="relative">
+      <Link to="/account">
+        <Bell className="h-5 w-5" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-bold flex items-center justify-center animate-scale-in">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+      </Link>
+    </Button>
+  );
+}
 
 export function Navbar() {
   const navLinks = [
     { name: 'Inicio', path: '/' },
     { name: 'Tienda', path: '/shop' },
-    { name: 'Sobre Nosotros', path: '/about' },
+    { name: 'Nosotros', path: '/about' },
   ];
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin, canManageOrders } = useRoles();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 shadow-sm">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="flex items-center hover-lift">
-          <img src={barbaroLogo} alt="Barbaro Nutrition" className="h-10 w-auto" />
+        <Link to="/" className="flex items-center group">
+          <img src={barbaroLogo} alt="Barbaro Nutrition" className="h-10 w-auto group-hover:opacity-80 transition-opacity" />
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        <nav className="hidden md:flex items-center gap-10">
           {navLinks.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className="text-sm font-bold text-foreground/70 hover:text-foreground transition-colors uppercase tracking-wide relative group"
+              className="text-[13px] font-bold text-foreground/60 hover:text-foreground transition-colors uppercase tracking-[0.1em] relative group py-1"
             >
               {link.name}
-              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-foreground transition-all duration-300 group-hover:w-full"></span>
+              <span className="absolute -bottom-0.5 left-0 w-0 h-[2px] bg-foreground transition-all duration-300 group-hover:w-full" />
             </Link>
           ))}
         </nav>
 
         {/* Actions */}
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <ThemeToggle />
+          <NotificationBell />
 
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="hover-lift">
-                  <User className="h-5 w-5" />
+                <Button variant="ghost" size="icon">
+                  <div className="h-7 w-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
+                    {user.email?.[0]?.toUpperCase() || 'U'}
+                  </div>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 p-2 shadow-xl border-border/50">
-                {/* User Info Header */}
-                <div className="px-3 py-3 mb-1 rounded-lg bg-gradient-to-br from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center ring-2 ring-primary/20">
-                      <User className="h-5 w-5 text-primary-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-sm truncate">{user.email}</p>
-                      <p className="text-xs text-muted-foreground">Mi perfil</p>
-                    </div>
-                  </div>
+              <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl shadow-xl border-border/50">
+                <div className="px-3 py-3 mb-1">
+                  <p className="font-semibold text-sm truncate">{user.email}</p>
+                  <p className="text-xs text-muted-foreground">Mi cuenta</p>
                 </div>
 
-                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuSeparator />
 
-                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2.5 my-0.5">
-                  <Link to="/account" className="flex items-center gap-3 font-medium">
-                    <div className="h-8 w-8 rounded-md bg-blue-500/10 flex items-center justify-center">
-                      <User className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <span>Mi Cuenta</span>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2.5">
+                  <Link to="/account" className="flex items-center gap-3">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">Mi Cuenta</span>
                   </Link>
                 </DropdownMenuItem>
 
-                <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2.5 my-0.5">
-                  <Link to="/orders" className="flex items-center gap-3 font-medium">
-                    <div className="h-8 w-8 rounded-md bg-green-500/10 flex items-center justify-center">
-                      <ShoppingBag className="h-4 w-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <span>Mis Pedidos</span>
+                <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2.5">
+                  <Link to="/orders" className="flex items-center gap-3">
+                    <ShoppingBag className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium">Mis Pedidos</span>
                   </Link>
                 </DropdownMenuItem>
 
                 {canManageOrders && (
                   <>
-                    <DropdownMenuSeparator className="my-2" />
-                    <DropdownMenuItem asChild className="cursor-pointer rounded-md px-3 py-2.5 my-0.5">
-                      <Link to="/admin" className="flex items-center gap-3 font-semibold">
-                        <div className="h-8 w-8 rounded-md bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center ring-1 ring-purple-500/30">
-                          <Settings className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-                        </div>
-                        <span className="bg-gradient-to-r from-purple-600 to-pink-600 dark:from-purple-400 dark:to-pink-400 bg-clip-text text-transparent">
-                          Panel Admin
-                        </span>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2.5">
+                      <Link to="/admin" className="flex items-center gap-3">
+                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <span className="font-bold">Panel Admin</span>
                       </Link>
                     </DropdownMenuItem>
                   </>
                 )}
 
-                <DropdownMenuSeparator className="my-2" />
+                <DropdownMenuSeparator />
 
                 <DropdownMenuItem
                   onClick={() => signOut()}
-                  className="cursor-pointer rounded-md px-3 py-2.5 my-0.5 focus:bg-destructive/10 focus:text-destructive"
+                  className="cursor-pointer rounded-lg px-3 py-2.5 text-destructive focus:text-destructive"
                 >
-                  <div className="flex items-center gap-3 font-medium">
-                    <div className="h-8 w-8 rounded-md bg-destructive/10 flex items-center justify-center">
-                      <LogOut className="h-4 w-4 text-destructive" />
-                    </div>
-                    <span className="text-destructive">Cerrar Sesión</span>
-                  </div>
+                  <LogOut className="h-4 w-4 mr-3" />
+                  <span className="font-medium">Cerrar Sesión</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button variant="ghost" size="icon" asChild className="hover-lift">
+            <Button variant="ghost" size="icon" asChild>
               <Link to="/auth">
                 <User className="h-5 w-5" />
               </Link>
@@ -148,7 +183,7 @@ export function Navbar() {
                     key={link.path}
                     to={link.path}
                     onClick={() => setIsOpen(false)}
-                    className="text-lg font-semibold uppercase tracking-wide hover:text-muted-foreground transition-colors"
+                    className="text-lg font-bold uppercase tracking-wide hover:text-muted-foreground transition-colors"
                   >
                     {link.name}
                   </Link>
@@ -156,38 +191,23 @@ export function Navbar() {
                 <div className="border-t border-border pt-6 mt-4">
                   {user ? (
                     <>
-                      <Link
-                        to="/account"
-                        onClick={() => setIsOpen(false)}
-                        className="block text-lg font-semibold uppercase tracking-wide mb-4"
-                      >
+                      <Link to="/account" onClick={() => setIsOpen(false)} className="block text-lg font-bold uppercase tracking-wide mb-4">
                         Mi Cuenta
                       </Link>
                       {canManageOrders && (
-                        <Link
-                          to="/admin"
-                          onClick={() => setIsOpen(false)}
-                          className="block text-lg font-semibold uppercase tracking-wide mb-4 text-primary"
-                        >
+                        <Link to="/admin" onClick={() => setIsOpen(false)} className="block text-lg font-bold uppercase tracking-wide mb-4">
                           Panel Admin
                         </Link>
                       )}
                       <button
-                        onClick={() => {
-                          signOut();
-                          setIsOpen(false);
-                        }}
-                        className="text-lg font-semibold uppercase tracking-wide text-muted-foreground"
+                        onClick={() => { signOut(); setIsOpen(false); }}
+                        className="text-lg font-bold uppercase tracking-wide text-muted-foreground"
                       >
                         Cerrar Sesión
                       </button>
                     </>
                   ) : (
-                    <Link
-                      to="/auth"
-                      onClick={() => setIsOpen(false)}
-                      className="text-lg font-semibold uppercase tracking-wide"
-                    >
+                    <Link to="/auth" onClick={() => setIsOpen(false)} className="text-lg font-bold uppercase tracking-wide">
                       Iniciar Sesión
                     </Link>
                   )}
