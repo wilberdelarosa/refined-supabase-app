@@ -106,7 +106,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async sendToUser(payload: UserNotificationPayload): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase.from('notifications').insert({
       user_id: payload.userId,
       title: payload.title,
