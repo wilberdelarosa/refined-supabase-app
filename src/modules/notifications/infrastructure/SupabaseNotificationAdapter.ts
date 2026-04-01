@@ -43,7 +43,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async markAsRead(notificationId: string): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
