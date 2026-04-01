@@ -19,7 +19,6 @@ const mapToEntity = (row: any): Notification => ({
 
 export class SupabaseNotificationAdapter implements NotificationRepository, NotificationSender {
   async getNotifications(userId: string): Promise<Notification[]> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -32,7 +31,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async getAdminNotifications(): Promise<Notification[]> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
@@ -45,7 +43,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async markAsRead(notificationId: string): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
@@ -55,7 +52,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async markAllAsRead(userId: string): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase
       .from('notifications')
       .update({ is_read: true })
@@ -110,7 +106,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async sendToUser(payload: UserNotificationPayload): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase.from('notifications').insert({
       user_id: payload.userId,
       title: payload.title,
@@ -123,7 +118,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async sendToAdmin(payload: AdminNotificationPayload): Promise<void> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { error } = await supabase.from('notifications').insert({
       user_id: null,
       title: payload.title,

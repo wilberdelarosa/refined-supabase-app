@@ -288,7 +288,7 @@ app.post("/", async (c) => {
         jsonrpc: "2.0",
         id,
         result: {
-          content: [{ type: "text", text: `Error: ${err.message}` }],
+          content: [{ type: "text", text: `Error: ${(err as Error).message}` }],
           isError: true,
         },
       });

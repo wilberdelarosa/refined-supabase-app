@@ -799,6 +799,10 @@ export type Database = {
           order_id: string
           payment_method: string
           proof_url: string | null
+          provider: string | null
+          provider_checkout_id: string | null
+          provider_currency: string | null
+          provider_payload: Json | null
           reference_number: string | null
           status: string
           updated_at: string
@@ -813,6 +817,10 @@ export type Database = {
           order_id: string
           payment_method: string
           proof_url?: string | null
+          provider?: string | null
+          provider_checkout_id?: string | null
+          provider_currency?: string | null
+          provider_payload?: Json | null
           reference_number?: string | null
           status?: string
           updated_at?: string
@@ -827,6 +835,10 @@ export type Database = {
           order_id?: string
           payment_method?: string
           proof_url?: string | null
+          provider?: string | null
+          provider_checkout_id?: string | null
+          provider_currency?: string | null
+          provider_payload?: Json | null
           reference_number?: string | null
           status?: string
           updated_at?: string
@@ -943,6 +955,8 @@ export type Database = {
           id: string
           ncf_generated: string | null
           ncf_type: string | null
+          payment_metadata: Json | null
+          payment_provider: string | null
           rnc_cedula: string | null
           shipping_address: string | null
           status: string
@@ -958,6 +972,8 @@ export type Database = {
           id?: string
           ncf_generated?: string | null
           ncf_type?: string | null
+          payment_metadata?: Json | null
+          payment_provider?: string | null
           rnc_cedula?: string | null
           shipping_address?: string | null
           status?: string
@@ -973,6 +989,8 @@ export type Database = {
           id?: string
           ncf_generated?: string | null
           ncf_type?: string | null
+          payment_metadata?: Json | null
+          payment_provider?: string | null
           rnc_cedula?: string | null
           shipping_address?: string | null
           status?: string
@@ -1475,6 +1493,36 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      whop_webhook_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          order_id: string | null
+          payload: Json | null
+          processed_at: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id: string
+          order_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          processed_at?: string | null
+          status?: string | null
         }
         Relationships: []
       }
