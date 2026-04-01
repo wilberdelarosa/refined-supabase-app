@@ -139,9 +139,13 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <div className="h-7 w-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
-                    {user.email?.[0]?.toUpperCase() || 'U'}
-                  </div>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="h-7 w-7 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-7 w-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
+                      {user.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl shadow-xl border-border/50">
