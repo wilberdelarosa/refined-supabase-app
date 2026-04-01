@@ -55,16 +55,34 @@ export function useDiscountCodes() {
         return null;
       }
 
-      if (user) {
+      if (user && discountCode.max_uses_per_user) {
+        // Only count usages linked to non-cancelled orders
         const { data: usages } = await supabase
           .from('discount_usages')
-          .select('id')
+          .select('id, order_id')
           .eq('discount_code_id', discountCode.id)
           .eq('user_id', user.id);
 
-        if (usages && usages.length >= discountCode.max_uses_per_user) {
-          setError('Ya has utilizado este código');
-          return null;
+        if (usages) {
+          // Filter out usages from cancelled orders
+          let validUsages = usages;
+          if (usages.length > 0) {
+            const orderIds = usages.map(u => u.order_id).filter(Boolean) as string[];
+            if (orderIds.length > 0) {
+              const { data: orders } = await supabase
+                .from('orders')
+                .select('id, status')
+                .in('id', orderIds);
+              const cancelledIds = new Set(
+                (orders || []).filter(o => o.status === 'cancelled').map(o => o.id)
+              );
+              validUsages = usages.filter(u => !u.order_id || !cancelledIds.has(u.order_id));
+            }
+          }
+          if (validUsages.length >= discountCode.max_uses_per_user) {
+            setError('Ya has utilizado este código el máximo de veces permitido');
+            return null;
+          }
         }
       }
 

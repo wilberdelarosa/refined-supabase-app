@@ -77,6 +77,36 @@ export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
   const { isAdmin, canManageOrders } = useRoles();
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) { setAvatarUrl(null); return; }
+    const fetchAvatar = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (data?.avatar_url) setAvatarUrl(data.avatar_url);
+    };
+    fetchAvatar();
+
+    // Listen for profile changes
+    const channel = supabase
+      .channel(`avatar-${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'profiles',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        const newAvatar = (payload.new as any)?.avatar_url;
+        setAvatarUrl(newAvatar || null);
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60">
@@ -109,9 +139,13 @@ export function Navbar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
-                  <div className="h-7 w-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
-                    {user.email?.[0]?.toUpperCase() || 'U'}
-                  </div>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="Avatar" className="h-7 w-7 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-7 w-7 rounded-full bg-foreground text-background flex items-center justify-center text-xs font-bold">
+                      {user.email?.[0]?.toUpperCase() || 'U'}
+                    </div>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 p-1.5 rounded-xl shadow-xl border-border/50">
