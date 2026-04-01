@@ -91,24 +91,6 @@ export function Hero() {
             </Button>
           </motion.div>
 
-          {/* Stats */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-            className="flex gap-8 sm:gap-12 mt-12 sm:mt-16 pt-8 border-t border-primary-foreground/10"
-          >
-            {[
-              { value: '500+', label: 'Productos' },
-              { value: '2K+', label: 'Clientes' },
-              { value: '4.9★', label: 'Rating' },
-            ].map((stat) => (
-              <div key={stat.label}>
-                <p className="text-2xl sm:text-3xl font-black text-primary-foreground">{stat.value}</p>
-                <p className="text-xs text-primary-foreground/50 uppercase tracking-wider font-medium">{stat.label}</p>
-              </div>
-            ))}
-          </motion.div>
         </div>
       </div>
     </section>

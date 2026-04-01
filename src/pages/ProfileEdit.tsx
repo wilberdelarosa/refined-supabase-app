@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { ProfileLayout } from '@/components/layout/ProfileLayout';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Camera, User, Save, Upload } from 'lucide-react';
+import { Camera, User, Save } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
 interface Profile {
@@ -28,6 +28,7 @@ export default function ProfileEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [profileExists, setProfileExists] = useState(false);
   const [profile, setProfile] = useState<Profile>({
     full_name: '',
     email: '',
@@ -52,6 +53,7 @@ export default function ProfileEdit() {
         .maybeSingle();
 
       if (!error && data) {
+        setProfileExists(true);
         setProfile({
           full_name: data.full_name || '',
           email: data.email || user!.email || '',
@@ -61,6 +63,14 @@ export default function ProfileEdit() {
           country: data.country || 'República Dominicana',
           avatar_url: data.avatar_url,
         });
+      } else {
+        // No profile row yet — pre-fill from auth
+        setProfileExists(false);
+        setProfile(prev => ({
+          ...prev,
+          email: user!.email || '',
+          full_name: user!.user_metadata?.full_name || '',
+        }));
       }
       setLoading(false);
     }
@@ -109,20 +119,30 @@ export default function ProfileEdit() {
 
     setSaving(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          phone: profile.phone,
-          address: profile.address,
-          city: profile.city,
-          country: profile.country,
-          avatar_url: profile.avatar_url,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
+      const payload = {
+        full_name: profile.full_name || null,
+        email: profile.email || user.email || null,
+        phone: profile.phone || null,
+        address: profile.address || null,
+        city: profile.city || null,
+        country: profile.country || null,
+        avatar_url: profile.avatar_url,
+        updated_at: new Date().toISOString(),
+      };
 
-      if (error) throw error;
+      if (profileExists) {
+        const { error } = await supabase
+          .from('profiles')
+          .update(payload)
+          .eq('user_id', user.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from('profiles')
+          .insert({ ...payload, user_id: user.id });
+        if (error) throw error;
+        setProfileExists(true);
+      }
 
       toast.success('Perfil actualizado correctamente');
       navigate('/account');
@@ -150,29 +170,29 @@ export default function ProfileEdit() {
     <ProfileLayout>
       <div className="max-w-4xl mx-auto">
         <header className="mb-8">
-          <h1 className="text-2xl font-bold text-slate-900">Configuración de Perfil</h1>
-          <p className="text-slate-500 text-sm">Gestiona tu información personal y preferencias</p>
+          <h1 className="text-2xl font-bold">Configuración de Perfil</h1>
+          <p className="text-muted-foreground text-sm">Gestiona tu información personal y preferencias</p>
         </header>
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Sidebar / Avatar Section */}
+          {/* Avatar */}
           <div className="space-y-6">
-            <Card className="border-slate-200 shadow-sm text-center">
+            <Card className="text-center">
               <CardHeader>
                 <CardTitle className="text-base">Foto de Perfil</CardTitle>
               </CardHeader>
               <CardContent className="flex flex-col items-center">
                 <div className="relative mb-4 group cursor-pointer">
-                  <Avatar className="h-32 w-32 border-4 border-slate-50 shadow-sm transition-transform group-hover:scale-105">
+                  <Avatar className="h-32 w-32 border-4 border-muted shadow-sm transition-transform group-hover:scale-105">
                     <AvatarImage src={profile.avatar_url || undefined} />
-                    <AvatarFallback className="bg-slate-100 text-slate-400">
+                    <AvatarFallback className="bg-muted text-muted-foreground">
                       <User className="h-12 w-12" />
                     </AvatarFallback>
                   </Avatar>
-                  <label className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-full cursor-pointer hover:bg-primary/90 transition-all shadow-md">
+                  <label className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full cursor-pointer hover:bg-primary/90 transition-all shadow-md">
                     <input
                       type="file"
-                      accept="image/*"
+                      accept="image/png,image/jpeg,image/webp"
                       className="hidden"
                       onChange={handleAvatarUpload}
                       disabled={uploading}
@@ -185,15 +205,15 @@ export default function ProfileEdit() {
                   </label>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Recomendado: 400x400px <br /> Max 5MB, JPG/PNG
+                  Recomendado: 400×400px<br />Max 5MB, JPG/PNG
                 </p>
               </CardContent>
             </Card>
           </div>
 
-          {/* Main Form */}
+          {/* Form */}
           <div className="md:col-span-2 space-y-6">
-            <Card className="border-slate-200 shadow-sm">
+            <Card>
               <CardHeader>
                 <CardTitle>Información Personal</CardTitle>
                 <CardDescription>Datos básicos de tu cuenta</CardDescription>
@@ -206,7 +226,6 @@ export default function ProfileEdit() {
                       id="full_name"
                       value={profile.full_name || ''}
                       onChange={(e) => setProfile(p => ({ ...p, full_name: e.target.value }))}
-                      className="bg-slate-50 border-slate-200"
                     />
                   </div>
                   <div className="space-y-2">
@@ -216,7 +235,7 @@ export default function ProfileEdit() {
                       type="email"
                       value={profile.email || ''}
                       disabled
-                      className="bg-slate-100 border-slate-200 text-slate-500"
+                      className="text-muted-foreground"
                     />
                   </div>
                 </div>
@@ -228,13 +247,12 @@ export default function ProfileEdit() {
                     value={profile.phone || ''}
                     onChange={(e) => setProfile(p => ({ ...p, phone: e.target.value }))}
                     placeholder="+1 809 555 0123"
-                    className="bg-slate-50 border-slate-200"
                   />
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="border-slate-200 shadow-sm">
+            <Card>
               <CardHeader>
                 <CardTitle>Dirección de Envío</CardTitle>
                 <CardDescription>Utilizada para calcular envíos</CardDescription>
@@ -247,7 +265,6 @@ export default function ProfileEdit() {
                     value={profile.address || ''}
                     onChange={(e) => setProfile(p => ({ ...p, address: e.target.value }))}
                     placeholder="Calle, número, sector"
-                    className="bg-slate-50 border-slate-200"
                   />
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -258,7 +275,6 @@ export default function ProfileEdit() {
                       value={profile.city || ''}
                       onChange={(e) => setProfile(p => ({ ...p, city: e.target.value }))}
                       placeholder="Santo Domingo"
-                      className="bg-slate-50 border-slate-200"
                     />
                   </div>
                   <div className="space-y-2">
@@ -267,18 +283,13 @@ export default function ProfileEdit() {
                       id="country"
                       value={profile.country || ''}
                       onChange={(e) => setProfile(p => ({ ...p, country: e.target.value }))}
-                      className="bg-slate-50 border-slate-200"
                     />
                   </div>
                 </div>
               </CardContent>
-              <CardFooter className="bg-slate-50/50 border-t border-slate-100 flex justify-end p-4">
+              <CardFooter className="border-t flex justify-end p-4">
                 <div className="flex gap-3">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => navigate('/account')}
-                  >
+                  <Button type="button" variant="ghost" onClick={() => navigate('/account')}>
                     Cancelar
                   </Button>
                   <Button type="submit" disabled={saving} className="min-w-[120px]">
