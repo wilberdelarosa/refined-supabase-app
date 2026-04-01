@@ -31,7 +31,6 @@ export class SupabaseNotificationAdapter implements NotificationRepository, Noti
   }
 
   async getAdminNotifications(): Promise<Notification[]> {
-    // @ts-expect-error - Notifications table not yet in Supabase types
     const { data, error } = await supabase
       .from('notifications')
       .select('*')
