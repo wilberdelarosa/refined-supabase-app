@@ -794,16 +794,22 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          failure_reason: string | null
           id: string
           notes: string | null
           order_id: string
+          paid_at: string | null
           payment_method: string
           proof_url: string | null
           provider: string | null
           provider_checkout_id: string | null
           provider_currency: string | null
+          provider_fee: number | null
           provider_payload: Json | null
+          provider_payment_id: string | null
+          provider_tax: number | null
           reference_number: string | null
+          refunded_amount: number | null
           status: string
           updated_at: string
           verified_at: string | null
@@ -812,16 +818,22 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          failure_reason?: string | null
           id?: string
           notes?: string | null
           order_id: string
+          paid_at?: string | null
           payment_method: string
           proof_url?: string | null
           provider?: string | null
           provider_checkout_id?: string | null
           provider_currency?: string | null
+          provider_fee?: number | null
           provider_payload?: Json | null
+          provider_payment_id?: string | null
+          provider_tax?: number | null
           reference_number?: string | null
+          refunded_amount?: number | null
           status?: string
           updated_at?: string
           verified_at?: string | null
@@ -830,16 +842,22 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          failure_reason?: string | null
           id?: string
           notes?: string | null
           order_id?: string
+          paid_at?: string | null
           payment_method?: string
           proof_url?: string | null
           provider?: string | null
           provider_checkout_id?: string | null
           provider_currency?: string | null
+          provider_fee?: number | null
           provider_payload?: Json | null
+          provider_payment_id?: string | null
+          provider_tax?: number | null
           reference_number?: string | null
+          refunded_amount?: number | null
           status?: string
           updated_at?: string
           verified_at?: string | null
@@ -955,8 +973,10 @@ export type Database = {
           id: string
           ncf_generated: string | null
           ncf_type: string | null
+          paid_at: string | null
           payment_metadata: Json | null
           payment_provider: string | null
+          provider_reference_id: string | null
           rnc_cedula: string | null
           shipping_address: string | null
           status: string
@@ -972,8 +992,10 @@ export type Database = {
           id?: string
           ncf_generated?: string | null
           ncf_type?: string | null
+          paid_at?: string | null
           payment_metadata?: Json | null
           payment_provider?: string | null
+          provider_reference_id?: string | null
           rnc_cedula?: string | null
           shipping_address?: string | null
           status?: string
@@ -989,8 +1011,10 @@ export type Database = {
           id?: string
           ncf_generated?: string | null
           ncf_type?: string | null
+          paid_at?: string | null
           payment_metadata?: Json | null
           payment_provider?: string | null
+          provider_reference_id?: string | null
           rnc_cedula?: string | null
           shipping_address?: string | null
           status?: string

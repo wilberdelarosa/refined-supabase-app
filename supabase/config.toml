@@ -4,7 +4,7 @@ project_id = "xuhvlomytegdbifziilf"
 verify_jwt = false
 
 [functions.create-whop-checkout]
-verify_jwt = true
+verify_jwt = false
 
 [functions.whop-webhook]
 verify_jwt = false
