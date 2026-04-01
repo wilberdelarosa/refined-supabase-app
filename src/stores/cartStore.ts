@@ -13,6 +13,7 @@ interface CartStore {
   
   // Actions
   addItem: (product: Product, quantity?: number) => void;
+  replaceItems: (items: CartItem[]) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeItem: (productId: string) => void;
   clearCart: () => void;
@@ -43,6 +44,10 @@ export const useCartStore = create<CartStore>()(
         } else {
           set({ items: [...items, { product, quantity }] });
         }
+      },
+
+      replaceItems: (items) => {
+        set({ items });
       },
 
       updateQuantity: (productId, quantity) => {
