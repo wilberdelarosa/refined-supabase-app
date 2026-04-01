@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { WhopCheckoutEmbed } from '@whop/checkout/react';
 import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, Truck, ShieldCheck, CreditCard, FileText } from 'lucide-react';
@@ -50,7 +50,7 @@ export default function TransferCheckout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
-  const { items, getSubtotal, clearCart } = useCartStore();
+  const { items, getSubtotal, clearCart, replaceItems } = useCartStore();
   const { validateCode, applyDiscount, loading: discountLoading, error: discountError, clearError } = useDiscountCodes();
   const { fetchRNC, loading: rncLoading } = useRNC();
   
@@ -104,6 +104,20 @@ export default function TransferCheckout() {
       }));
     }
   }, [user?.email]);
+
+  const validCartItems = useMemo(
+    () => items.filter((item) => Boolean(item.product?.id && item.product?.name && Number(item.product?.price) >= 0)),
+    [items],
+  );
+
+  useEffect(() => {
+    if (validCartItems.length !== items.length) {
+      replaceItems(validCartItems);
+      toast.warning('Se limpiaron productos inválidos del carrito', {
+        description: 'Había artículos desactualizados que impedían completar el pago.',
+      });
+    }
+  }, [items, replaceItems, validCartItems]);
 
   useEffect(() => {
     const orderIdFromQuery = searchParams.get('order');
@@ -224,7 +238,14 @@ export default function TransferCheckout() {
       return false;
     }
 
-    const outOfStock = items.filter((item) => {
+    if (validCartItems.length === 0) {
+      toast.error('Tu carrito está vacío', {
+        description: 'Agrega al menos un producto válido antes de continuar.',
+      });
+      return false;
+    }
+
+    const outOfStock = validCartItems.filter((item) => {
       const available = item.product.stock ?? 0;
       return item.quantity > available;
     });
@@ -243,7 +264,7 @@ export default function TransferCheckout() {
     const sourceUrl = typeof window !== 'undefined' ? window.location.href : undefined;
     const { data, error } = await supabase.functions.invoke<WhopCheckoutResponse>('create-whop-checkout', {
       body: {
-        items: items.map((item) => ({
+        items: validCartItems.map((item) => ({
           productId: item.product.id,
           quantity: item.quantity,
         })),
@@ -331,7 +352,7 @@ export default function TransferCheckout() {
       }
 
       // Validate stock
-      const outOfStock = items.filter(item => {
+      const outOfStock = validCartItems.filter(item => {
         const available = item.product.stock ?? 0;
         return item.quantity > available;
       });
@@ -397,7 +418,7 @@ export default function TransferCheckout() {
       const savedOrder = orderResult; // Alias for compatibility with rest of code
 
       // Create order items
-      const orderItems = items.map(item => ({
+      const orderItems = validCartItems.map(item => ({
         order_id: savedOrder.id,
         product_id: item.product.id,
         product_name: item.product.name,
@@ -417,7 +438,7 @@ export default function TransferCheckout() {
        }
 
        // Update stock
-       for (const item of items) {
+       for (const item of validCartItems) {
          await supabase
            .from('products')
            .update({ stock: item.product.stock - item.quantity })
