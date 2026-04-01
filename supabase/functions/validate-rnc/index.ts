@@ -1,18 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
-/**
- * Edge function to validate Dominican Republic RNC/Cédula numbers.
- * Uses the DGII public API to look up taxpayer information.
- */
-
 interface DGIIResponse {
   rnc: string;
   name: string;
   commercial_name?: string;
   status?: string;
-  category?: string;
-  payment_regime?: string;
 }
 
 async function lookupRNC(rnc: string): Promise<DGIIResponse | null> {
@@ -22,77 +15,122 @@ async function lookupRNC(rnc: string): Promise<DGIIResponse | null> {
     return null;
   }
 
-  // Try DGII public API
+  // Try multiple DGII API approaches
+  const endpoints = [
+    `https://dgii.gov.do/app/WebApps/ConsultasWeb2/ConsultasWeb/consultas/rnc.aspx`,
+  ];
+
+  // Approach 1: DGII web scraping via fetch
   try {
-    const url = `https://dgii.gov.do/app/WebApps/ConsultasWeb2/ConsultasWeb/consultas/rnc.aspx`;
-    
-    // Use the DGII API endpoint directly
-    const apiUrl = `https://dgii.gov.do/app/WebApps/ConsultasWeb/ConsultasWeb/api/rnc/${cleanRNC}`;
-    
-    const response = await fetch(apiUrl, {
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0",
+    const formData = new URLSearchParams();
+    formData.append("txtRncCed", cleanRNC);
+
+    const response = await fetch(
+      "https://dgii.gov.do/app/WebApps/ConsultasWeb2/ConsultasWeb/consultas/rnc.aspx",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+          Accept: "text/html",
+        },
+        body: formData.toString(),
       },
-    });
+    );
 
     if (response.ok) {
-      const data = await response.json();
-      if (data && (data.nombre || data.razonSocial || data.name)) {
+      const html = await response.text();
+
+      // Parse name from response HTML
+      const nameMatch = html.match(
+        /id="lblNombre"[^>]*>([^<]+)</i,
+      );
+      const statusMatch = html.match(
+        /id="lblEstado"[^>]*>([^<]+)</i,
+      );
+      const commercialMatch = html.match(
+        /id="lblNombreComercial"[^>]*>([^<]+)</i,
+      );
+
+      if (nameMatch && nameMatch[1]?.trim()) {
         return {
           rnc: cleanRNC,
-          name: data.nombre || data.razonSocial || data.name || "",
-          commercial_name: data.nombreComercial || data.commercial_name || "",
-          status: data.estado || data.status || "ACTIVO",
+          name: nameMatch[1].trim(),
+          commercial_name: commercialMatch?.[1]?.trim() || "",
+          status: statusMatch?.[1]?.trim() || "ACTIVO",
         };
       }
     }
   } catch (e) {
-    console.warn("DGII API lookup failed, trying fallback...", (e as Error).message);
+    console.warn("DGII scrape failed:", (e as Error).message);
   }
 
-  // Fallback: try dgii-rnc npm package approach
-  try {
-    // Simple validation based on check digit algorithm for RNC (9 digits)
-    if (cleanRNC.length === 9) {
-      const weights = [7, 9, 8, 6, 5, 4, 3, 2];
-      let sum = 0;
-      for (let i = 0; i < 8; i++) {
-        sum += parseInt(cleanRNC[i]) * weights[i];
-      }
-      const remainder = sum % 11;
-      const checkDigit = remainder === 0 ? 2 : remainder === 1 ? 1 : 11 - remainder;
-      
-      if (checkDigit !== parseInt(cleanRNC[8])) {
-        return null; // Invalid check digit
-      }
-    }
+  // Approach 2: Try public JSON API variations
+  for (const path of [
+    `https://api.digital.gob.do/v3/rnc/${cleanRNC}`,
+    `https://dgii.gov.do/app/WebApps/ConsultasWeb/ConsultasWeb/api/rnc/${cleanRNC}`,
+  ]) {
+    try {
+      const response = await fetch(path, {
+        headers: {
+          Accept: "application/json",
+          "User-Agent": "Mozilla/5.0",
+        },
+      });
 
-    // For cédula (11 digits), validate with Luhn-like algorithm
-    if (cleanRNC.length === 11) {
-      const weights = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2];
-      let sum = 0;
-      for (let i = 0; i < 10; i++) {
-        let product = parseInt(cleanRNC[i]) * weights[i];
-        if (product >= 10) product -= 9;
-        sum += product;
-      }
-      const checkDigit = (10 - (sum % 10)) % 10;
-      
-      if (checkDigit !== parseInt(cleanRNC[10])) {
-        return null; // Invalid check digit
-      }
-    }
+      if (response.ok) {
+        const contentType = response.headers.get("content-type") || "";
+        if (!contentType.includes("json")) continue;
 
-    // Return validated but without name (DGII lookup failed)
-    return {
-      rnc: cleanRNC,
-      name: "",
-      status: "VALIDADO_LOCAL",
-    };
-  } catch {
-    return null;
+        const data = await response.json();
+        const name =
+          data.nombre || data.razonSocial || data.name || data.razon_social;
+        if (name) {
+          return {
+            rnc: cleanRNC,
+            name,
+            commercial_name:
+              data.nombreComercial || data.commercial_name || "",
+            status: data.estado || data.status || "ACTIVO",
+          };
+        }
+      }
+    } catch (e) {
+      console.warn(`API ${path} failed:`, (e as Error).message);
+    }
   }
+
+  // Fallback: local checksum validation only
+  if (cleanRNC.length === 9) {
+    const weights = [7, 9, 8, 6, 5, 4, 3, 2];
+    let sum = 0;
+    for (let i = 0; i < 8; i++) {
+      sum += parseInt(cleanRNC[i]) * weights[i];
+    }
+    const remainder = sum % 11;
+    const checkDigit =
+      remainder === 0 ? 2 : remainder === 1 ? 1 : 11 - remainder;
+    if (checkDigit !== parseInt(cleanRNC[8])) return null;
+  }
+
+  if (cleanRNC.length === 11) {
+    const weights = [1, 2, 1, 2, 1, 2, 1, 2, 1, 2];
+    let sum = 0;
+    for (let i = 0; i < 10; i++) {
+      let product = parseInt(cleanRNC[i]) * weights[i];
+      if (product >= 10) product -= 9;
+      sum += product;
+    }
+    const checkDigit = (10 - (sum % 10)) % 10;
+    if (checkDigit !== parseInt(cleanRNC[10])) return null;
+  }
+
+  return {
+    rnc: cleanRNC,
+    name: "",
+    status: "VALIDADO_LOCAL",
+  };
 }
 
 serve(async (req) => {
