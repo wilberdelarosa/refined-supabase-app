@@ -63,6 +63,9 @@ export function CartDrawer() {
             
             {/* Header */}
             <SheetHeader className="px-6 py-5 border-b sticky top-0 bg-background/80 backdrop-blur-xl z-10">
+              <SheetDescription className="sr-only">
+                Resumen del carrito con productos, cantidades y acceso directo al checkout.
+              </SheetDescription>
               <div className="flex items-center justify-between">
                 <SheetTitle className="flex items-center gap-2 text-lg font-bold">
                     <ShoppingBag className="h-5 w-5 text-primary" />
