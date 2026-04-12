@@ -190,7 +190,7 @@ const About = () => {
                 className="border-2 border-background text-background hover:bg-background hover:text-foreground font-semibold uppercase tracking-wide text-base px-10 py-6 h-auto transition-all duration-300"
                 asChild
               >
-                <Link to="/contact">Contáctanos</Link>
+                <a href="https://wa.me/18095551234" target="_blank" rel="noopener noreferrer">Contáctanos</a>
               </Button>
               </div>
             </FadeInUp>

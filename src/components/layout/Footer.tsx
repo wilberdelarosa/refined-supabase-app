@@ -69,15 +69,15 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium inline-flex items-center group">
+                <a href="mailto:info@barbaronutrition.com" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium inline-flex items-center group">
                   <span className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all">→</span>
                   Contacto
-                </Link>
+                </a>
               </li>
               <li>
-                <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium inline-flex items-center group">
+                <Link to="/shop" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium inline-flex items-center group">
                   <span className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all">→</span>
-                  Blog
+                  Tienda
                 </Link>
               </li>
             </ul>
