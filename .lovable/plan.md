@@ -1,116 +1,40 @@
 
 
-# Plan: Corregir Build, Integrar Whop, Pulir Diseño y Completar Módulos
+## Plan: Mejoras de Testimonios, About, Responsive y Whop Checkout
 
-## Resumen
+### Problemas identificados
 
-Corregir todos los errores de build existentes, agregar las columnas faltantes para la integración Whop, y pulir el diseño general de la aplicación para que sea más robusta y completa.
+1. **Testimonios**: El componente actual es funcional pero básico. Se rediseñará con un estilo más premium.
+2. **Botón roto en About**: El botón "Contáctanos" apunta a `/contact` que no existe. También en el Footer.
+3. **Avatar no se actualiza en tiempo real**: El Navbar ya escucha cambios de `profiles` vía realtime channel -- esto debería funcionar. Verificaré que el `ProfileEdit` haga un update correcto que dispare el evento.
+4. **Whop guest checkout**: Ya está implementado con `WhopCheckoutEmbed` y `skipRedirect` + `hideAddressForm`. El usuario no necesita cuenta Whop. Solo falta asegurar que los textos no mencionen "Whop" de forma confusa y que el flujo sea claro.
+5. **Responsive**: Revisar y mejorar el checkout y testimonios en móvil.
 
----
+### Cambios planificados
 
-## Fase 1: Corregir Errores de Build (Crítico)
+#### 1. Rediseño del componente Testimonials
+- Nuevo diseño con tarjetas más grandes, fotos de avatar más prominentes
+- Mejor tipografía y espaciado
+- Animación más suave y profesional
+- Diseño responsive mejorado (1 columna en móvil, 2 en tablet, 3 en desktop)
 
-### 1.1 Edge Functions — errores de TypeScript
-| Archivo | Error | Fix |
-|---|---|---|
-| `supabase/functions/mcp-inventory/index.ts:291` | `'err' is of type 'unknown'` | Cast: `(err as Error).message` |
-| `supabase/functions/send-notification/index.ts:96` | `'error' is of type 'unknown'` | Cast: `(error as Error).message` |
-| `supabase/functions/whop-webhook/index.ts:414` | `event.data?.metadata` no existe en el tipo | Cast: `(event.data as any)?.metadata?.order_id` |
+#### 2. Fix del botón "Contáctanos" en About y Footer
+- Cambiar `Link to="/contact"` por `Link to="/about"` o un enlace a WhatsApp/email directo, ya que no existe la ruta `/contact`
+- Opción: redirigir al footer de la misma página About donde están los datos de contacto
 
-### 1.2 Frontend — errores de TypeScript
-| Archivo | Error | Fix |
-|---|---|---|
-| `src/components/creative/animated-card.tsx:15` | Conflicto `onAnimationStart` entre motion y React HTML | Separar props: excluir `onAnimationStart` del spread con `Omit` |
-| `src/components/product/AIRecommendation.tsx:33` | `err` no existe en `FunctionsResponse` | Cambiar `{ data, err }` a `{ data, error }` |
-| `src/modules/notifications/infrastructure/SupabaseNotificationAdapter.ts` | `@ts-expect-error` innecesarios (la tabla `notifications` ya está en los types) | Remover los 6 `@ts-expect-error` |
-| `src/pages/TransferCheckout.tsx:142` | `provider` column no existe en `order_payments` | Ver Fase 2 (migración) |
-| `src/test/setup.ts:29` | `global` no definido | Usar `globalThis` en su lugar |
-| `src/lib/whop-checkout.test.ts` | `describe`, `it`, `expect` no encontrados | Agregar referencia de tipos vitest en tsconfig o importar de vitest |
+#### 3. Mejoras de UX en el checkout Whop
+- Renombrar "Tarjeta con Whop" a simplemente "Pagar con Tarjeta" para que el cliente no vea branding de Whop
+- Eliminar texto técnico como "webhook" del mensaje informativo
+- Simplificar los mensajes al usuario final
+- Asegurar que el embed se muestra correctamente en móvil
 
----
+#### 4. Responsive general
+- Verificar que el checkout, testimonios y About se vean bien en móvil (375px-414px)
+- Ajustar paddings y tamaños de fuente para pantallas pequeñas
 
-## Fase 2: Migración — Columnas Faltantes para Whop
-
-La tabla `order_payments` necesita columnas que el `create-whop-checkout` Edge Function ya escribe pero que no existen en el esquema:
-
-```sql
-ALTER TABLE order_payments ADD COLUMN IF NOT EXISTS provider text;
-ALTER TABLE order_payments ADD COLUMN IF NOT EXISTS provider_checkout_id text;
-ALTER TABLE order_payments ADD COLUMN IF NOT EXISTS provider_currency text;
-ALTER TABLE order_payments ADD COLUMN IF NOT EXISTS provider_payload jsonb;
-
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_provider text;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS provider_checkout_id text;
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS payment_metadata jsonb;
-```
-
-Tambien crear la tabla para idempotencia del webhook:
-```sql
-CREATE TABLE IF NOT EXISTS whop_webhook_events (
-  id text PRIMARY KEY,
-  event_type text NOT NULL,
-  payload jsonb,
-  status text DEFAULT 'received',
-  order_id text,
-  created_at timestamptz DEFAULT now(),
-  processed_at timestamptz
-);
-ALTER TABLE whop_webhook_events ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Admins can manage webhook events" ON whop_webhook_events
-  FOR ALL USING (is_admin(auth.uid()));
-```
-
----
-
-## Fase 3: Corregir TransferCheckout para Whop
-
-Después de la migración, `TransferCheckout.tsx` línea 132 puede hacer `.select('provider, provider_checkout_id, ...')` sin error. Pero necesitamos esperar a que los types se regeneren. Mientras tanto, usar un cast temporal o seleccionar solo las columnas existentes y verificar via `notes` (que ya funciona con `isWhopPayment`).
-
----
-
-## Fase 4: Pulir Diseño
-
-### 4.1 Mejoras generales de UI
-- **Navbar**: Agregar icono de notificaciones (campana) con badge de conteo no leído junto al carrito
-- **Footer**: Verificar que links funcionen y estén completos
-- **Shop page**: Mejorar estado vacío cuando no hay productos con ilustración
-- **ProductCard**: Agregar badge de "Agotado" cuando stock=0, badge de descuento cuando `original_price > price`
-- **NotificationCenter**: Integrar en el Navbar para que sea accesible desde cualquier página
-
-### 4.2 Admin Dashboard
-- Verificar que `/admin` muestre resumen con métricas (total pedidos, ingresos, productos, usuarios)
-- Asegurar que las notificaciones admin lleguen al centro de notificaciones
-
----
-
-## Fase 5: Desplegar Edge Functions Corregidas
-
-Redesplegar las 3 edge functions corregidas:
-- `mcp-inventory`
-- `send-notification`
-- `whop-webhook`
-
----
-
-## Archivos a Modificar
-
-| Archivo | Cambio |
-|---|---|
-| `supabase/functions/mcp-inventory/index.ts` | Fix `err` unknown cast |
-| `supabase/functions/send-notification/index.ts` | Fix `error` unknown cast |
-| `supabase/functions/whop-webhook/index.ts` | Fix `metadata` type cast |
-| `src/components/creative/animated-card.tsx` | Fix motion props conflict |
-| `src/components/product/AIRecommendation.tsx` | Fix `err` → `error` |
-| `src/modules/notifications/infrastructure/SupabaseNotificationAdapter.ts` | Remove `@ts-expect-error` |
-| `src/pages/TransferCheckout.tsx` | Fix provider column select |
-| `src/test/setup.ts` | Fix `global` → `globalThis` |
-| `src/lib/whop-checkout.test.ts` | Add vitest imports |
-| Migración SQL | Agregar columnas Whop a `order_payments` y `orders` + crear `whop_webhook_events` |
-| `src/components/layout/Navbar.tsx` | Agregar icono de notificaciones |
-
-## Detalles Técnicos
-
-- La integración Whop ya está funcionalmente completa en las Edge Functions (`create-whop-checkout` y `whop-webhook`). Solo faltan las columnas en la DB y los fixes de tipos.
-- Los secrets de Whop (`WHOP_API_KEY`, `WHOP_COMPANY_ID`, `WHOP_WEBHOOK_SECRET`) necesitan estar configurados. Actualmente NO aparecen en los secrets del proyecto — habrá que agregarlos si se quiere usar Whop en producción.
-- El diseño actual ya es sólido (monochromático, Inter font, dark mode). Las mejoras son incrementales: notificaciones visibles, estados vacíos, badges informativos.
+### Archivos a modificar
+- `src/components/home/Testimonials.tsx` -- rediseño completo
+- `src/pages/About.tsx` -- fix botón Contáctanos
+- `src/components/layout/Footer.tsx` -- fix link Contacto
+- `src/pages/TransferCheckout.tsx` -- mejorar UX labels de Whop y responsive
 
