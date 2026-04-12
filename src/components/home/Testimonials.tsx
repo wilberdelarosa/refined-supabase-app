@@ -1,9 +1,6 @@
-import { Star, Quote, ChevronLeft, ChevronRight } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useCallback } from 'react';
-import useEmblaCarousel from 'embla-carousel-react';
+import { Star, Quote } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { FadeInUp } from '@/components/animations/ScrollAnimations';
-import { cn } from '@/lib/utils';
 
 const testimonials = [
   {
@@ -46,138 +43,79 @@ const testimonials = [
     rating: 5,
     initials: 'RS',
   },
+  {
+    id: 6,
+    name: 'Laura Díaz',
+    role: 'Fitness Lifestyle',
+    content: 'Me encanta la transparencia de sus productos. Ingredientes claros, resultados reales. ¡Los amo!',
+    rating: 5,
+    initials: 'LD',
+  },
 ];
 
 export function Testimonials() {
-  const [emblaRef, emblaApi] = useEmblaCarousel({
-    loop: true,
-    align: 'center',
-    skipSnaps: false,
-  });
-  const [selectedIndex, setSelectedIndex] = useState(0);
-
-  const scrollPrev = useCallback(() => emblaApi?.scrollPrev(), [emblaApi]);
-  const scrollNext = useCallback(() => emblaApi?.scrollNext(), [emblaApi]);
-
-  const onSelect = useCallback(() => {
-    if (!emblaApi) return;
-    setSelectedIndex(emblaApi.selectedScrollSnap());
-  }, [emblaApi]);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    onSelect();
-    emblaApi.on('select', onSelect);
-    return () => { emblaApi.off('select', onSelect); };
-  }, [emblaApi, onSelect]);
-
-  // Autoplay
-  useEffect(() => {
-    if (!emblaApi) return;
-    const interval = setInterval(() => {
-      emblaApi.scrollNext();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [emblaApi]);
-
   return (
-    <section className="py-20 md:py-32 bg-muted/30 relative overflow-hidden">
-      {/* Subtle background decoration */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] rounded-full bg-foreground/[0.02] blur-3xl pointer-events-none" />
+    <section className="py-24 md:py-36 bg-background relative overflow-hidden">
+      {/* Decorative elements */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/[0.03] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-primary/[0.03] rounded-full blur-3xl translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <div className="container relative">
         <FadeInUp>
-          <div className="text-center mb-16">
-            <span className="inline-block text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-4">
-              Lo que dicen nuestros clientes
-            </span>
-            <h2 className="text-3xl md:text-5xl font-black tracking-tight">
+          <div className="text-center mb-16 md:mb-20">
+            <span className="inline-block text-xs font-bold uppercase tracking-[0.25em] text-primary mb-4 px-4 py-1.5 rounded-full bg-primary/10">
               Testimonios
+            </span>
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tight mt-4">
+              Lo que dicen nuestros
+              <br />
+              <span className="text-primary">clientes</span>
             </h2>
+            <p className="text-muted-foreground text-lg md:text-xl mt-4 max-w-2xl mx-auto">
+              Miles de atletas confían en nosotros para alcanzar sus metas
+            </p>
           </div>
         </FadeInUp>
 
-        {/* Carousel */}
-        <div className="relative max-w-5xl mx-auto">
-          {/* Navigation Arrows */}
-          <button
-            onClick={scrollPrev}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-14 z-10 h-12 w-12 rounded-full border border-border bg-card/80 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-card hover:scale-110 transition-all duration-300"
-            aria-label="Anterior"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-14 z-10 h-12 w-12 rounded-full border border-border bg-card/80 backdrop-blur-sm shadow-lg flex items-center justify-center hover:bg-card hover:scale-110 transition-all duration-300"
-            aria-label="Siguiente"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+        {/* Testimonial Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 max-w-6xl mx-auto">
+          {testimonials.map((t, idx) => (
+            <motion.div
+              key={t.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-50px' }}
+              transition={{ delay: idx * 0.08, duration: 0.5, ease: 'easeOut' }}
+            >
+              <div className="group relative h-full bg-card border border-border/60 rounded-2xl p-7 md:p-8 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1.5 transition-all duration-500">
+                {/* Quote icon */}
+                <Quote className="absolute top-6 right-6 h-10 w-10 text-primary/[0.07] group-hover:text-primary/[0.15] transition-colors duration-500" />
 
-          <div className="overflow-hidden" ref={emblaRef}>
-            <div className="flex">
-              {testimonials.map((t, idx) => (
-                <div
-                  key={t.id}
-                  className="flex-[0_0_100%] min-w-0 px-4 md:flex-[0_0_50%] lg:flex-[0_0_33.333%]"
-                >
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: idx * 0.1, duration: 0.5 }}
-                    className="h-full"
-                  >
-                    <div className="group h-full bg-card border border-border rounded-2xl p-8 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden">
-                      {/* Quote accent */}
-                      <Quote className="absolute top-4 right-4 h-16 w-16 text-foreground/[0.04] group-hover:text-foreground/[0.08] transition-colors duration-500" />
-
-                      {/* Stars */}
-                      <div className="flex gap-0.5 mb-5">
-                        {[...Array(t.rating)].map((_, i) => (
-                          <Star key={i} className="h-4 w-4 fill-foreground text-foreground" />
-                        ))}
-                      </div>
-
-                      {/* Content */}
-                      <p className="text-foreground/80 leading-relaxed mb-8 relative z-10 text-sm md:text-base">
-                        "{t.content}"
-                      </p>
-
-                      {/* Author */}
-                      <div className="flex items-center gap-3 mt-auto">
-                        <div className="h-11 w-11 rounded-full bg-foreground text-background flex items-center justify-center font-bold text-sm shrink-0">
-                          {t.initials}
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{t.name}</p>
-                          <p className="text-xs text-muted-foreground">{t.role}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
+                {/* Stars */}
+                <div className="flex gap-1 mb-6">
+                  {[...Array(t.rating)].map((_, i) => (
+                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Dots */}
-          <div className="flex justify-center gap-2 mt-10">
-            {testimonials.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => emblaApi?.scrollTo(idx)}
-                className={cn(
-                  "h-2 rounded-full transition-all duration-300",
-                  idx === selectedIndex
-                    ? "w-8 bg-foreground"
-                    : "w-2 bg-foreground/20 hover:bg-foreground/40"
-                )}
-                aria-label={`Ir a testimonio ${idx + 1}`}
-              />
-            ))}
-          </div>
+                {/* Content */}
+                <blockquote className="text-foreground/85 leading-relaxed mb-8 text-[15px] md:text-base relative z-10">
+                  "{t.content}"
+                </blockquote>
+
+                {/* Author */}
+                <div className="flex items-center gap-4 pt-6 border-t border-border/50">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-primary/70 text-primary-foreground flex items-center justify-center font-bold text-sm shrink-0 shadow-md shadow-primary/20">
+                    {t.initials}
+                  </div>
+                  <div>
+                    <p className="font-bold text-sm tracking-tight">{t.name}</p>
+                    <p className="text-xs text-muted-foreground font-medium">{t.role}</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

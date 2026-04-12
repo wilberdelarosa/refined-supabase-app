@@ -356,7 +356,7 @@ export default function TransferCheckout() {
     navigate(`/checkout/transferencia?order=${data.orderId}`, { replace: true });
 
     toast.success('Checkout seguro listo', {
-      description: 'Completa el pago con tarjeta en el bloque de Whop que aparece abajo.',
+      description: 'Completa el pago con tarjeta en el formulario que aparece abajo.',
     });
   };
 
@@ -744,9 +744,9 @@ export default function TransferCheckout() {
                             </div>
                             {paymentMode === 'whop' && (
                                 <div className="space-y-4">
-                                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-                                        El checkout de Whop se enlaza con esta compra real y marcará la orden como pagada cuando llegue el webhook.
-                                    </div>
+                                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800 p-4 text-sm text-emerald-900 dark:text-emerald-200">
+                                         Tu pago se procesará de forma segura. La orden se confirmará automáticamente al completar el pago.
+                                     </div>
 
                                     {whopSessionId ? (
                                         <>
@@ -785,9 +785,9 @@ export default function TransferCheckout() {
                                         </div>
                                     )}
 
-                                    {restoringWhopSession && (
-                                        <p className="text-sm text-muted-foreground">Restaurando la sesión de Whop asociada a tu orden...</p>
-                                    )}
+                                     {restoringWhopSession && (
+                                         <p className="text-sm text-muted-foreground">Restaurando la sesión de pago...</p>
+                                     )}
                                 </div>
                             )}
                         </CardContent>
@@ -801,7 +801,7 @@ export default function TransferCheckout() {
                                 Método de Pago
                             </CardTitle>
                             <CardDescription>
-                                Elige si quieres pagar por transferencia o con tarjeta vía Whop.
+                                Elige cómo quieres pagar tu pedido.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -814,12 +814,12 @@ export default function TransferCheckout() {
                                         <RadioGroupItem value="whop" className="mt-1" />
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-semibold">Tarjeta con Whop</span>
-                                                <Badge variant="secondary">Automático</Badge>
+                                                 <span className="font-semibold">Pagar con Tarjeta</span>
+                                                <Badge variant="secondary">Rápido y seguro</Badge>
                                             </div>
-                                            <p className="text-sm text-muted-foreground">
-                                                Crea una orden real y abre un checkout embebido con confirmación automática.
-                                            </p>
+                                             <p className="text-sm text-muted-foreground">
+                                                 Paga directamente con tarjeta de crédito o débito. Sin necesidad de crear cuenta.
+                                             </p>
                                         </div>
                                     </label>
                                 )}
@@ -997,8 +997,8 @@ export default function TransferCheckout() {
                                         <span className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin" />
                                         Procesando...
                                     </span>
-                                ) : paymentMode === 'whop' ? (
-                                    whopSessionId ? 'Checkout creado, paga arriba' : 'Crear checkout seguro'
+                                 ) : paymentMode === 'whop' ? (
+                                     whopSessionId ? 'Pago listo — completa arriba ↑' : 'Pagar con Tarjeta'
                                 ) : 'Confirmar Pedido'}
                             </Button>
                         </CardFooter>
