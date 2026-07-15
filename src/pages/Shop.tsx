@@ -127,7 +127,12 @@ export default function Shop() {
                 categories={categories}
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
+                brands={brands}
+                selectedBrands={selectedBrands}
+                onBrandsChange={setSelectedBrands}
                 priceRange={priceRange}
+                priceMin={priceBounds.min}
+                priceMax={priceBounds.max}
                 onPriceChange={setPriceRange}
                 inStockOnly={inStockOnly}
                 onInStockChange={setInStockOnly}
@@ -180,7 +185,12 @@ export default function Shop() {
                         categories={categories}
                         selectedCategory={selectedCategory}
                         onCategoryChange={setSelectedCategory}
+                        brands={brands}
+                        selectedBrands={selectedBrands}
+                        onBrandsChange={setSelectedBrands}
                         priceRange={priceRange}
+                        priceMin={priceBounds.min}
+                        priceMax={priceBounds.max}
                         onPriceChange={setPriceRange}
                         inStockOnly={inStockOnly}
                         onInStockChange={setInStockOnly}
