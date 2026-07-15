@@ -81,6 +81,7 @@ interface OrderPayment {
 
 interface Order {
   id: string;
+  user_id: string;
   total: number;
   subtotal: number | null;
   discount_amount: number | null;

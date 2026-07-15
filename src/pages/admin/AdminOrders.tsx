@@ -909,25 +909,10 @@ export default function AdminOrders() {
                           )}
 
                           {payment.proof_url && (
-                            <div className="space-y-2 pt-2 border-t border-slate-200">
-                              <p className="text-xs font-semibold text-slate-500 uppercase">Comprobante</p>
-                              <div className="relative group">
-                                <img
-                                  src={payment.proof_url}
-                                  alt="Comprobante de pago"
-                                  className="w-full max-h-48 object-contain rounded-lg border border-slate-200 bg-slate-50 cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => setSelectedProofUrl(payment.proof_url)}
-                                />
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-white/90 hover:bg-white"
-                                  onClick={() => window.open(payment.proof_url!, '_blank')}
-                                >
-                                  <ExternalLink className="h-3.5 w-3.5" />
-                                </Button>
-                              </div>
-                            </div>
+                            <ProofPreview
+                              proofUrl={payment.proof_url}
+                              onOpenLightbox={(url) => setSelectedProofUrl(url)}
+                            />
                           )}
 
                           {payment.status === 'pending' && !isWhopPayment(payment) && (
