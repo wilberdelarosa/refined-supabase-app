@@ -5,14 +5,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { X, SlidersHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
 interface ShopFiltersProps {
   categories: string[];
   selectedCategory: string | undefined;
   onCategoryChange: (category: string | undefined) => void;
+  brands?: string[];
+  selectedBrands?: string[];
+  onBrandsChange?: (brands: string[]) => void;
   priceRange: [number, number];
+  priceMin?: number;
+  priceMax?: number;
   onPriceChange: (range: [number, number]) => void;
   inStockOnly: boolean;
   onInStockChange: (checked: boolean) => void;
@@ -21,14 +25,19 @@ interface ShopFiltersProps {
   hasActiveFilters: boolean;
   onClearFilters: () => void;
   className?: string;
-  isMobile?: boolean; // To adjust layout if needed
+  isMobile?: boolean;
 }
 
 export function ShopFilters({
   categories,
   selectedCategory,
   onCategoryChange,
+  brands = [],
+  selectedBrands = [],
+  onBrandsChange,
   priceRange,
+  priceMin = 0,
+  priceMax = 50000,
   onPriceChange,
   inStockOnly,
   onInStockChange,
@@ -39,6 +48,14 @@ export function ShopFilters({
   className,
   isMobile = false
 }: ShopFiltersProps) {
+  const toggleBrand = (brand: string) => {
+    if (!onBrandsChange) return;
+    onBrandsChange(
+      selectedBrands.includes(brand)
+        ? selectedBrands.filter((b) => b !== brand)
+        : [...selectedBrands, brand]
+    );
+  };
   return (
     <div className={cn("space-y-8", className)}>
       {/* Header if needed */}
