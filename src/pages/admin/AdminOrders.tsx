@@ -60,7 +60,7 @@ import {
 import { normalizeImageUrl } from '@/lib/image-url';
 import { Spinner } from '@/components/ui/spinner';
 import { formatCurrency } from '@/lib/format-currency';
-import { isWhopPayment } from '@/lib/whop-checkout';
+const isWhopPayment = (_p: unknown): boolean => false;
 
 interface Order {
   id: string;
