@@ -846,18 +846,6 @@ export default function AdminProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* Nutrition Dialog - Pass props comfortably */}
-      {nutritionProduct && (
-        <ProductNutritionDialog
-          open={nutritionDialogOpen}
-          onOpenChange={setNutritionDialogOpen}
-          productId={nutritionProduct.id}
-          productName={nutritionProduct.name}
-          productCategory={nutritionProduct.category}
-          productDescription={nutritionProduct.description || undefined}
-          onSaved={() => { }}
-        />
-      )}
     </AdminLayout>
   );
 }
