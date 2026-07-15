@@ -156,9 +156,6 @@ export function AdminLayout({ children, showSearch = true }: AdminLayoutProps) {
                             {/* Actions */}
                             <div className="flex items-center gap-3">
                                 <NotificationCenter isAdmin />
-                                <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
-                                    <Settings className="h-[22px] w-[22px]" />
-                                </button>
 
                                 {/* User Profile */}
                                 <div className="flex items-center gap-3 pl-2 border-l border-slate-200 ml-1">
