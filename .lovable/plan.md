@@ -1,40 +1,81 @@
+## Plan: Imágenes editables desde admin + mejoras generales
 
+### 1. Sistema de imágenes editables desde el panel admin
 
-## Plan: Mejoras de Testimonios, About, Responsive y Whop Checkout
+**Nueva tabla `site_images`** (Lovable Cloud):
+- `id`, `slot` (text unique), `image_url`, `alt_text`, `title`, `subtitle`, `link_url`, `sort_order`, `is_active`, `updated_at`
+- RLS: lectura pública; escritura solo admin
+- GRANT SELECT a `anon` y `authenticated`; ALL a `service_role` y admin write vía policy
 
-### Problemas identificados
+**Slots iniciales que se poblarán con las imágenes actuales**:
+- `hero_banner_main` (1920×1080, JPG, <500KB)
+- `category_proteinas` / `_creatina` / `_pre-entrenos` / `_vitaminas` / `_aminoacidos` (640×800, 3:4)
+- `newsletter_bg` (1600×600)
+- `about_hero` (1600×900)
 
-1. **Testimonios**: El componente actual es funcional pero básico. Se rediseñará con un estilo más premium.
-2. **Botón roto en About**: El botón "Contáctanos" apunta a `/contact` que no existe. También en el Footer.
-3. **Avatar no se actualiza en tiempo real**: El Navbar ya escucha cambios de `profiles` vía realtime channel -- esto debería funcionar. Verificaré que el `ProfileEdit` haga un update correcto que dispare el evento.
-4. **Whop guest checkout**: Ya está implementado con `WhopCheckoutEmbed` y `skipRedirect` + `hideAddressForm`. El usuario no necesita cuenta Whop. Solo falta asegurar que los textos no mencionen "Whop" de forma confusa y que el flujo sea claro.
-5. **Responsive**: Revisar y mejorar el checkout y testimonios en móvil.
+**Nueva página admin: `/admin/site-images`**
+- Grid con cada slot mostrando: preview, dimensiones recomendadas, peso máximo, formato sugerido
+- Botón "Cambiar imagen" -> sube a bucket `site-images` (nuevo bucket público)
+- Editar `alt_text`, `title`, `subtitle`, `link_url`
+- Validación cliente: avisa si la imagen difiere mucho de la relación de aspecto recomendada
+- Añadir link en `AdminLayout` sidebar
 
-### Cambios planificados
+**Hook `useSiteImages(slot | slots[])`** que consulta la tabla y hace fallback a los assets actuales si no hay registro.
 
-#### 1. Rediseño del componente Testimonials
-- Nuevo diseño con tarjetas más grandes, fotos de avatar más prominentes
-- Mejor tipografía y espaciado
-- Animación más suave y profesional
-- Diseño responsive mejorado (1 columna en móvil, 2 en tablet, 3 en desktop)
+**Refactor de componentes** para consumir el hook:
+- `src/components/home/Hero.tsx` -> lee `hero_banner_main`
+- `src/components/home/Categories.tsx` -> mapea slots `category_*`, mantiene fallback a los assets locales
+- `src/components/home/Newsletter.tsx` -> `newsletter_bg`
+- `src/pages/About.tsx` -> `about_hero`
 
-#### 2. Fix del botón "Contáctanos" en About y Footer
-- Cambiar `Link to="/contact"` por `Link to="/about"` o un enlace a WhatsApp/email directo, ya que no existe la ruta `/contact`
-- Opción: redirigir al footer de la misma página About donde están los datos de contacto
+### 2. Filtros y tienda más completos
 
-#### 3. Mejoras de UX en el checkout Whop
-- Renombrar "Tarjeta con Whop" a simplemente "Pagar con Tarjeta" para que el cliente no vea branding de Whop
-- Eliminar texto técnico como "webhook" del mensaje informativo
-- Simplificar los mensajes al usuario final
-- Asegurar que el embed se muestra correctamente en móvil
+En `src/pages/Shop.tsx` y `src/components/shop/ShopFilters.tsx`:
+- Filtro por **marca** (multi-select) leyendo `products.brand` distinct
+- Filtro de **peso/tamaño** (`weight_size`)
+- Ordenar por: relevancia, precio asc/desc, nombre, más nuevos, más vendidos
+- Chips de filtros activos con opción de quitar individualmente
+- Contador "N productos encontrados"
+- Rango de precios dinámico (min/max reales del catálogo, no fijo 50000)
+- Mantener query params en la URL para compartir/volver
+- Skeleton de carga y estado vacío mejorado con CTA "Limpiar filtros"
 
-#### 4. Responsive general
-- Verificar que el checkout, testimonios y About se vean bien en móvil (375px-414px)
-- Ajustar paddings y tamaños de fuente para pantallas pequeñas
+### 3. Recomendación con IA
 
-### Archivos a modificar
-- `src/components/home/Testimonials.tsx` -- rediseño completo
-- `src/pages/About.tsx` -- fix botón Contáctanos
-- `src/components/layout/Footer.tsx` -- fix link Contacto
-- `src/pages/TransferCheckout.tsx` -- mejorar UX labels de Whop y responsive
+Revisar `supabase/functions/ai-recommendation/index.ts` y `src/components/product/AIRecommendation.tsx`:
+- Confirmar modelo válido del catálogo (usar `google/gemini-2.5-flash` vía Lovable AI Gateway)
+- Manejo de 429 y 402 con mensaje claro al usuario
+- Validar input con zod, CORS correcto
+- Cache de respuesta por producto en sessionStorage para no reconsumir créditos
+- Loader y estados de error visibles en UI
 
+### 4. Ajustes / panel admin
+
+- Recorrer rutas de `AdminLayout` y verificar que cada página carga sin error
+- Corregir permisos: cualquier tabla nueva tiene RLS + GRANT
+- Página de **Ajustes de tienda** (`store_settings`): editar nombre, logo, email de contacto, teléfono, horario, monedas, impuesto por defecto
+- Verificar que `AdminPaymentMethods` guarda y lista correctamente
+
+### 5. Detalles técnicos
+
+- Bucket `site-images` público (SELECT), INSERT/UPDATE/DELETE restringido a admin
+- Sin emojis en UI
+- Sin cambios en `whop_*` (dejar como legacy hasta limpieza posterior)
+- Tipos TS actualizados vía regeneración automática de `types.ts`
+
+### Archivos a crear/modificar
+
+**Crear**:
+- `supabase/migrations/<timestamp>_site_images.sql`
+- `src/hooks/useSiteImages.ts`
+- `src/pages/admin/AdminSiteImages.tsx`
+- `src/components/admin/ImageSlotCard.tsx`
+
+**Modificar**:
+- `src/components/home/Hero.tsx`, `Categories.tsx`, `Newsletter.tsx`
+- `src/pages/About.tsx`
+- `src/pages/Shop.tsx`, `src/components/shop/ShopFilters.tsx`
+- `src/components/product/AIRecommendation.tsx`
+- `supabase/functions/ai-recommendation/index.ts`
+- `src/components/layout/AdminLayout.tsx`
+- `src/App.tsx` (nueva ruta admin)
