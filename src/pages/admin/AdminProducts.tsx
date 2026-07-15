@@ -100,8 +100,6 @@ export default function AdminProducts() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastEditedId, setLastEditedId] = useState<string | null>(null);
-  const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
-  const [nutritionProduct, setNutritionProduct] = useState<Product | null>(null);
   const [seeding, setSeeding] = useState(false);
 
   async function handleExportJSON() {
