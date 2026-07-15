@@ -55,8 +55,8 @@ interface WhopCheckoutResponse {
 
 type PaymentMode = 'whop' | 'transfer' | HostedPaymentProvider;
 
-const DEFAULT_WHOP_ENVIRONMENT = import.meta.env.VITE_WHOP_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production';
-const IS_WHOP_ENABLED = import.meta.env.VITE_ENABLE_WHOP_CHECKOUT !== 'false';
+const DEFAULT_WHOP_ENVIRONMENT: 'production' | 'sandbox' = 'sandbox';
+const IS_WHOP_ENABLED = false;
 
 export default function TransferCheckout() {
   const navigate = useNavigate();
