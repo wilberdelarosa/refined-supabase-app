@@ -85,7 +85,7 @@ export function Hero() {
               className="border-2 border-primary-foreground/30 bg-transparent text-primary-foreground hover:bg-primary-foreground/10 hover:border-primary-foreground/50 font-bold uppercase tracking-wide h-12 sm:h-14 px-8 rounded-full transition-all duration-300 backdrop-blur-sm"
               asChild
             >
-              <Link to="/about">
+              <Link to="/sobre-nosotros">
                 Conocer Más
               </Link>
             </Button>

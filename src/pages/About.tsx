@@ -2,201 +2,272 @@ import { Layout } from '@/components/layout/Layout';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Award, Users, Heart, Target } from 'lucide-react';
-import entrenamientoImg from '@/assets/entrenamiento.png';
-import { FadeInUp, FadeInLeft, FadeInRight, ScaleIn, StaggerContainer, StaggerItem, RotateIn, SlideInBlur } from '@/components/animations/ScrollAnimations';
+import { Users, Flame, Compass, ShieldCheck } from 'lucide-react';
+import { FadeInUp, FadeInLeft, FadeInRight, ScaleIn, StaggerContainer, StaggerItem, SlideInBlur } from '@/components/animations/ScrollAnimations';
 
 const About = () => {
   const values = [
     {
-      icon: Award,
-      title: 'Calidad Premium',
-      desc: 'Ofrecemos solo los mejores suplementos deportivos con ingredientes de la más alta calidad y respaldados por la ciencia.'
+      icon: ShieldCheck,
+      title: 'Calidad Suprema',
+      desc: 'Formulaciones premium respaldadas por la ciencia, utilizando materias primas de la máxima pureza certificada.'
+    },
+    {
+      icon: Flame,
+      title: 'Rendimiento Bárbaro',
+      desc: 'Diseñados por y para atletas exigentes que buscan romper límites y alcanzar su máximo potencial biológico.'
     },
     {
       icon: Users,
-      title: 'Asesoría Personalizada',
-      desc: 'Nuestro equipo de expertos está disponible para guiarte y ayudarte a encontrar los productos ideales para tus objetivos.'
+      title: 'La Tribu',
+      desc: 'Una hermandad de entusiastas del fitness unidos por el sudor, la disciplina y el hambre constante de mejora.'
     },
     {
-      icon: Heart,
-      title: 'Comunidad',
-      desc: 'Más que una tienda, somos una comunidad de personas comprometidas con el fitness y el bienestar integral.'
-    },
-    {
-      icon: Target,
-      title: 'Resultados',
-      desc: 'Nos enfocamos en ayudarte a alcanzar tus metas con productos efectivos y un servicio de excelencia.'
+      icon: Compass,
+      title: 'Asesoría de Élite',
+      desc: 'Expertos certificados listos para diseñar tu plan de suplementación personalizado según tus metas individuales.'
     },
   ];
 
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-muted/50 to-background">
-        <div className="container">
-          <div className="max-w-4xl mx-auto text-center">
+      <div className="bg-black text-white min-h-screen overflow-hidden">
+        
+        {/* HERO SECTION - Premium Brutalist style */}
+        <section className="relative min-h-[85vh] flex items-center justify-center py-24 overflow-hidden border-b border-neutral-900">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/focused-fitness.png" 
+              alt="Background athlete" 
+              className="w-full h-full object-cover object-center opacity-25 filter grayscale contrast-125"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent opacity-60" />
+          </div>
+
+          <div className="container relative z-10 mx-auto px-4 text-center">
             <ScaleIn>
-              <div className="inline-block mb-6">
-                <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground px-4 py-2 rounded-full bg-muted/50">
-                  Sobre Nosotros
-                </p>
-              </div>
+              <span className="text-[hsl(var(--accent-gold))] text-xs sm:text-sm font-extrabold uppercase tracking-[0.4em] mb-4 inline-block">
+                // BARBARO NUTRITION
+              </span>
             </ScaleIn>
+            
             <FadeInUp delay={0.2}>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                Conoce la historia detrás de <span className="text-primary">Barbaro Nutrition</span>
+              <h1 className="text-6xl sm:text-8xl md:text-9xl font-black italic tracking-tighter uppercase leading-none select-none">
+                SOMOS LA <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-[hsl(var(--accent-gold))]">
+                  TRIBU
+                </span>
               </h1>
             </FadeInUp>
+            
             <SlideInBlur delay={0.4}>
-              <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-                Y nuestra pasión por el fitness
+              <p className="text-neutral-400 font-light text-lg sm:text-xl max-w-xl mx-auto mt-6 leading-relaxed">
+                Nuestra pasión es tu rendimiento. Suplementos deportivos premium diseñados para la élite atlética y aquellos que no aceptan límites.
               </p>
             </SlideInBlur>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Story Section */}
-      <section className="py-20 md:py-28">
-        <div className="container">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-7xl mx-auto">
-            {/* Text Content */}
-            <FadeInLeft>
-            <div className="space-y-8 lg:pr-8">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-4">
-                  Nuestra Historia
-                </p>
-                <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold leading-tight mb-6">
-                  Bienvenidos <br />Bárbaros
-                </h2>
-              </div>
+        {/* STORY SECTION - Grid Layout with Asymmetrical elements */}
+        <section className="py-24 md:py-32 relative">
+          <div className="container mx-auto px-4">
+            <div className="grid lg:grid-cols-12 gap-12 items-center max-w-7xl mx-auto">
+              
+              {/* Text Block (Left) */}
+              <div className="lg:col-span-7 space-y-8">
+                <FadeInLeft>
+                  <div className="space-y-4">
+                    <span className="text-[hsl(var(--accent-gold))] font-mono text-xs uppercase tracking-widest block">
+                      // NUESTRA HISTORIA
+                    </span>
+                    <h2 className="text-4xl md:text-7xl font-black tracking-tighter uppercase italic leading-none">
+                      BIENVENIDOS <br/>
+                      <span className="text-neutral-500">BÁRBAROS</span>
+                    </h2>
+                  </div>
+                </FadeInLeft>
 
-              <div className="space-y-6 text-muted-foreground leading-relaxed">
-                <p className="text-lg">
-                  Con mucho orgullo y entusiasmo les invito a ser parte de esta tribu la que se caracterizará por ser una <strong className="text-foreground">gran familia</strong>. Que tendrá como norte mejorar cada día en una mejor versión de nosotros mismos promoviendo siempre el bienestar físico y emocional de todos sus miembros.
-                </p>
-                <p className="text-lg">
-                  Pronto estaremos listos para iniciar con ustedes este camino el cual nos llenará de gratas experiencias y de conocimientos.
-                </p>
-              </div>
+                <FadeInLeft delay={0.2} className="space-y-6 text-neutral-400 font-light text-lg leading-relaxed max-w-2xl">
+                  <p>
+                    Con mucho orgullo y entusiasmo les invito a ser parte de esta tribu, la cual se caracterizará por ser una <strong className="text-white font-semibold">gran familia</strong>. Nuestro norte es mejorar cada día para forjar una versión superior de nosotros mismos, promoviendo siempre el bienestar físico y emocional de todos sus miembros.
+                  </p>
+                  <p>
+                    Aquí la suplementación no es una moda, es la herramienta fundamental que potencia tu disciplina diaria y amplifica tus resultados. Estás en el lugar donde la ciencia nutricional se encuentra con el sudor.
+                  </p>
+                </FadeInLeft>
 
-              <RotateIn delay={0.3}>
-                <div className="pt-4">
-                  <div className="border-l-4 border-primary pl-6 py-2">
-                    <p className="font-bold text-foreground text-xl md:text-2xl">
-                      Acompáñanos en este gran reto y sé parte de la tribu…
+                <FadeInLeft delay={0.3}>
+                  <div className="border-l-2 border-[hsl(var(--accent-gold))] pl-6 py-2">
+                    <p className="font-bold text-white text-xl md:text-2xl italic tracking-tight">
+                      "Acompáñanos en este gran reto y sé parte de la tribu…"
                     </p>
                   </div>
-                </div>
-              </RotateIn>
-            </div>
-            </FadeInLeft>
+                </FadeInLeft>
+              </div>
 
-            {/* Image */}
-            <FadeInRight>
-            <div className="relative lg:order-last">
-              <ScaleIn delay={0.2}>
-                <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                  <img
-                    src={entrenamientoImg}
-                    alt="Entrenamiento Barbaro Nutrition"
-                    className="w-full h-auto object-contain"
-                  />
-                  {/* Subtle gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
-                </div>
-              </ScaleIn>
-              {/* Decorative elements */}
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10" />
-              <div className="absolute -top-6 -left-6 w-32 h-32 bg-primary/10 rounded-full blur-3xl -z-10" />
+              {/* Graphic Block (Right) */}
+              <div className="lg:col-span-5 relative mt-8 lg:mt-0">
+                <FadeInRight>
+                  <div className="relative aspect-[3/4] sm:aspect-square w-full rounded-2xl overflow-hidden shadow-2xl border border-neutral-800">
+                    <img 
+                      src="/gym-team-bw.png" 
+                      alt="Tribu Barbaro" 
+                      className="w-full h-full object-cover object-center filter grayscale hover:grayscale-0 transition-all duration-700 hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/10 to-transparent pointer-events-none" />
+                  </div>
+                </FadeInRight>
+
+                {/* Overlapping Glass Card */}
+                <ScaleIn delay={0.4} className="absolute -bottom-8 -right-4 sm:-right-8 max-w-xs p-6 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-xl shadow-2xl">
+                  <p className="text-xs text-[hsl(var(--accent-gold))] font-bold uppercase tracking-wider mb-2">Fundador & CEO</p>
+                  <p className="text-sm font-medium italic text-neutral-200">
+                    "Unidos por la disciplina, impulsados por el rendimiento."
+                  </p>
+                </ScaleIn>
+              </div>
+
             </div>
-            </FadeInRight>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* Values Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container">
-          <FadeInUp>
-            <div className="text-center max-w-3xl mx-auto mb-16">
-              <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-4">
-                Lo que nos define
-              </p>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6">
-                Nuestra Misión
-              </h2>
-              <p className="text-muted-foreground text-lg md:text-xl">
-                Comprometidos con tu transformación física y emocional
-              </p>
+        {/* QUANTIFIED SECTION - High Impact Numbers */}
+        <section className="py-16 bg-neutral-950 border-y border-neutral-900">
+          <div className="container mx-auto px-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center max-w-6xl mx-auto">
+              <FadeInUp delay={0.1}>
+                <div>
+                  <h3 className="text-4xl md:text-6xl font-black text-[hsl(var(--accent-gold))] italic tracking-tighter">
+                    +10K
+                  </h3>
+                  <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold mt-2">
+                    Atletas Activos
+                  </p>
+                </div>
+              </FadeInUp>
+              <FadeInUp delay={0.2}>
+                <div>
+                  <h3 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">
+                    99%
+                  </h3>
+                  <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold mt-2">
+                    Satisfacción
+                  </p>
+                </div>
+              </FadeInUp>
+              <FadeInUp delay={0.3}>
+                <div>
+                  <h3 className="text-4xl md:text-6xl font-black text-[hsl(var(--accent-gold))] italic tracking-tighter">
+                    100%
+                  </h3>
+                  <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold mt-2">
+                    Garantía Pura
+                  </p>
+                </div>
+              </FadeInUp>
+              <FadeInUp delay={0.4}>
+                <div>
+                  <h3 className="text-4xl md:text-6xl font-black text-white italic tracking-tighter">
+                    +50
+                  </h3>
+                  <p className="text-xs text-neutral-500 uppercase tracking-widest font-bold mt-2">
+                    Puntos de Venta
+                  </p>
+                </div>
+              </FadeInUp>
             </div>
-          </FadeInUp>
+          </div>
+        </section>
 
-          <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto" staggerDelay={0.15}>
-            {values.map((item, idx) => (
-              <StaggerItem key={item.title}>
-                <RotateIn>
-                  <Card className="group border-2 hover:border-primary/50 transition-all duration-300 hover:shadow-lg h-full">
-                    <CardContent className="p-8 text-center space-y-4">
-                      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-all duration-300 group-hover:scale-110">
-                        <item.icon className="h-8 w-8" />
+        {/* VALUES SECTION - Glassmorphic details */}
+        <section className="py-24 md:py-32 relative">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-amber-500/5 via-transparent to-transparent pointer-events-none" />
+          
+          <div className="container mx-auto px-4">
+            <FadeInUp>
+              <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+                <span className="text-[hsl(var(--accent-gold))] font-mono text-xs uppercase tracking-widest block">
+                  // LO QUE NOS DEFINE
+                </span>
+                <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase italic leading-none">
+                  NUESTRA MISIÓN
+                </h2>
+                <p className="text-neutral-400 font-light text-lg">
+                  Llevando la suplementación deportiva al siguiente nivel con pilares inquebrantables.
+                </p>
+              </div>
+            </FadeInUp>
+
+            <StaggerContainer className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 max-w-7xl mx-auto" staggerDelay={0.15}>
+              {values.map((item) => (
+                <StaggerItem key={item.title}>
+                  <Card className="group h-full relative overflow-hidden bg-neutral-900/40 border border-neutral-800 hover:border-[hsl(var(--accent-gold))]/30 transition-all duration-300 hover:shadow-[0_0_30px_rgba(212,175,55,0.05)] rounded-2xl">
+                    <CardContent className="p-8 space-y-5">
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-neutral-850 text-[hsl(var(--accent-gold))] group-hover:bg-[hsl(var(--accent-gold))] group-hover:text-black transition-all duration-300">
+                        <item.icon className="h-7 w-7" />
                       </div>
-                      <h3 className="font-bold text-xl">{item.title}</h3>
-                      <p className="text-sm text-muted-foreground leading-relaxed">
+                      <h3 className="font-bold text-xl uppercase italic tracking-tight text-white">{item.title}</h3>
+                      <p className="text-sm text-neutral-400 font-light leading-relaxed">
                         {item.desc}
                       </p>
                     </CardContent>
                   </Card>
-                </RotateIn>
-              </StaggerItem>
-            ))}
-          </StaggerContainer>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 md:py-28 bg-gradient-to-br from-foreground via-foreground to-foreground/90 text-background relative overflow-hidden">
-        {/* Decorative background elements */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-primary/20 via-transparent to-transparent" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl" />
-
-        <div className="container relative">
-          <div className="max-w-4xl mx-auto text-center space-y-8">
-            <ScaleIn>
-              <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                ¿Listo para ser parte de la tribu?
-              </h2>
-            </ScaleIn>
-            <FadeInUp delay={0.2}>
-              <p className="text-background/80 text-xl md:text-2xl max-w-2xl mx-auto leading-relaxed">
-                Explora nuestra selección de suplementos premium y comienza tu transformación hoy mismo.
-              </p>
-            </FadeInUp>
-            <FadeInUp delay={0.4}>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-              <Button
-                size="lg"
-                className="bg-background text-foreground hover:bg-background/90 font-semibold uppercase tracking-wide text-base px-10 py-6 h-auto shadow-xl hover:shadow-2xl transition-all duration-300"
-                asChild
-              >
-                <Link to="/shop">Ver Productos</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-2 border-background text-background hover:bg-background hover:text-foreground font-semibold uppercase tracking-wide text-base px-10 py-6 h-auto transition-all duration-300"
-                asChild
-              >
-                <a href="https://wa.me/18095551234" target="_blank" rel="noopener noreferrer">Contáctanos</a>
-              </Button>
-              </div>
-            </FadeInUp>
+                </StaggerItem>
+              ))}
+            </StaggerContainer>
           </div>
-        </div>
-      </section>
+        </section>
+
+        {/* CTA SECTION - Extreme Premium Overlaid style */}
+        <section className="relative py-28 md:py-36 overflow-hidden border-t border-neutral-900 bg-black">
+          <div className="absolute inset-0 z-0">
+            <img 
+              src="/crossfit-athlete.png" 
+              alt="CTA Background athlete" 
+              className="w-full h-full object-cover object-center opacity-30 filter grayscale"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black via-black/90 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/80" />
+          </div>
+
+          <div className="container relative z-10 mx-auto px-4">
+            <div className="max-w-3xl space-y-6">
+              <span className="text-[hsl(var(--accent-gold))] font-mono text-xs uppercase tracking-widest block">
+                // ÚNETE A LA TRIBU
+              </span>
+              <h2 className="text-5xl md:text-8xl font-black tracking-tighter uppercase italic leading-none text-white select-none">
+                ¿LISTO PARA EL <br/>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[hsl(var(--accent-gold))] to-white">
+                  RETO?
+                </span>
+              </h2>
+              <p className="text-neutral-400 font-light text-lg md:text-xl max-w-xl leading-relaxed">
+                Descubre nuestra selección exclusiva de suplementos deportivos diseñados para potenciar tus objetivos.
+              </p>
+              
+              <div className="flex flex-wrap gap-4 pt-6">
+                <Button
+                  size="lg"
+                  className="bg-white text-black hover:bg-[hsl(var(--accent-gold))] hover:text-black font-bold uppercase tracking-wider text-sm px-8 py-5 h-auto rounded-full transition-all duration-300 shadow-xl"
+                  asChild
+                >
+                  <Link to="/shop">Ir a la Tienda</Link>
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-2 border-white/20 bg-transparent text-white hover:bg-white/10 hover:border-white/50 font-bold uppercase tracking-wider text-sm px-8 py-5 h-auto rounded-full transition-all duration-300"
+                  asChild
+                >
+                  <a href="https://wa.me/18095551234" target="_blank" rel="noopener noreferrer">Asesoría WhatsApp</a>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
     </Layout>
   );
 };

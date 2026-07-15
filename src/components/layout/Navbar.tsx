@@ -72,7 +72,7 @@ export function Navbar() {
   const navLinks = [
     { name: 'Inicio', path: '/' },
     { name: 'Tienda', path: '/shop' },
-    { name: 'Nosotros', path: '/about' },
+    { name: 'Nosotros', path: '/sobre-nosotros' },
   ];
   const [isOpen, setIsOpen] = useState(false);
   const { user, signOut } = useAuth();
@@ -100,7 +100,12 @@ export function Navbar() {
         table: 'profiles',
         filter: `user_id=eq.${user.id}`,
       }, (payload) => {
-        const newAvatar = (payload.new as any)?.avatar_url;
+        const newAvatar =
+          typeof payload.new === 'object' &&
+          payload.new !== null &&
+          'avatar_url' in payload.new
+            ? (payload.new.avatar_url as string | null)
+            : null;
         setAvatarUrl(newAvatar || null);
       })
       .subscribe();

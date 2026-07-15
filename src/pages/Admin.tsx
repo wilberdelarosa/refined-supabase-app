@@ -18,6 +18,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { formatCurrency } from '@/lib/format-currency';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface DashboardStats {
   totalSales: number;
@@ -47,6 +48,7 @@ export default function Admin() {
     totalUsers: 0
   });
   const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([]);
+  const [chartData, setChartData] = useState<{ date: string; Ventas: number }[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -100,7 +102,15 @@ export default function Admin() {
         .order('created_at', { ascending: false })
         .limit(5);
 
-      if (salesError || ordersError || usersError || recentOrdersError) {
+      // 5. Fetch Chart Data (completed orders last 30 days)
+      const { data: chartDataRaw, error: chartDataError } = await supabase
+        .from('orders')
+        .select('created_at, total')
+        .eq('status', 'completed')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: true });
+
+      if (salesError || ordersError || usersError || recentOrdersError || chartDataError) {
         console.error('Error fetching dashboard data');
       }
 
@@ -113,6 +123,28 @@ export default function Admin() {
       if (recentOrdersData) {
         setRecentOrders(recentOrdersData as unknown as RecentOrder[]);
       }
+
+      // Group sales by day for the last 15 days
+      const salesByDate: Record<string, number> = {};
+      for (let i = 14; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const label = format(d, 'dd MMM', { locale: es });
+        salesByDate[label] = 0;
+      }
+
+      chartDataRaw?.forEach(order => {
+        const label = format(new Date(order.created_at), 'dd MMM', { locale: es });
+        if (salesByDate[label] !== undefined) {
+          salesByDate[label] += order.total;
+        }
+      });
+
+      const formattedChartData = Object.entries(salesByDate).map(([date, total]) => ({
+        date,
+        Ventas: total
+      }));
+      setChartData(formattedChartData);
 
     } catch (error) {
       console.error('Error in dashboard fetch:', error);
@@ -222,30 +254,46 @@ export default function Admin() {
             {/* Removed hardcoded numbers from chart header to avoid confusion */}
           </div>
           <div className="p-6 flex-1 flex flex-col justify-end min-h-[300px]">
-            {/* Chart visual representation using SVG - purely decorative for now */}
             <div className="relative h-64 w-full">
-              <svg className="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 800 200">
-                {/* Grid lines */}
-                <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="200" y2="200"></line>
-                <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="150" y2="150"></line>
-                <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="100" y2="100"></line>
-                <line className="stroke-slate-200" strokeDasharray="4 4" strokeWidth="1" x1="0" x2="800" y1="50" y2="50"></line>
-                {/* Data Line */}
-                <defs>
-                  <linearGradient id="gradient" x1="0" x2="0" y1="0" y2="1">
-                    <stop offset="0%" stopColor="#2b8dee" stopOpacity="0.2"></stop>
-                    <stop offset="100%" stopColor="#2b8dee" stopOpacity="0"></stop>
-                  </linearGradient>
-                </defs>
-                <path d="M0,150 Q50,140 100,120 T200,100 T300,130 T400,80 T500,90 T600,50 T700,60 T800,20" fill="none" stroke="#2b8dee" strokeLinecap="round" strokeLinejoin="round" strokeWidth="3"></path>
-                <path d="M0,150 Q50,140 100,120 T200,100 T300,130 T400,80 T500,90 T600,50 T700,60 T800,20 V200 H0 Z" fill="url(#gradient)" stroke="none"></path>
-              </svg>
-            </div>
-            <div className="flex justify-between text-xs text-slate-400 mt-4 font-medium uppercase tracking-wider">
-              <span>Semana 1</span>
-              <span>Semana 2</span>
-              <span>Semana 3</span>
-              <span>Semana 4</span>
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart
+                  data={chartData}
+                  margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                >
+                  <defs>
+                    <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#2b8dee" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#2b8dee" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                  <XAxis 
+                    dataKey="date" 
+                    tickLine={false} 
+                    axisLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 500 }}
+                  />
+                  <YAxis 
+                    tickLine={false} 
+                    axisLine={false}
+                    tick={{ fill: '#94a3b8', fontSize: 10, fontWeight: 500 }}
+                    tickFormatter={(val) => `RD$${val.toLocaleString()}`}
+                  />
+                  <Tooltip 
+                    contentStyle={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value: string | number) => [`RD$ ${Number(value).toLocaleString()}`, 'Ventas']}
+                    labelStyle={{ fontWeight: 'bold', color: '#0f172a' }}
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="Ventas" 
+                    stroke="#2b8dee" 
+                    strokeWidth={3}
+                    fillOpacity={1} 
+                    fill="url(#colorSales)" 
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>

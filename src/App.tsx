@@ -55,6 +55,7 @@ const App = () => (
               <Route path="/shop" element={<Shop />} />
               <Route path="/cart" element={<Shop />} /> {/* Redirect to shop, use CartDrawer */}
               <Route path="/about" element={<About />} />
+              <Route path="/sobre-nosotros" element={<About />} />
               <Route path="/account" element={<Account />} />
               <Route path="/profile/edit" element={<ProfileEdit />} />
               <Route path="/wishlist" element={<Wishlist />} />

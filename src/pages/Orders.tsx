@@ -53,6 +53,9 @@ interface OrderWithDetails {
       image_url: string | null;
     } | null;
   }>;
+  invoices?: Array<{
+    id: string;
+  }> | null;
 }
 
 const statusConfig: Record<string, {
@@ -187,11 +190,9 @@ function EmptyOrders() {
 
 // Order card component
 function OrderCard({
-  order,
-  onViewInvoice
+  order
 }: {
   order: OrderWithDetails;
-  onViewInvoice: (orderId: string) => void;
 }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const status = statusConfig[order.status] || statusConfig.pending;
@@ -355,10 +356,12 @@ function OrderCard({
                                 </Link>
                             </Button>
                         )}
-                        {canViewInvoice ? (
-                            <Button variant="outline" className="w-full gap-2 shadow-sm" onClick={() => onViewInvoice(order.id)}>
-                                <FileText className="h-4 w-4" />
-                                <span className="text-xs sm:text-sm">Factura</span>
+                        {order.invoices && order.invoices.length > 0 ? (
+                            <Button variant="outline" className="w-full gap-2 shadow-sm" asChild>
+                                <Link to={`/orders/invoice/${order.invoices[0].id}`}>
+                                    <FileText className="h-4 w-4" />
+                                    <span className="text-xs sm:text-sm">Factura</span>
+                                </Link>
                             </Button>
                         ) : (
                             <Tooltip>
@@ -371,7 +374,7 @@ function OrderCard({
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                    <p>La factura estará disponible cuando el pago sea confirmado.</p>
+                                    <p>La factura estará disponible cuando el pago sea verificado y el pedido sea procesado.</p>
                                 </TooltipContent>
                             </Tooltip>
                         )}
@@ -399,14 +402,7 @@ export default function Orders() {
   const [orders, setOrders] = useState<OrderWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const handleDownloadInvoice = async (orderId: string) => {
-      // existing logic
-      toast.info('Descargando factura...', { id: 'download-invoice' });
-      // simulate delay/fetch since we don't have the backend here fully mocked
-      setTimeout(() => {
-          toast.success('Factura descargada', { id: 'download-invoice' });
-      }, 1000);
-  };
+  // Note: handleDownloadInvoice was removed in favor of direct linking to /orders/invoice/:invoiceId
 
   const handleExportCSV = () => {
     if (orders.length === 0) {
@@ -452,6 +448,9 @@ export default function Orders() {
                 products (
                     image_url
                 )
+            ),
+            invoices (
+                id
             )
             `)
             .eq('user_id', user.id)
@@ -531,7 +530,6 @@ export default function Orders() {
                   >
                     <OrderCard
                       order={order}
-                      onViewInvoice={handleDownloadInvoice}
                     />
                   </div>
                 ))}

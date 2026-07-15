@@ -63,7 +63,7 @@ export function Footer() {
             <h4 className="font-bold mb-4 uppercase tracking-wide text-sm">Empresa</h4>
             <ul className="space-y-3">
               <li>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium inline-flex items-center group">
+                <Link to="/sobre-nosotros" className="text-sm text-muted-foreground hover:text-foreground transition-colors font-medium inline-flex items-center group">
                   <span className="mr-2 opacity-0 -ml-4 group-hover:opacity-100 group-hover:ml-0 transition-all">→</span>
                   Sobre Nosotros
                 </Link>

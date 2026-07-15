@@ -11,6 +11,7 @@ import { Product } from '@/types/product';
 import { toast } from 'sonner';
 import { normalizeImageUrl, getProductImageFallback } from '@/lib/image-url';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface ProductCardProps {
   product: Product;
@@ -70,13 +71,17 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
   if (isList) {
     return (
       <Link to={`/producto/${product.id}`} className="block h-full">
-         <div className="group flex gap-4 p-4 rounded-xl border bg-card hover:shadow-md transition-all duration-300 h-full items-center">
+         <motion.div
+           whileHover={{ x: 4 }}
+           transition={{ duration: 0.2 }}
+           className="group flex gap-4 p-4 rounded-xl border bg-card shadow-sm hover-glow-premium dark:hover-glow-premium-dark transition-all duration-300 h-full items-center"
+         >
             <div className="relative h-24 w-24 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-lg bg-muted/20">
               {imageSrc && !imageFailed ? (
                 <img
                     src={imageSrc}
                     alt={product.name}
-                    className="h-full w-full object-contain p-2 mix-blend-multiply" 
+                    className="h-full w-full object-contain p-2 mix-blend-multiply transition-transform duration-500 group-hover:scale-105" 
                     onError={() => setImageFailed(true)}
                 />
                ) : (
@@ -92,7 +97,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                         <Badge variant="secondary" className="mb-1 text-[10px]">{product.category}</Badge>
                         <h3 className="font-semibold text-base sm:text-lg leading-tight truncate pr-4">{product.name}</h3>
                     </div>
-                    {hasDiscount && <Badge className="bg-red-500 hover:bg-red-600">-{discountPercentage}%</Badge>}
+                    {hasDiscount && <Badge className="bg-red-500 hover:bg-red-600 text-white font-bold border-0 shadow-sm">-{discountPercentage}%</Badge>}
                 </div>
                 
                 <div className="flex items-baseline gap-2">
@@ -109,7 +114,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                 <Button
                     size="icon"
                     variant="ghost"
-                    className={cn("h-9 w-9", isFavorite && "text-red-500 hover:text-red-600 bg-red-50")}
+                    className={cn("h-9 w-9 rounded-full", isFavorite && "text-red-500 hover:text-red-600 bg-red-50")}
                     onClick={handleToggleWishlist}
                 >
                     <Heart className={cn("h-5 w-5", isFavorite && "fill-current")} />
@@ -118,19 +123,28 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                     size="icon" 
                     onClick={handleAddToCart}
                     disabled={!isAvailable}
-                    className="h-9 w-9"
+                    className={cn(
+                      "h-9 w-9 rounded-full transition-all duration-300",
+                      isAvailable 
+                        ? "bg-primary text-primary-foreground hover:bg-[hsl(var(--accent-gold))] hover:text-black hover:scale-110 border-0" 
+                        : "opacity-50"
+                    )}
                 >
-                    <ShoppingCart className="h-4 w-4" />
+                    {isAdding ? <Check className="h-4 w-4" /> : <ShoppingCart className="h-4 w-4" />}
                 </Button>
             </div>
-         </div>
+         </motion.div>
       </Link>
     )
   }
 
   return (
     <Link to={`/producto/${product.id}`} className="block h-full">
-      <div className="group h-full relative flex flex-col rounded-xl border bg-card hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden">
+      <motion.div
+        whileHover={{ y: -6 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="group h-full relative flex flex-col rounded-xl border bg-card shadow-sm hover-glow-premium dark:hover-glow-premium-dark transition-all duration-300 overflow-hidden"
+      >
         {/* Image Container */}
         <div className="relative aspect-square overflow-hidden bg-muted/10 p-6">
           {imageSrc && !imageFailed ? (
@@ -153,7 +167,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
               <Badge variant="destructive" className="shadow-sm">Agotado</Badge>
             )}
             {hasDiscount && isAvailable && (
-              <Badge className="bg-red-500 hover:bg-red-600 text-white shadow-sm border-0">-{discountPercentage}%</Badge>
+              <Badge className="bg-red-500 hover:bg-red-600 text-white shadow-sm border-0 font-bold">-{discountPercentage}%</Badge>
             )}
           </div>
 
@@ -200,7 +214,9 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                     size="sm"
                     className={cn(
                         "rounded-full h-9 w-9 p-0 shadow-sm transition-all duration-300",
-                        isAvailable ? "hover:scale-105 active:scale-95" : "opacity-50"
+                        isAvailable 
+                          ? "bg-primary text-primary-foreground hover:bg-[hsl(var(--accent-gold))] hover:text-black hover:scale-110 active:scale-95 border-0" 
+                          : "opacity-50"
                     )}
                   >
                     {isAdding ? (
@@ -212,7 +228,7 @@ export function ProductCard({ product, variant = 'grid' }: ProductCardProps) {
                   </Button>
             </div>
         </div>
-      </div>
+      </motion.div>
     </Link>
   );
 }
