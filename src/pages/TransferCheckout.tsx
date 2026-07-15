@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { WhopCheckoutEmbed } from '@whop/checkout/react';
+
 import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, Truck, ShieldCheck, CreditCard, FileText, ExternalLink, Link2, LockKeyhole } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
