@@ -170,21 +170,9 @@ export default function ProductDetail() {
           </FadeInUp>
         </div>
 
-        {/* Nutrition & Details Section */}
-        <div className="mt-12 grid lg:grid-cols-2 gap-8">
-          {/* Left: Nutrition */}
-          <div>
-            {nutritionLoading ? (
-              <div className="flex justify-center py-8"><Spinner className="h-6 w-6" /></div>
-            ) : nutrition ? (
-              <NutritionTable nutrition={nutrition} usageInstructions={extProduct.usage_instructions} />
-            ) : null}
-          </div>
-
-          {/* Right: AI Recommendation */}
-          <div className="space-y-6">
-            <AIRecommendation productName={product.name} productCategory={product.category} />
-          </div>
+        {/* AI Recommendation Section */}
+        <div className="mt-12">
+          <AIRecommendation productName={product.name} productCategory={product.category} />
         </div>
 
         {/* Related Products */}
