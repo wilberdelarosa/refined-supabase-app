@@ -20,7 +20,7 @@ import RelatedProducts from '@/components/product/RelatedProducts';
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
   const { product, loading, error } = useNativeProduct(handle || '');
-  const { nutrition, loading: nutritionLoading } = useProductNutrition(product?.id);
+  
   const addItem = useCartStore(state => state.addItem);
   const { isInWishlist, toggleWishlist } = useNativeWishlist();
   const [quantity, setQuantity] = useState(1);
