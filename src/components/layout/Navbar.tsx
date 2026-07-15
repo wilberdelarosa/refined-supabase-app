@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Menu, Settings, LogOut, ShoppingBag, Bell } from 'lucide-react';
+import { User, Menu, LogOut, ShoppingBag, Bell, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
