@@ -98,26 +98,50 @@ export function ShopFilters({
 
       <Separator />
 
+      {/* Brands */}
+      {brands.length > 0 && onBrandsChange && (
+        <>
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Marcas</h3>
+            <div className="space-y-2 max-h-56 overflow-y-auto pr-2">
+              {brands.map((brand) => (
+                <div key={brand} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`brand-${brand}`}
+                    checked={selectedBrands.includes(brand)}
+                    onCheckedChange={() => toggleBrand(brand)}
+                  />
+                  <Label htmlFor={`brand-${brand}`} className="text-sm font-normal cursor-pointer">
+                    {brand}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+          <Separator />
+        </>
+      )}
+
       {/* Price Range */}
       <div className="space-y-4">
         <h3 className="text-sm font-medium uppercase tracking-wider text-muted-foreground">Precio</h3>
         <div className="pt-2 px-2">
           <Slider
-            defaultValue={[0, 50000]} // Assuming a max price for now, can be dynamic
             value={priceRange}
-            max={50000}
-            step={100}
+            min={priceMin}
+            max={priceMax}
+            step={Math.max(50, Math.round((priceMax - priceMin) / 100))}
             minStepsBetweenThumbs={1}
             onValueChange={(value) => onPriceChange(value as [number, number])}
             className="mb-6"
           />
           <div className="flex items-center justify-between text-sm">
             <div className="border rounded px-2 py-1 min-w-[4rem] text-center">
-              RD${priceRange[0]}
+              RD${priceRange[0].toLocaleString()}
             </div>
             <span className="text-muted-foreground">-</span>
             <div className="border rounded px-2 py-1 min-w-[4rem] text-center">
-              RD${priceRange[1]}
+              RD${priceRange[1].toLocaleString()}
             </div>
           </div>
         </div>
