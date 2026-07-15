@@ -627,18 +627,6 @@ export default function AdminProducts() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                              setNutritionProduct(product);
-                              setNutritionDialogOpen(true);
-                            }}
-                            className="hover:bg-green-500/10 h-9 w-9 text-slate-400 hover:text-green-600"
-                            title="Info Nutricional"
-                          >
-                            <Beaker className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
                             onClick={() => openEditDialog(product)}
                             className="hover:bg-blue-500/10 h-9 w-9 text-slate-400 hover:text-blue-600"
                           >
