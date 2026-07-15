@@ -81,6 +81,7 @@ interface OrderPayment {
 
 interface Order {
   id: string;
+  user_id: string;
   total: number;
   subtotal: number | null;
   discount_amount: number | null;
@@ -312,17 +313,14 @@ export default function OrderConfirmation() {
     setUploading(true);
     try {
       const fileExt = proofFile.name.split('.').pop();
-      const fileName = `${order.id}-${Date.now()}.${fileExt}`;
+      // Store under the user's folder so RLS allows only the owner (and admins) to read.
+      const filePath = `${order.user_id}/${order.id}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from('order-proofs')
-        .upload(fileName, proofFile);
+        .upload(filePath, proofFile);
 
       if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('order-proofs')
-        .getPublicUrl(fileName);
 
       const { error: paymentError } = await supabase
         .from('order_payments')
@@ -331,7 +329,8 @@ export default function OrderConfirmation() {
           amount: order.total,
           payment_method: 'transfer',
           status: 'pending',
-          proof_url: publicUrl,
+          // Store the storage path; signed URLs are generated on demand for viewing.
+          proof_url: filePath,
           reference_number: referenceNumber || null,
           notes: notes || null
         });
@@ -596,7 +595,21 @@ export default function OrderConfirmation() {
                                 </div>
                                 {existingPayment.proof_url && (
                                     <div className="flex items-center gap-2">
-                                        <Button variant="outline" size="sm" onClick={() => window.open(existingPayment.proof_url!, '_blank')}>
+                                        <Button variant="outline" size="sm" onClick={async () => {
+                                            const value = existingPayment.proof_url!;
+                                            if (/^https?:\/\//i.test(value)) {
+                                                window.open(value, '_blank', 'noopener,noreferrer');
+                                                return;
+                                            }
+                                            const { data, error } = await supabase.storage
+                                                .from('order-proofs')
+                                                .createSignedUrl(value, 300);
+                                            if (error || !data?.signedUrl) {
+                                                toast.error('No se pudo abrir el comprobante');
+                                                return;
+                                            }
+                                            window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+                                        }}>
                                             <Eye className="h-3 w-3 mr-2" />
                                             Ver Comprobante
                                         </Button>
