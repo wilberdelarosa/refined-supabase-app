@@ -55,7 +55,7 @@ export function AdminLayout({ children, showSearch = true }: AdminLayoutProps) {
         { label: 'Facturas', icon: FileText, href: '/admin/invoices', visible: canManageOrders },
         { label: 'Categorías', icon: Tags, href: '/admin/categories', visible: canManageProducts },
         { label: 'Métodos de Pago', icon: CreditCard, href: '/admin/payment-methods', visible: isAdmin },
-        { label: 'Nutricionistas', icon: UserCheck, href: '/admin/nutritionists', visible: isAdmin },
+        
     ].filter(item => item.visible !== false);
 
     const isActive = (href: string, exact: boolean = false) => {
