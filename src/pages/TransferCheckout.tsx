@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { WhopCheckoutEmbed } from '@whop/checkout/react';
-import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, Truck, ShieldCheck, CreditCard, FileText } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, Truck, ShieldCheck, CreditCard, FileText, ExternalLink, Link2, LockKeyhole } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,15 @@ import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
 import { getWhopSessionId, isWhopPayment, loadWhopSession, saveWhopSession } from '@/lib/whop-checkout';
+import {
+  fetchActivePaymentGateways,
+  getHostedProviderLabel,
+  HostedPaymentProvider,
+  HostedPaymentResponse,
+  isHostedPaymentProvider,
+  PaymentGatewaySetting,
+  submitHostedPaymentForm,
+} from '@/lib/hosted-payments';
 
 interface PaymentMethod {
   id: string;
@@ -41,7 +50,7 @@ interface WhopCheckoutResponse {
   environment?: 'production' | 'sandbox';
 }
 
-type PaymentMode = 'whop' | 'transfer';
+type PaymentMode = 'whop' | 'transfer' | HostedPaymentProvider;
 
 const DEFAULT_WHOP_ENVIRONMENT = import.meta.env.VITE_WHOP_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production';
 const IS_WHOP_ENABLED = import.meta.env.VITE_ENABLE_WHOP_CHECKOUT !== 'false';
@@ -55,6 +64,8 @@ export default function TransferCheckout() {
   const { fetchRNC, loading: rncLoading } = useRNC();
   
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [hostedGateways, setHostedGateways] = useState<PaymentGatewaySetting[]>([]);
+  const [loadingHostedGateways, setLoadingHostedGateways] = useState(true);
   const [copied, setCopied] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [discountCodeInput, setDiscountCodeInput] = useState('');
@@ -95,6 +106,31 @@ export default function TransferCheckout() {
     }
     fetchPaymentMethods();
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setLoadingHostedGateways(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingHostedGateways(true);
+
+    fetchActivePaymentGateways()
+      .then((gateways) => {
+        if (!cancelled) setHostedGateways(gateways);
+      })
+      .catch((error) => {
+        console.warn('Hosted payment gateways are not available yet:', error);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingHostedGateways(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (user?.email) {
@@ -185,6 +221,14 @@ export default function TransferCheckout() {
   const whopReturnUrl = typeof window !== 'undefined' && whopOrderId
     ? `${window.location.origin}/checkout/transferencia?order=${whopOrderId}`
     : undefined;
+  const selectedHostedGateway = isHostedPaymentProvider(paymentMode)
+    ? hostedGateways.find((gateway) => gateway.provider === paymentMode)
+    : undefined;
+  const primaryButtonLabel = paymentMode === 'whop'
+    ? (whopSessionId ? 'Pago listo — completa arriba ↑' : 'Pagar con tarjeta')
+    : selectedHostedGateway
+      ? `Continuar con ${selectedHostedGateway.display_name}`
+      : 'Confirmar pedido';
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -360,6 +404,47 @@ export default function TransferCheckout() {
     });
   };
 
+  const createHostedCheckout = async (provider: HostedPaymentProvider) => {
+    const syncedItems = await syncCartWithDatabase();
+    if (syncedItems.length === 0) {
+      throw new Error('Tu carrito no tiene productos validos para pagar.');
+    }
+
+    const sourceUrl = typeof window !== 'undefined' ? window.location.href : undefined;
+    const { data, error } = await supabase.functions.invoke<HostedPaymentResponse>('create-hosted-payment', {
+      body: {
+        provider,
+        items: syncedItems.map((item) => ({
+          productId: item.product.id,
+          quantity: item.quantity,
+        })),
+        sourceUrl,
+        discountCode: appliedDiscount?.code.code || null,
+        wantsTaxReceipt,
+        customer: {
+          fullName: formData.fullName,
+          email: formData.email,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          notes: formData.notes,
+          rnc: wantsTaxReceipt ? formData.rnc : undefined,
+          companyName: wantsTaxReceipt ? formData.companyName : undefined,
+        },
+      },
+    });
+
+    if (error) throw error;
+    if (!data?.orderId || !data.form?.url) {
+      throw new Error(`No se pudo iniciar el pago con ${getHostedProviderLabel(provider)}.`);
+    }
+
+    toast.success('Conexion segura lista', {
+      description: `Te estamos enviando a ${getHostedProviderLabel(provider)} para completar el pago.`,
+    });
+    submitHostedPaymentForm(data.form);
+  };
+
   const handleWhopComplete = () => {
     if (whopOrderId) {
       clearCart();
@@ -370,7 +455,7 @@ export default function TransferCheckout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (paymentMode === 'whop') {
+    if (paymentMode === 'whop' || isHostedPaymentProvider(paymentMode)) {
       if (!validateCheckoutForm()) {
         return;
       }
@@ -398,6 +483,11 @@ export default function TransferCheckout() {
     try {
       if (paymentMode === 'whop') {
         await createWhopCheckout();
+        return;
+      }
+
+      if (isHostedPaymentProvider(paymentMode)) {
+        await createHostedCheckout(paymentMode);
         return;
       }
 
@@ -459,7 +549,6 @@ export default function TransferCheckout() {
           console.warn("Primary insert failed. Attempting fallback without fiscal columns.", orderError);
           
           // Fallback payload (remove fiscal columns)
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           const { rnc_cedula, company_name, ncf_type, ...fallbackPayload } = orderPayload;
           
           const { data: fallbackOrder, error: fallbackError } = await supabase
@@ -790,6 +879,23 @@ export default function TransferCheckout() {
                                      )}
                                 </div>
                             )}
+                            {isHostedPaymentProvider(paymentMode) && (
+                                <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100">
+                                    <div className="flex items-start gap-3">
+                                        <LockKeyhole className="h-5 w-5 shrink-0 text-sky-700 dark:text-sky-300" />
+                                        <div className="space-y-1">
+                                            <p className="font-semibold">
+                                                Pago protegido por {selectedHostedGateway?.display_name || getHostedProviderLabel(paymentMode)}
+                                            </p>
+                                            <p className="leading-relaxed text-sky-800 dark:text-sky-200">
+                                                {paymentMode === 'payment_link'
+                                                    ? 'Abriremos el enlace externo configurado por Administración. La confirmación depende del proveedor del enlace.'
+                                                    : 'Los datos de tu tarjeta se ingresan únicamente en el portal certificado de la pasarela. Bárbaro Nutrition no almacena número, CVV ni fecha de vencimiento.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -814,7 +920,7 @@ export default function TransferCheckout() {
                                         <RadioGroupItem value="whop" className="mt-1" />
                                         <div className="space-y-1">
                                             <div className="flex items-center gap-2">
-                                                 <span className="font-semibold">Pagar con Tarjeta</span>
+                                                 <span className="font-semibold">Tarjeta con Whop</span>
                                                 <Badge variant="secondary">Rápido y seguro</Badge>
                                             </div>
                                              <p className="text-sm text-muted-foreground">
@@ -822,6 +928,39 @@ export default function TransferCheckout() {
                                              </p>
                                         </div>
                                     </label>
+                                )}
+
+                                {hostedGateways.map((gateway) => (
+                                    <label key={gateway.id} className={cn(
+                                        'flex items-start gap-4 rounded-xl border p-4 transition-colors cursor-pointer',
+                                        paymentMode === gateway.provider ? 'border-sky-500 bg-sky-50/70 dark:bg-sky-950/20' : 'border-border hover:border-sky-400/60'
+                                    )}>
+                                        <RadioGroupItem value={gateway.provider} className="mt-1" />
+                                        <div className="flex-1 space-y-1">
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                {gateway.provider === 'payment_link'
+                                                    ? <Link2 className="h-4 w-4 text-sky-700" />
+                                                    : <CreditCard className="h-4 w-4 text-sky-700" />}
+                                                <span className="font-semibold">{gateway.display_name}</span>
+                                                <Badge variant={gateway.environment === 'sandbox' ? 'outline' : 'secondary'}>
+                                                    {gateway.environment === 'sandbox' ? 'Pruebas' : 'Producción'}
+                                                </Badge>
+                                            </div>
+                                            <p className="text-sm text-muted-foreground">
+                                                {gateway.description || 'Pago mediante portal seguro externo.'}
+                                            </p>
+                                            <div className="flex items-center gap-1 text-xs font-medium text-sky-700 dark:text-sky-300">
+                                                <ExternalLink className="h-3.5 w-3.5" />
+                                                Se abre el portal seguro del proveedor
+                                            </div>
+                                        </div>
+                                    </label>
+                                ))}
+
+                                {loadingHostedGateways && (
+                                    <div className="rounded-xl border border-dashed p-4 text-sm text-muted-foreground">
+                                        Verificando pasarelas disponibles...
+                                    </div>
                                 )}
 
                                 <label className={cn(
@@ -997,9 +1136,7 @@ export default function TransferCheckout() {
                                         <span className="h-4 w-4 rounded-full border-2 border-current border-r-transparent animate-spin" />
                                         Procesando...
                                     </span>
-                                 ) : paymentMode === 'whop' ? (
-                                     whopSessionId ? 'Pago listo — completa arriba ↑' : 'Pagar con Tarjeta'
-                                ) : 'Confirmar Pedido'}
+                                 ) : primaryButtonLabel}
                             </Button>
                         </CardFooter>
                     </Card>

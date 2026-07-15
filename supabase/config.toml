@@ -9,6 +9,15 @@ verify_jwt = false
 [functions.whop-webhook]
 verify_jwt = false
 
+[functions.create-hosted-payment]
+verify_jwt = false
+
+[functions.card-payment-callback]
+verify_jwt = false
+
+[functions.payment-provider-health]
+verify_jwt = false
+
 [functions.ai-nutrition]
 verify_jwt = false
 

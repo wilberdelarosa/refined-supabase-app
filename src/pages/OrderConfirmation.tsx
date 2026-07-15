@@ -1,6 +1,6 @@
 
-import { useState, useEffect, useRef } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -40,6 +40,7 @@ import { normalizeImageUrl } from '@/lib/image-url';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { getWhopPurchaseUrl, isWhopPayment } from '@/lib/whop-checkout';
+import { useCartStore } from '@/stores/cartStore';
 
 // Types
 interface PaymentMethod {
@@ -104,6 +105,7 @@ function OrderTimeline({ status }: { status: string }) {
     const statusMap: Record<string, number> = {
         'pending': 0,
         'payment_pending': 1,
+        'paid': 2,
         'verified': 2,
         'processing': 2,
         'packed': 2,
@@ -166,8 +168,11 @@ function OrderTimeline({ status }: { status: string }) {
 export default function OrderConfirmation() {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, loading: authLoading } = useAuth();
+  const clearCart = useCartStore((state) => state.clearCart);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const returnToastShown = useRef(false);
 
   const [order, setOrder] = useState<Order | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -179,20 +184,25 @@ export default function OrderConfirmation() {
   const [referenceNumber, setReferenceNumber] = useState('');
   const [notes, setNotes] = useState('');
   const [existingPayment, setExistingPayment] = useState<OrderPayment | null>(null);
+  const [invoiceId, setInvoiceId] = useState<string | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
 
   useEffect(() => {
-    if (!authLoading && !user) {
-      navigate('/auth');
-      return;
-    }
-    if (orderId && user) {
-      fetchOrder();
-      fetchPaymentMethods();
-    }
-  }, [orderId, user, authLoading, navigate]);
+    const paymentStatus = searchParams.get('payment');
+    if (returnToastShown.current || !paymentStatus) return;
+    returnToastShown.current = true;
 
-  async function fetchPaymentMethods() {
+    if (paymentStatus === 'success') {
+      clearCart();
+      toast.success('Pago confirmado', { description: 'La factura fue generada y tu orden ya está en proceso.' });
+    } else if (paymentStatus === 'cancelled') {
+      toast.info('Pago cancelado', { description: 'No se realizó ningún cobro. Puedes intentarlo nuevamente.' });
+    } else {
+      toast.error('Pago no completado', { description: 'La pasarela no confirmó el cobro. Revisa el estado o intenta de nuevo.' });
+    }
+  }, [clearCart, searchParams]);
+
+  const fetchPaymentMethods = useCallback(async () => {
     const { data } = await supabase
       .from('payment_methods')
       .select('*')
@@ -200,9 +210,9 @@ export default function OrderConfirmation() {
       .order('display_order', { ascending: true });
 
     if (data) setPaymentMethods(data);
-  }
+  }, []);
 
-  async function fetchOrder() {
+  const fetchOrder = useCallback(async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('orders')
@@ -225,8 +235,26 @@ export default function OrderConfirmation() {
     if (data.order_payments && data.order_payments.length > 0) {
       setExistingPayment(data.order_payments[0]);
     }
+
+    const { data: invoiceData } = await supabase
+      .from('invoices')
+      .select('id')
+      .eq('order_id', data.id)
+      .maybeSingle();
+    setInvoiceId(invoiceData?.id || null);
     setLoading(false);
-  }
+  }, [navigate, orderId, user?.id]);
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+      return;
+    }
+    if (orderId && user) {
+      fetchOrder();
+      fetchPaymentMethods();
+    }
+  }, [orderId, user, authLoading, navigate, fetchOrder, fetchPaymentMethods]);
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
@@ -343,9 +371,21 @@ export default function OrderConfirmation() {
   if (!order) return null;
 
   const isWhopOrder = order.payment_provider === 'whop' || isWhopPayment(existingPayment);
+  const hostedProvider = order.payment_provider === 'azul' || order.payment_provider === 'cardnet'
+    ? order.payment_provider
+    : null;
+  const isPaymentLinkOrder = order.payment_provider === 'payment_link';
+  const isAutomaticOrder = isWhopOrder || Boolean(hostedProvider) || isPaymentLinkOrder;
+  const providerLabel = hostedProvider === 'azul'
+    ? 'Azul'
+    : hostedProvider === 'cardnet'
+      ? 'CardNET'
+      : isPaymentLinkOrder
+        ? 'link de pago'
+        : 'Whop';
   const whopResumeUrl = `/checkout/transferencia?order=${order.id}`;
   const whopPurchaseUrl = getWhopPurchaseUrl(existingPayment);
-  const showUploadSection = !isWhopOrder && order.status === 'pending' && !existingPayment;
+  const showUploadSection = !isAutomaticOrder && order.status === 'pending' && !existingPayment;
   // If payment exists or status implies payment started
   const showPaymentStatus = existingPayment || (order.status !== 'pending' && order.status !== 'cancelled');
 
@@ -432,6 +472,34 @@ export default function OrderConfirmation() {
                             </CardContent>
                          </Card>
                      )}
+
+                     {(hostedProvider || isPaymentLinkOrder) && order.status === 'pending' && (
+                         <Card className="border-2 border-sky-200 shadow-md">
+                            <CardHeader className="border-b border-sky-100 bg-sky-50/70">
+                                <CardTitle className="flex items-center gap-2 text-sky-900">
+                                    <ShieldCheck className="h-5 w-5" />
+                                    Pago con {providerLabel}
+                                </CardTitle>
+                                <CardDescription>
+                                    {existingPayment?.status === 'rejected'
+                                        ? 'La pasarela no confirmó el cobro de esta orden.'
+                                        : 'La orden está creada y espera la confirmación del proveedor.'}
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-4 pt-6">
+                                <p className="text-sm text-muted-foreground">
+                                    {isPaymentLinkOrder
+                                        ? 'Los links externos requieren confirmación del proveedor o validación administrativa antes de preparar el pedido.'
+                                        : `No necesitas subir comprobantes. ${providerLabel} notificará el resultado automáticamente después del pago.`}
+                                </p>
+                                {existingPayment?.status === 'rejected' && (
+                                    <Button asChild>
+                                        <Link to="/checkout/transferencia">Intentar de nuevo</Link>
+                                    </Button>
+                                )}
+                            </CardContent>
+                         </Card>
+                     )}
                      
                      {showUploadSection && (
                          <Card className="border-2 border-primary/20 shadow-md">
@@ -510,7 +578,7 @@ export default function OrderConfirmation() {
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2 text-base">
                                     <Receipt className="h-5 w-5" />
-                                    {isWhopOrder ? 'Estado del cobro' : 'Estado del Pago'}
+                                    {isAutomaticOrder ? `Estado del cobro con ${providerLabel}` : 'Estado del Pago'}
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -522,7 +590,7 @@ export default function OrderConfirmation() {
                                         {existingPayment.status === 'verified' ? 'Confirmado' : existingPayment.status === 'rejected' ? 'Rechazado' : 'En Revisión'}
                                     </Badge>
                                     <span className="text-sm text-muted-foreground">
-                                        Subido el {new Date(existingPayment.created_at).toLocaleString()}
+                                        Registrado el {new Date(existingPayment.created_at).toLocaleString('es-DO')}
                                     </span>
                                 </div>
                                 {existingPayment.proof_url && (
@@ -531,16 +599,18 @@ export default function OrderConfirmation() {
                                             <Eye className="h-3 w-3 mr-2" />
                                             Ver Comprobante
                                         </Button>
-                                        {existingPayment.reference_number && (
-                                            <span className="text-xs font-mono bg-muted px-2 py-1 rounded">Ref: {existingPayment.reference_number}</span>
-                                        )}
                                     </div>
+                                )}
+                                {existingPayment.reference_number && (
+                                    <p className="mt-3 break-all rounded bg-muted px-3 py-2 font-mono text-xs">
+                                        Referencia: {existingPayment.reference_number}
+                                    </p>
                                 )}
                             </CardContent>
                         </Card>
                      )}
 
-                     <div className={cn('space-y-4', isWhopOrder && 'hidden')}>
+                     <div className={cn('space-y-4', isAutomaticOrder && 'hidden')}>
                          <h3 className="font-semibold text-lg flex items-center gap-2">
                             <Building2 className="h-5 w-5 text-primary" />
                             Cuentas para Transferencia
@@ -611,6 +681,27 @@ export default function OrderConfirmation() {
                             </div>
                         </CardContent>
                      </Card>
+
+                     {invoiceId && (
+                         <Card className="border-emerald-200 bg-emerald-50/40">
+                             <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+                                 <div className="flex items-start gap-3">
+                                     <div className="rounded-lg bg-emerald-100 p-2 text-emerald-700">
+                                         <Receipt className="h-5 w-5" />
+                                     </div>
+                                     <div>
+                                         <p className="font-semibold text-emerald-950">Factura disponible</p>
+                                         <p className="text-sm text-emerald-800">Puedes verla, imprimirla o guardarla como PDF.</p>
+                                     </div>
+                                 </div>
+                                 <Button asChild className="bg-emerald-700 hover:bg-emerald-800">
+                                     <Link to={`/orders/invoice/${invoiceId}`}>
+                                         <Download className="mr-2 h-4 w-4" /> Descargar factura
+                                     </Link>
+                                 </Button>
+                             </CardContent>
+                         </Card>
+                     )}
 
                      {order.shipping_address && (
                          <Card>

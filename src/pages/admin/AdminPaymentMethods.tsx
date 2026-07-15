@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -10,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -46,7 +49,12 @@ import {
   GripVertical,
   Check,
   X,
-  ArrowLeft
+  ArrowLeft,
+  RefreshCcw,
+  ShieldCheck,
+  Link2,
+  AlertTriangle,
+  ExternalLink
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
@@ -64,6 +72,23 @@ interface PaymentMethod {
   display_order: number;
   created_at: string;
 }
+
+type GatewayProvider = 'azul' | 'cardnet' | 'payment_link';
+
+interface GatewaySetting {
+  id: string;
+  provider: GatewayProvider;
+  display_name: string;
+  description: string | null;
+  environment: 'sandbox' | 'production';
+  is_active: boolean;
+  payment_link_url: string | null;
+  health_status: 'not_configured' | 'ready' | 'warning' | 'error';
+  health_message: string | null;
+  last_health_at: string | null;
+}
+
+const gatewayClient = supabase as unknown as SupabaseClient;
 
 const emptyMethod: Omit<PaymentMethod, 'id' | 'created_at'> = {
   name: '',
@@ -84,8 +109,12 @@ export default function AdminPaymentMethods() {
   const navigate = useNavigate();
 
   const [methods, setMethods] = useState<PaymentMethod[]>([]);
+  const [gateways, setGateways] = useState<GatewaySetting[]>([]);
   const [loading, setLoading] = useState(true);
+  const [gatewaysLoading, setGatewaysLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savingGateway, setSavingGateway] = useState<string | null>(null);
+  const [testingProvider, setTestingProvider] = useState<GatewayProvider | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingMethod, setEditingMethod] = useState<PaymentMethod | null>(null);
@@ -96,8 +125,11 @@ export default function AdminPaymentMethods() {
       navigate('/');
       return;
     }
-    if (user) fetchMethods();
-  }, [user, rolesLoading, isAdmin, isManager]);
+    if (user) {
+      fetchMethods();
+      fetchGateways();
+    }
+  }, [user, rolesLoading, isAdmin, isManager, navigate]);
 
   async function fetchMethods() {
     setLoading(true);
@@ -111,6 +143,74 @@ export default function AdminPaymentMethods() {
     }
     setLoading(false);
   }
+
+  async function fetchGateways() {
+    setGatewaysLoading(true);
+    const { data, error } = await gatewayClient
+      .from('payment_gateway_settings')
+      .select('id, provider, display_name, description, environment, is_active, payment_link_url, health_status, health_message, last_health_at')
+      .in('provider', ['azul', 'cardnet', 'payment_link'])
+      .order('display_order', { ascending: true });
+
+    if (error) {
+      console.warn('Payment gateway settings are not available:', error);
+    } else {
+      setGateways((data ?? []) as GatewaySetting[]);
+    }
+    setGatewaysLoading(false);
+  }
+
+  const updateGateway = async (
+    gateway: GatewaySetting,
+    updates: Partial<Pick<GatewaySetting, 'is_active' | 'environment' | 'payment_link_url'>>,
+  ) => {
+    if (updates.is_active && gateway.health_status !== 'ready') {
+      toast({
+        title: 'Configuración incompleta',
+        description: 'Ejecuta el diagnóstico y corrige los secretos antes de activar esta pasarela.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setSavingGateway(gateway.id);
+    try {
+      const { error } = await gatewayClient
+        .from('payment_gateway_settings')
+        .update(updates)
+        .eq('id', gateway.id);
+      if (error) throw error;
+      toast({ title: 'Pasarela actualizada', description: `${gateway.display_name} se guardó correctamente.` });
+      await fetchGateways();
+    } catch (error) {
+      console.error('Error updating payment gateway:', error);
+      toast({ title: 'Error', description: 'No se pudo actualizar la pasarela.', variant: 'destructive' });
+    } finally {
+      setSavingGateway(null);
+    }
+  };
+
+  const runGatewayHealth = async (provider: GatewayProvider) => {
+    setTestingProvider(provider);
+    try {
+      const { data, error } = await supabase.functions.invoke('payment-provider-health', {
+        body: { provider },
+      });
+      if (error) throw error;
+      const result = data?.results?.[0] as { status?: string; message?: string } | undefined;
+      toast({
+        title: result?.status === 'ready' ? 'Diagnóstico correcto' : 'Revisión necesaria',
+        description: result?.message || 'Diagnóstico completado.',
+        variant: result?.status === 'ready' ? 'default' : 'destructive',
+      });
+      await fetchGateways();
+    } catch (error) {
+      console.error('Payment gateway health check failed:', error);
+      toast({ title: 'Diagnóstico fallido', description: 'Verifica la función y los secretos en Supabase.', variant: 'destructive' });
+    } finally {
+      setTestingProvider(null);
+    }
+  };
 
   const openCreateDialog = () => {
     setEditingMethod(null);
@@ -230,7 +330,7 @@ export default function AdminPaymentMethods() {
     }
   };
 
-  if (loading || rolesLoading) {
+  if (loading || gatewaysLoading || rolesLoading) {
     return (
       <AdminLayout>
         <div className="flex h-[50vh] items-center justify-center">
@@ -267,6 +367,146 @@ export default function AdminPaymentMethods() {
           </Button>
         </div>
       </div>
+
+      <Card className="mb-8 overflow-hidden border border-sky-200 bg-white shadow-sm">
+        <CardHeader className="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white">
+          <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-slate-900">
+                <ShieldCheck className="h-5 w-5 text-sky-700" />
+                Pasarelas de tarjeta y links
+              </CardTitle>
+              <CardDescription className="mt-2 max-w-3xl">
+                Configura Azul, CardNET o un link externo. Los secretos se guardan únicamente en Supabase y nunca se muestran en esta pantalla.
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="w-fit border-sky-200 bg-white text-sky-800">
+              1. Secretos · 2. Diagnóstico · 3. Activación
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="p-4 md:p-6">
+          {gateways.length === 0 ? (
+            <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-950">
+              <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+              <div>
+                <p className="font-semibold">La migración de pasarelas todavía no está aplicada.</p>
+                <p className="mt-1 text-amber-800">Despliega la migración y las Edge Functions indicadas en la guía antes de activar pagos.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="grid gap-4 xl:grid-cols-3">
+              {gateways.map((gateway) => {
+                const isReady = gateway.health_status === 'ready';
+                const isBusy = savingGateway === gateway.id || testingProvider === gateway.provider;
+                return (
+                  <div key={gateway.id} className="flex min-h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-xl bg-sky-100 p-2.5 text-sky-700">
+                          {gateway.provider === 'payment_link' ? <Link2 className="h-5 w-5" /> : <CreditCard className="h-5 w-5" />}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900">{gateway.display_name}</h3>
+                          <p className="text-xs text-slate-500">{gateway.provider === 'payment_link' ? 'Cobro externo' : 'Página alojada 3DS'}</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={gateway.is_active}
+                        disabled={isBusy}
+                        onCheckedChange={(checked) => updateGateway(gateway, { is_active: checked })}
+                        aria-label={`Activar ${gateway.display_name}`}
+                        className="data-[state=checked]:bg-emerald-500"
+                      />
+                    </div>
+
+                    <p className="mt-4 min-h-10 text-sm leading-relaxed text-slate-600">
+                      {gateway.description || 'Pasarela de pago externa.'}
+                    </p>
+
+                    <div className="mt-4 space-y-2">
+                      <Label htmlFor={`environment-${gateway.id}`} className="text-xs font-semibold text-slate-700">Ambiente</Label>
+                      <Select
+                        value={gateway.environment}
+                        disabled={isBusy || gateway.provider === 'payment_link'}
+                        onValueChange={(value: 'sandbox' | 'production') => updateGateway(gateway, { environment: value })}
+                      >
+                        <SelectTrigger id={`environment-${gateway.id}`} className="border-slate-200">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sandbox">Pruebas / certificación</SelectItem>
+                          <SelectItem value="production">Producción</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {gateway.provider === 'payment_link' && (
+                      <div className="mt-4 space-y-2">
+                        <Label htmlFor={`link-${gateway.id}`} className="text-xs font-semibold text-slate-700">URL HTTPS</Label>
+                        <Input
+                          id={`link-${gateway.id}`}
+                          value={gateway.payment_link_url || ''}
+                          placeholder="https://proveedor.com/pago/{order_id}"
+                          onChange={(event) => setGateways((current) => current.map((item) => (
+                            item.id === gateway.id ? { ...item, payment_link_url: event.target.value } : item
+                          )))}
+                          className="border-slate-200"
+                        />
+                        <p className="text-[11px] text-slate-500">Variables opcionales: {'{order_id}'}, {'{amount}'}, {'{currency}'}.</p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={isBusy}
+                          onClick={() => updateGateway(gateway, { payment_link_url: gateway.payment_link_url })}
+                        >
+                          Guardar link
+                        </Button>
+                      </div>
+                    )}
+
+                    <div className={`mt-4 rounded-xl border p-3 text-sm ${isReady ? 'border-emerald-200 bg-emerald-50 text-emerald-900' : 'border-amber-200 bg-amber-50 text-amber-950'}`}>
+                      <div className="flex items-center gap-2 font-semibold">
+                        {isReady ? <Check className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                        {isReady ? 'Listo para activar' : 'Revisión necesaria'}
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed opacity-80">
+                        {gateway.health_message || 'Ejecuta el diagnóstico para revisar la configuración.'}
+                      </p>
+                      {gateway.last_health_at && (
+                        <p className="mt-2 text-[11px] opacity-70">Última revisión: {new Date(gateway.last_health_at).toLocaleString('es-DO')}</p>
+                      )}
+                    </div>
+
+                    <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isBusy}
+                        onClick={() => runGatewayHealth(gateway.provider)}
+                      >
+                        <RefreshCcw className={`mr-2 h-4 w-4 ${testingProvider === gateway.provider ? 'animate-spin' : ''}`} />
+                        Ejecutar diagnóstico
+                      </Button>
+                      {gateway.provider !== 'payment_link' && (
+                        <Button size="sm" variant="ghost" asChild>
+                          <a
+                            href={gateway.provider === 'azul' ? 'https://dev.azul.com.do/' : 'https://developers.cardnet.com.do/'}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Documentación <ExternalLink className="ml-1 h-3.5 w-3.5" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Methods Table */}
       <Card className="shadow-sm border border-slate-200 overflow-hidden bg-white">

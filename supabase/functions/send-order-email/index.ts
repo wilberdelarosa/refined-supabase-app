@@ -1,25 +1,18 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.89.0";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+type PaymentMethod = "transfer" | "whop" | "azul" | "cardnet" | "payment_link";
 
 interface OrderEmailRequest {
   type: "order_created" | "status_changed";
-  paymentMethod?: "transfer" | "whop";
+  paymentMethod?: PaymentMethod;
   customerEmail: string;
   customerName: string;
   orderId: string;
   orderTotal: number;
-  orderItems: Array<{
-    name: string;
-    quantity: number;
-    price: number;
-  }>;
+  orderItems: Array<{ name: string; quantity: number; price: number }>;
   newStatus?: string;
   oldStatus?: string;
   shippingAddress?: string;
@@ -28,7 +21,7 @@ interface OrderEmailRequest {
 
 const statusLabels: Record<string, string> = {
   pending: "Pendiente",
-  payment_pending: "Verificando Pago",
+  payment_pending: "Verificando pago",
   paid: "Pagado",
   processing: "Procesando",
   packed: "Empacado",
@@ -38,254 +31,183 @@ const statusLabels: Record<string, string> = {
   refunded: "Reembolsado",
 };
 
-function generateOrderCreatedEmail(data: OrderEmailRequest): string {
-  const isWhopPayment = data.paymentMethod === "whop";
-  const itemsHtml = data.orderItems
-    .map(
-      (item) => `
-      <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #eee;">${item.name}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #eee; text-align: right;">DOP ${(item.price * item.quantity).toLocaleString("es-DO", { minimumFractionDigits: 2 })}</td>
-      </tr>
-    `
-    )
-    .join("");
+const statusMessages: Record<string, string> = {
+  payment_pending: "Recibimos el comprobante y estamos verificando el pago.",
+  paid: "Confirmamos el pago y tu pedido entró en preparación.",
+  processing: "Nuestro equipo está preparando tu pedido.",
+  packed: "Tu pedido está empacado y listo para envío.",
+  shipped: "Tu pedido está en camino.",
+  delivered: "Tu pedido fue entregado. Gracias por elegirnos.",
+  cancelled: "Tu pedido fue cancelado.",
+  refunded: "El pedido fue reembolsado.",
+};
 
-  return `
-    <!DOCTYPE html>
-    <html>
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function formatCurrency(value: number) {
+  return new Intl.NumberFormat("es-DO", {
+    style: "currency",
+    currency: "DOP",
+    minimumFractionDigits: 2,
+  }).format(value);
+}
+
+function paymentLabel(method?: PaymentMethod) {
+  if (method === "whop") return "Whop";
+  if (method === "azul") return "Azul";
+  if (method === "cardnet") return "CardNET";
+  if (method === "payment_link") return "link de pago";
+  return "transferencia bancaria";
+}
+
+function isAutomaticPayment(method?: PaymentMethod) {
+  return method === "whop" || method === "azul" || method === "cardnet";
+}
+
+function emailShell(content: string) {
+  return `<!doctype html>
+  <html lang="es">
     <head>
       <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <style>
+        @media (max-width:620px){.wrap{padding:12px!important}.content{padding:22px!important}.items th,.items td{padding:9px 6px!important;font-size:12px!important}.button{display:block!important;text-align:center!important}}
+      </style>
     </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <!-- Header -->
-          <div style="background-color: #000; color: #fff; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Barbaro Nutrition</h1>
+    <body style="margin:0;background:#f3f6f8;color:#172033;font-family:Arial,Helvetica,sans-serif">
+      <div class="wrap" style="padding:28px 16px">
+        <div style="max-width:640px;margin:0 auto;overflow:hidden;border:1px solid #dce4ea;border-radius:18px;background:#fff;box-shadow:0 12px 32px rgba(15,23,42,.08)">
+          <div style="padding:26px 30px;background:linear-gradient(135deg,#071521,#123b55);color:#fff">
+            <div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7dd3fc">Bárbaro Nutrition</div>
+            <div style="margin-top:7px;font-size:24px;font-weight:800">Tu nutrición, bien gestionada</div>
           </div>
-          
-          <!-- Content -->
-          <div style="padding: 30px;">
-            <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #333;">¡Gracias por tu pedido, ${data.customerName}!</h2>
-            <p style="color: #666; margin: 0 0 20px 0;">Hemos recibido tu pedido correctamente. Aquí están los detalles:</p>
-            
-            <div style="background-color: #f8f8f8; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-              <p style="margin: 0; color: #333;"><strong>Número de Pedido:</strong> #${data.orderId.slice(0, 8).toUpperCase()}</p>
-            </div>
-            
-            <!-- Order Items -->
-            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-              <thead>
-                <tr style="background-color: #f0f0f0;">
-                  <th style="padding: 12px; text-align: left; font-weight: 600;">Producto</th>
-                  <th style="padding: 12px; text-align: center; font-weight: 600;">Cantidad</th>
-                  <th style="padding: 12px; text-align: right; font-weight: 600;">Precio</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${itemsHtml}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <td colspan="2" style="padding: 15px 12px; font-weight: bold; font-size: 16px;">Total</td>
-                  <td style="padding: 15px 12px; text-align: right; font-weight: bold; font-size: 16px;">DOP ${data.orderTotal.toLocaleString("es-DO", { minimumFractionDigits: 2 })}</td>
-                </tr>
-              </tfoot>
-            </table>
-            
-            ${
-              data.shippingAddress
-                ? `
-            <div style="background-color: #f8f8f8; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-              <h3 style="margin: 0 0 10px 0; font-size: 14px; color: #333;">Dirección de Envío</h3>
-              <p style="margin: 0; color: #666; white-space: pre-line; font-size: 14px;">${data.shippingAddress}</p>
-            </div>
-            `
-                : ""
-            }
-            
-            <div style="background-color: ${isWhopPayment ? "#e8f5e9" : "#fef3cd"}; border: 1px solid ${isWhopPayment ? "#66bb6a" : "#ffc107"}; border-radius: 8px; padding: 15px;">
-              <p style="margin: 0; color: ${isWhopPayment ? "#1b5e20" : "#856404"}; font-size: 14px;">
-                ${
-                  isWhopPayment
-                    ? "<strong>Pago confirmado:</strong> Tu pago fue recibido correctamente por Whop. Ya estamos preparando tu orden y puedes revisar el estado desde el enlace siguiente."
-                    : "<strong>Importante:</strong> Si realizaste el pago por transferencia, tu pedido será procesado una vez verifiquemos el pago. Puedes subir tu comprobante en el enlace siguiente."
-                }
-              </p>
-            </div>
-            ${
-              data.orderUrl
-                ? `
-            <div style="text-align: center; margin-top: 25px;">
-              <a href="${data.orderUrl}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600;">${isWhopPayment ? "Ver estado del pedido" : "Ver pedido y subir comprobante"}</a>
-            </div>
-            `
-                : ""
-            }
-          </div>
-          
-          <!-- Footer -->
-          <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-            <p style="margin: 0; color: #666; font-size: 14px;">¿Tienes preguntas? Contáctanos</p>
-            <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">© ${new Date().getFullYear()} Barbaro Nutrition. Todos los derechos reservados.</p>
+          <div class="content" style="padding:30px">${content}</div>
+          <div style="padding:18px 30px;border-top:1px solid #e7edf1;background:#f8fafc;text-align:center;color:#64748b;font-size:12px">
+            © ${new Date().getFullYear()} Bárbaro Nutrition · Este correo fue generado automáticamente.
           </div>
         </div>
       </div>
     </body>
-    </html>
-  `;
+  </html>`;
 }
 
-function generateStatusChangeEmail(data: OrderEmailRequest): string {
-  const newStatusLabel = statusLabels[data.newStatus || ""] || data.newStatus;
-  const oldStatusLabel = statusLabels[data.oldStatus || ""] || data.oldStatus;
+function orderCreatedEmail(data: OrderEmailRequest) {
+  const automatic = isAutomaticPayment(data.paymentMethod);
+  const provider = paymentLabel(data.paymentMethod);
+  const items = data.orderItems.map((item) => `
+    <tr>
+      <td style="padding:12px 8px;border-bottom:1px solid #e7edf1">${escapeHtml(item.name)}</td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e7edf1;text-align:center">${item.quantity}</td>
+      <td style="padding:12px 8px;border-bottom:1px solid #e7edf1;text-align:right;white-space:nowrap">${formatCurrency(item.price * item.quantity)}</td>
+    </tr>`).join("");
+  const address = data.shippingAddress
+    ? `<div style="margin-top:20px;padding:16px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc"><strong>Entrega</strong><div style="margin-top:8px;color:#475569;line-height:1.6">${escapeHtml(data.shippingAddress).replaceAll("\n", "<br>")}</div></div>`
+    : "";
+  const action = data.orderUrl
+    ? `<div style="margin-top:24px;text-align:center"><a class="button" href="${escapeHtml(data.orderUrl)}" style="display:inline-block;padding:13px 22px;border-radius:10px;background:#0284c7;color:#fff;text-decoration:none;font-weight:700">Ver pedido y factura</a></div>`
+    : "";
 
-  let statusMessage = "";
-  let statusColor = "#333";
-
-  switch (data.newStatus) {
-    case "payment_pending":
-      statusMessage = "Hemos recibido tu comprobante de pago. Lo estamos verificando.";
-      statusColor = "#fd7e14";
-      break;
-    case "paid":
-      statusMessage = "Hemos confirmado tu pago. Tu pedido está siendo preparado.";
-      statusColor = "#28a745";
-      break;
-    case "processing":
-      statusMessage = "Tu pedido está siendo preparado por nuestro equipo.";
-      statusColor = "#17a2b8";
-      break;
-    case "packed":
-      statusMessage = "Tu pedido ha sido empacado y está listo para envío.";
-      statusColor = "#6c757d";
-      break;
-    case "shipped":
-      statusMessage = "¡Tu pedido está en camino! Pronto lo recibirás.";
-      statusColor = "#007bff";
-      break;
-    case "delivered":
-      statusMessage = "¡Tu pedido ha sido entregado! Esperamos que disfrutes tus productos.";
-      statusColor = "#28a745";
-      break;
-    case "cancelled":
-      statusMessage = "Tu pedido ha sido cancelado. Si tienes preguntas, contáctanos.";
-      statusColor = "#dc3545";
-      break;
-    case "refunded":
-      statusMessage = "Tu pedido ha sido reembolsado. El monto será devuelto a tu cuenta.";
-      statusColor = "#dc3545";
-      break;
-    default:
-      statusMessage = `El estado de tu pedido ha cambiado de ${oldStatusLabel} a ${newStatusLabel}.`;
-  }
-
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    </head>
-    <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; background-color: #f5f5f5;">
-      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-        <div style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-          <!-- Header -->
-          <div style="background-color: #000; color: #fff; padding: 30px; text-align: center;">
-            <h1 style="margin: 0; font-size: 24px; font-weight: bold;">Barbaro Nutrition</h1>
-          </div>
-          
-          <!-- Content -->
-          <div style="padding: 30px;">
-            <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #333;">Actualización de tu Pedido</h2>
-            <p style="color: #666; margin: 0 0 20px 0;">Hola ${data.customerName}, hay novedades sobre tu pedido:</p>
-            
-            <div style="background-color: #f8f8f8; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-              <p style="margin: 0; color: #333;"><strong>Pedido:</strong> #${data.orderId.slice(0, 8).toUpperCase()}</p>
-            </div>
-            
-            <!-- Status Badge -->
-            <div style="text-align: center; padding: 30px 0;">
-              <div style="display: inline-block; background-color: ${statusColor}; color: #fff; padding: 15px 30px; border-radius: 50px; font-size: 18px; font-weight: bold;">
-                ${newStatusLabel}
-              </div>
-            </div>
-            
-            <p style="text-align: center; color: #666; font-size: 16px; margin: 0 0 20px 0;">
-              ${statusMessage}
-            </p>
-            
-            <div style="text-align: center; padding: 20px 0;">
-              <p style="color: #999; font-size: 14px; margin: 0;">
-                Total del pedido: <strong>DOP ${data.orderTotal.toLocaleString("es-DO", { minimumFractionDigits: 2 })}</strong>
-              </p>
-            </div>
-          </div>
-          
-          <!-- Footer -->
-          <div style="background-color: #f8f8f8; padding: 20px; text-align: center; border-top: 1px solid #eee;">
-            <p style="margin: 0; color: #666; font-size: 14px;">¿Tienes preguntas? Contáctanos</p>
-            <p style="margin: 10px 0 0 0; color: #999; font-size: 12px;">© ${new Date().getFullYear()} Barbaro Nutrition. Todos los derechos reservados.</p>
-          </div>
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
+  return emailShell(`
+    <h1 style="margin:0;font-size:24px">${automatic ? "Pago confirmado" : "Pedido recibido"}</h1>
+    <p style="margin:10px 0 0;color:#475569;line-height:1.6">Hola ${escapeHtml(data.customerName)}, registramos tu pedido <strong>#${escapeHtml(data.orderId.slice(0, 8).toUpperCase())}</strong>.</p>
+    <div style="margin:22px 0;padding:16px;border-radius:12px;background:${automatic ? "#ecfdf5" : "#fff7ed"};border:1px solid ${automatic ? "#a7f3d0" : "#fed7aa"};color:${automatic ? "#065f46" : "#9a3412"}">
+      <strong>${automatic ? "Cobro verificado" : "Pago pendiente"}:</strong>
+      ${automatic ? ` ${escapeHtml(provider)} confirmó la transacción.` : ` completa o confirma el pago mediante ${escapeHtml(provider)}.`}
+    </div>
+    <table class="items" style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#f1f5f9"><th style="padding:10px 8px;text-align:left">Producto</th><th style="padding:10px 8px;text-align:center">Cant.</th><th style="padding:10px 8px;text-align:right">Importe</th></tr></thead>
+      <tbody>${items}</tbody>
+      <tfoot><tr><td colspan="2" style="padding:16px 8px;font-weight:800">Total</td><td style="padding:16px 8px;text-align:right;font-size:18px;font-weight:800">${formatCurrency(data.orderTotal)}</td></tr></tfoot>
+    </table>
+    ${address}${action}`);
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  // Handle CORS preflight requests
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+function statusChangedEmail(data: OrderEmailRequest) {
+  const label = statusLabels[data.newStatus || ""] || data.newStatus || "Actualizado";
+  const message = statusMessages[data.newStatus || ""]
+    || `El estado cambió de ${statusLabels[data.oldStatus || ""] || data.oldStatus || "anterior"} a ${label}.`;
+  const action = data.orderUrl
+    ? `<div style="margin-top:24px;text-align:center"><a class="button" href="${escapeHtml(data.orderUrl)}" style="display:inline-block;padding:13px 22px;border-radius:10px;background:#0284c7;color:#fff;text-decoration:none;font-weight:700">Ver estado del pedido</a></div>`
+    : "";
+  return emailShell(`
+    <h1 style="margin:0;font-size:24px">Actualización de pedido</h1>
+    <p style="margin:10px 0 0;color:#475569;line-height:1.6">Hola ${escapeHtml(data.customerName)}, hay novedades en el pedido <strong>#${escapeHtml(data.orderId.slice(0, 8).toUpperCase())}</strong>.</p>
+    <div style="margin:24px 0;text-align:center"><span style="display:inline-block;padding:12px 22px;border-radius:999px;background:#0f172a;color:#fff;font-weight:800">${escapeHtml(label)}</span></div>
+    <p style="text-align:center;color:#475569;line-height:1.6">${escapeHtml(message)}</p>
+    <p style="text-align:center;color:#64748b">Total: <strong>${formatCurrency(data.orderTotal)}</strong></p>
+    ${action}`);
+}
+
+async function authorizeRequest(req: Request, orderId: string) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const serviceRole = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  const authorization = req.headers.get("Authorization") || "";
+  if (!supabaseUrl || !anonKey || !serviceRole) throw new Error("Supabase email authorization is not configured");
+
+  if (authorization === `Bearer ${serviceRole}`) return;
+
+  const authClient = createClient(supabaseUrl, anonKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    global: { headers: { Authorization: authorization } },
+  });
+  const { data: { user }, error: userError } = await authClient.auth.getUser();
+  if (userError || !user) throw new Error("Unauthorized");
+
+  const admin = createClient(supabaseUrl, serviceRole, { auth: { persistSession: false, autoRefreshToken: false } });
+  const { data: order } = await admin.from("orders").select("user_id").eq("id", orderId).maybeSingle();
+  if (order?.user_id === user.id) return;
+
+  const { data: roles } = await admin.from("user_roles").select("role").eq("user_id", user.id);
+  if ((roles ?? []).some((row) => ["admin", "manager", "support"].includes(row.role))) return;
+  throw new Error("Forbidden");
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
 
   try {
-    const data: OrderEmailRequest = await req.json();
-    
-    console.log("Sending order email:", { type: data.type, orderId: data.orderId, to: data.customerEmail });
-
-    let subject = "";
-    let html = "";
-
-    if (data.type === "order_created") {
-      subject = `Pedido #${data.orderId.slice(0, 8).toUpperCase()} - Confirmación de Compra`;
-      html = generateOrderCreatedEmail(data);
-    } else if (data.type === "status_changed") {
-      const statusLabel = statusLabels[data.newStatus || ""] || data.newStatus;
-      subject = `Pedido #${data.orderId.slice(0, 8).toUpperCase()} - ${statusLabel}`;
-      html = generateStatusChangeEmail(data);
-    } else {
-      throw new Error("Invalid email type");
+    const data = await req.json() as OrderEmailRequest;
+    if (!data.orderId || !data.customerEmail || !data.customerEmail.includes("@")) {
+      return jsonResponse({ error: "Invalid email request" }, 400);
+    }
+    if (data.type !== "order_created" && data.type !== "status_changed") {
+      return jsonResponse({ error: "Invalid email type" }, 400);
     }
 
+    await authorizeRequest(req, data.orderId);
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) throw new Error("RESEND_API_KEY is not configured");
+
+    const resend = new Resend(apiKey);
+    const statusLabel = statusLabels[data.newStatus || ""] || data.newStatus;
+    const subject = data.type === "order_created"
+      ? `Pedido #${data.orderId.slice(0, 8).toUpperCase()} - ${isAutomaticPayment(data.paymentMethod) ? "Pago confirmado" : "Confirmación"}`
+      : `Pedido #${data.orderId.slice(0, 8).toUpperCase()} - ${statusLabel}`;
+    const html = data.type === "order_created" ? orderCreatedEmail(data) : statusChangedEmail(data);
+    const from = Deno.env.get("ORDER_EMAIL_FROM")?.trim() || "Bárbaro Nutrition <onboarding@resend.dev>";
+
     const emailResponse = await resend.emails.send({
-      from: "Barbaro Nutrition <onboarding@resend.dev>",
+      from,
       to: [data.customerEmail],
       subject,
       html,
     });
 
-    console.log("Email sent successfully:", emailResponse);
-
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
-      status: 200,
-      headers: { "Content-Type": "application/json", ...corsHeaders },
-    });
+    console.log("Order email sent", { type: data.type, orderId: data.orderId });
+    return jsonResponse({ success: true, data: emailResponse });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unexpected error";
-    console.error("Error in send-order-email function:", error);
-    return new Response(
-      JSON.stringify({ success: false, error: message }),
-      {
-        status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
-      }
-    );
+    console.error("send-order-email error", message);
+    const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
+    return jsonResponse({ success: false, error: message }, status);
   }
-};
-
-serve(handler);
+});

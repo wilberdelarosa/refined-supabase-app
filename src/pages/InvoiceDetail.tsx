@@ -103,11 +103,12 @@ export default function InvoiceDetail() {
         .eq('invoice_id', invoiceId);
 
       // Try to fetch order with fiscal columns
-      let { data: orderData, error: orderError } = await supabase
+      const { data: primaryOrderData, error: orderError } = await supabase
         .from('orders')
         .select('shipping_address, user_id, rnc_cedula, company_name')
         .eq('id', invoiceData.order_id)
         .maybeSingle();
+      let orderData: OrderInfo | null = primaryOrderData;
 
       // Fallback: If fetch fails (likely due to missing columns in DB), fetch without fiscal columns
       if (orderError) {
@@ -119,14 +120,11 @@ export default function InvoiceDetail() {
             .maybeSingle();
         
         if (fallbackData) {
-            // Manually add missing properties to satisfy type
             orderData = {
                 ...fallbackData,
                 rnc_cedula: null,
                 company_name: null,
-                ncf_type: null,
-                ncf_generated: null
-            } as any; 
+            };
         }
       }
 
@@ -142,10 +140,15 @@ export default function InvoiceDetail() {
   }, [invoiceId, user, authLoading, navigate, canManageOrders, rolesLoading]);
 
   const handlePrint = () => {
-    // Preparar el documento para imprimir
+    const previousTitle = document.title;
     document.title = `Factura-${invoice?.invoice_number || 'INV'}`;
-    
-    // Trigger print dialog
+
+    const restoreTitle = () => {
+      document.title = previousTitle;
+      window.removeEventListener('afterprint', restoreTitle);
+    };
+    window.addEventListener('afterprint', restoreTitle);
+
     setTimeout(() => {
       window.print();
     }, 100);
