@@ -180,7 +180,7 @@ export function Navbar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2.5">
                       <Link to="/admin" className="flex items-center gap-3">
-                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                         <span className="font-bold">Panel Admin</span>
                       </Link>
                     </DropdownMenuItem>
