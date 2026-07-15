@@ -53,9 +53,9 @@ const About = () => {
             </ScaleIn>
             
             <FadeInUp delay={0.2}>
-              <h1 className="text-6xl sm:text-8xl md:text-9xl font-black italic tracking-tighter uppercase leading-none select-none">
+              <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black italic tracking-tight uppercase leading-[1.05] select-none pr-[0.15em] pb-2 overflow-visible">
                 SOMOS LA <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-[hsl(var(--accent-gold))]">
+                <span className="inline-block text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-100 to-[hsl(var(--accent-gold))] pr-[0.12em]">
                   TRIBU
                 </span>
               </h1>
