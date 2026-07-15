@@ -22,7 +22,10 @@ import { formatCurrency } from '@/lib/format-currency';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { getWhopSessionId, isWhopPayment, loadWhopSession, saveWhopSession } from '@/lib/whop-checkout';
+const loadWhopSession = (_orderId: string): string | null => null;
+const saveWhopSession = (_orderId: string, _sessionId: string): void => {};
+const isWhopPayment = (_p: unknown): boolean => false;
+const getWhopSessionId = (_p: unknown): string | null => null;
 import {
   fetchActivePaymentGateways,
   getHostedProviderLabel,
