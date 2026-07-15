@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { ArrowUpRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { FadeInUp } from '@/components/animations/ScrollAnimations';
+import { useSiteImages } from '@/hooks/useSiteImages';
 
 import catProteinas from '@/assets/cat-proteinas.jpg';
 import catCreatina from '@/assets/cat-creatina.jpg';
@@ -43,6 +44,11 @@ const categories = [
 ];
 
 export function Categories() {
+  const { images } = useSiteImages();
+  const getImage = (slug: string, fallback: string) => {
+    const found = images.find((i) => i.slot === `category_${slug}` && i.is_active && i.image_url);
+    return found?.image_url || fallback;
+  };
   return (
     <section className="py-20 md:py-28">
       <div className="container">
@@ -72,7 +78,7 @@ export function Categories() {
               >
                 {/* Image */}
                 <img
-                  src={cat.image}
+                  src={getImage(cat.slug, cat.image)}
                   alt={cat.name}
                   loading="lazy"
                   width={640}

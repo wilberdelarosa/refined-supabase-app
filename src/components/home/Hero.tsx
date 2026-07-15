@@ -3,8 +3,10 @@ import { ArrowRight, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import heroImage from '@/assets/hero-fitness.png';
+import { useSiteImage } from '@/hooks/useSiteImages';
 
 export function Hero() {
+  const hero = useSiteImage('hero_banner_main', heroImage);
   return (
     <section className="relative min-h-[80vh] sm:min-h-[90vh] flex items-center overflow-hidden bg-foreground">
       {/* Background Image */}
@@ -13,8 +15,8 @@ export function Hero() {
           initial={{ scale: 1.1 }}
           animate={{ scale: 1 }}
           transition={{ duration: 1.5, ease: 'easeOut' }}
-          src={heroImage}
-          alt="Atleta fitness de alto rendimiento"
+          src={hero.url || heroImage}
+          alt={hero.alt || 'Atleta fitness de alto rendimiento'}
           className="w-full h-full object-cover object-[75%_20%] sm:object-[65%_30%] grayscale opacity-50"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-foreground via-foreground/70 to-transparent" />
