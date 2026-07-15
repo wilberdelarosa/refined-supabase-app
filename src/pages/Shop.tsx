@@ -46,9 +46,10 @@ export default function Shop() {
   const [searchInput, setSearchInput] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string | undefined>();
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<ShopSortBy>('created_at');
-  // Price range state for UI (0-50000)
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
+  const [priceInitialized, setPriceInitialized] = useState(false);
   const [inStockOnly, setInStockOnly] = useState(false);
   const [featuredOnly, setFeaturedOnly] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -66,32 +67,40 @@ export default function Shop() {
     sortBy,
     inStockOnly,
     featuredOnly,
-    priceMin: priceRange[0] > 0 ? priceRange[0] : undefined,
-    priceMax: priceRange[1] < 50000 ? priceRange[1] : undefined,
+    priceMin: priceInitialized ? priceRange[0] : undefined,
+    priceMax: priceInitialized ? priceRange[1] : undefined,
+    brands: selectedBrands.length ? selectedBrands : undefined,
   };
 
-  const { products, categories, loading, error } = useNativeProducts(filters);
+  const { products, categories, brands, priceBounds, loading, error } = useNativeProducts(filters);
 
-  // Determine if filters are active
+  // Initialize price range to real bounds once loaded
+  useEffect(() => {
+    if (!priceInitialized && priceBounds && priceBounds.max > 0) {
+      setPriceRange([priceBounds.min, priceBounds.max]);
+      setPriceInitialized(true);
+    }
+  }, [priceBounds, priceInitialized]);
+
   const hasActiveFilters = Boolean(
     debouncedSearch ||
     selectedCategory ||
+    selectedBrands.length ||
     inStockOnly ||
     featuredOnly ||
-    priceRange[0] > 0 ||
-    priceRange[1] < 50000
+    (priceInitialized && (priceRange[0] > priceBounds.min || priceRange[1] < priceBounds.max))
   );
 
   const clearFilters = useCallback(() => {
     setSearchInput('');
     setDebouncedSearch('');
     setSelectedCategory(undefined);
+    setSelectedBrands([]);
     setInStockOnly(false);
     setFeaturedOnly(false);
-    setPriceRange([0, 50000]);
-    // Reset sort to default if desired, or keep user preference
+    setPriceRange([priceBounds.min, priceBounds.max]);
     setSortBy('created_at');
-  }, []);
+  }, [priceBounds]);
 
   return (
     <Layout>
@@ -118,7 +127,12 @@ export default function Shop() {
                 categories={categories}
                 selectedCategory={selectedCategory}
                 onCategoryChange={setSelectedCategory}
+                brands={brands}
+                selectedBrands={selectedBrands}
+                onBrandsChange={setSelectedBrands}
                 priceRange={priceRange}
+                priceMin={priceBounds.min}
+                priceMax={priceBounds.max}
                 onPriceChange={setPriceRange}
                 inStockOnly={inStockOnly}
                 onInStockChange={setInStockOnly}
@@ -171,7 +185,12 @@ export default function Shop() {
                         categories={categories}
                         selectedCategory={selectedCategory}
                         onCategoryChange={setSelectedCategory}
+                        brands={brands}
+                        selectedBrands={selectedBrands}
+                        onBrandsChange={setSelectedBrands}
                         priceRange={priceRange}
+                        priceMin={priceBounds.min}
+                        priceMax={priceBounds.max}
                         onPriceChange={setPriceRange}
                         inStockOnly={inStockOnly}
                         onInStockChange={setInStockOnly}

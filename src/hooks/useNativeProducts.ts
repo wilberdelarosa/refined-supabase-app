@@ -13,6 +13,7 @@ export interface ShopFilters {
   featuredOnly?: boolean;
   priceMin?: number;
   priceMax?: number;
+  brands?: string[];
 }
 
 export function useNativeProducts(filters?: ShopFilters | string) {
@@ -25,23 +26,33 @@ export function useNativeProducts(filters?: ShopFilters | string) {
   const [products, setProducts] = useState<Product[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [priceBounds, setPriceBounds] = useState<{ min: number; max: number }>({ min: 0, max: 50000 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch categories only once
   useEffect(() => {
-    async function fetchCategories() {
+    async function fetchMeta() {
       const { data } = await supabase
         .from('products')
-        .select('category')
-        .order('category');
-
+        .select('category, brand, price');
       if (data) {
-        const unique = [...new Set(data.map((p) => p.category))].filter(Boolean);
-        setCategories(unique);
+        const uniqueCats = [...new Set(data.map((p) => p.category))].filter(Boolean) as string[];
+        setCategories(uniqueCats);
+        const uniqueBrands = [...new Set(data.map((p) => (p as { brand?: string }).brand))]
+          .filter(Boolean) as string[];
+        setBrands(uniqueBrands.sort());
+        const prices = data.map((p) => Number(p.price)).filter((n) => !Number.isNaN(n));
+        if (prices.length) {
+          setPriceBounds({
+            min: Math.floor(Math.min(...prices)),
+            max: Math.ceil(Math.max(...prices)),
+          });
+        }
       }
     }
-    fetchCategories();
+    fetchMeta();
   }, []);
 
   // Fetch products when filters change
@@ -83,6 +94,11 @@ export function useNativeProducts(filters?: ShopFilters | string) {
         }
         if (resolvedFilters?.priceMax != null) {
           query = query.lte('price', resolvedFilters.priceMax);
+        }
+
+        // Brands (multi-select)
+        if (resolvedFilters?.brands && resolvedFilters.brands.length > 0) {
+          query = query.in('brand', resolvedFilters.brands);
         }
 
         // Sort (server-side where possible)
@@ -157,9 +173,11 @@ export function useNativeProducts(filters?: ShopFilters | string) {
     resolvedFilters?.featuredOnly,
     resolvedFilters?.priceMin,
     resolvedFilters?.priceMax,
+    // Serialize brands so array identity changes don't re-fetch endlessly
+    resolvedFilters?.brands?.join(','),
   ]);
 
-  return { products, featuredProducts, categories, loading, error };
+  return { products, featuredProducts, categories, brands, priceBounds, loading, error };
 }
 
 export function useNativeProduct(id: string) {

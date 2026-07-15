@@ -18,7 +18,8 @@ import {
     Search,
     Bell,
     Settings,
-    UserCheck
+    UserCheck,
+    Image as ImageIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationCenter } from '@/modules/notifications/presentation/NotificationCenter';
@@ -55,6 +56,7 @@ export function AdminLayout({ children, showSearch = true }: AdminLayoutProps) {
         { label: 'Facturas', icon: FileText, href: '/admin/invoices', visible: canManageOrders },
         { label: 'Categorías', icon: Tags, href: '/admin/categories', visible: canManageProducts },
         { label: 'Métodos de Pago', icon: CreditCard, href: '/admin/payment-methods', visible: isAdmin },
+        { label: 'Imágenes del sitio', icon: ImageIcon, href: '/admin/site-images', visible: isAdmin },
         
     ].filter(item => item.visible !== false);
 

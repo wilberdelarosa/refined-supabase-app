@@ -1551,6 +1551,63 @@ export type Database = {
         }
         Relationships: []
       }
+      site_images: {
+        Row: {
+          alt_text: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          link_url: string | null
+          max_size_kb: number | null
+          recommended_format: string | null
+          recommended_height: number | null
+          recommended_width: number | null
+          slot: string
+          sort_order: number
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          alt_text?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string | null
+          max_size_kb?: number | null
+          recommended_format?: string | null
+          recommended_height?: number | null
+          recommended_width?: number | null
+          slot: string
+          sort_order?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alt_text?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          link_url?: string | null
+          max_size_kb?: number | null
+          recommended_format?: string | null
+          recommended_height?: number | null
+          recommended_width?: number | null
+          slot?: string
+          sort_order?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       stock_locations: {
         Row: {
           address: string | null
