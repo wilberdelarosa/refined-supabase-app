@@ -1032,6 +1032,75 @@ export type Database = {
           },
         ]
       }
+      payment_gateway_settings: {
+        Row: {
+          checkout_mode: string
+          created_at: string
+          description: string | null
+          display_name: string
+          display_order: number
+          environment: string
+          health_message: string | null
+          health_status: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          last_health_at: string | null
+          payment_link_url: string | null
+          provider: string
+          public_config: Json
+          supported_cards: string[]
+          supports_credit: boolean
+          supports_debit: boolean
+          supports_payment_links: boolean
+          updated_at: string
+        }
+        Insert: {
+          checkout_mode?: string
+          created_at?: string
+          description?: string | null
+          display_name: string
+          display_order?: number
+          environment?: string
+          health_message?: string | null
+          health_status?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          last_health_at?: string | null
+          payment_link_url?: string | null
+          provider: string
+          public_config?: Json
+          supported_cards?: string[]
+          supports_credit?: boolean
+          supports_debit?: boolean
+          supports_payment_links?: boolean
+          updated_at?: string
+        }
+        Update: {
+          checkout_mode?: string
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          display_order?: number
+          environment?: string
+          health_message?: string | null
+          health_status?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          last_health_at?: string | null
+          payment_link_url?: string | null
+          provider?: string
+          public_config?: Json
+          supported_cards?: string[]
+          supports_credit?: boolean
+          supports_debit?: boolean
+          supports_payment_links?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           account_holder: string | null
@@ -1079,6 +1148,103 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      payment_provider_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          order_id: string
+          order_reference: string
+          provider: string
+          request_payload: Json
+          session_id: string | null
+          session_key: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id: string
+          order_reference: string
+          provider: string
+          request_payload?: Json
+          session_id?: string | null
+          session_key?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          order_id?: string
+          order_reference?: string
+          provider?: string
+          request_payload?: Json
+          session_id?: string | null
+          session_key?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_provider_sessions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_return_events: {
+        Row: {
+          error_message: string | null
+          event_key: string
+          id: string
+          order_id: string | null
+          outcome: string
+          processed_at: string | null
+          provider: string
+          received_at: string
+          response_code: string | null
+          sanitized_payload: Json
+          verified: boolean
+        }
+        Insert: {
+          error_message?: string | null
+          event_key: string
+          id?: string
+          order_id?: string | null
+          outcome: string
+          processed_at?: string | null
+          provider: string
+          received_at?: string
+          response_code?: string | null
+          sanitized_payload?: Json
+          verified?: boolean
+        }
+        Update: {
+          error_message?: string | null
+          event_key?: string
+          id?: string
+          order_id?: string | null
+          outcome?: string
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          response_code?: string | null
+          sanitized_payload?: Json
+          verified?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_return_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       product_images: {
         Row: {
@@ -1610,6 +1776,17 @@ export type Database = {
           p_table_name: string
         }
         Returns: string
+      }
+      settle_hosted_order_payment: {
+        Args: {
+          p_authorization_code?: string
+          p_order_id: string
+          p_payload?: Json
+          p_provider: string
+          p_provider_reference_id: string
+          p_response_code?: string
+        }
+        Returns: Json
       }
     }
     Enums: {

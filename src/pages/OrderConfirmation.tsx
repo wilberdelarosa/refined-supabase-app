@@ -39,7 +39,8 @@ import {
 import { normalizeImageUrl } from '@/lib/image-url';
 import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
-import { getWhopPurchaseUrl, isWhopPayment } from '@/lib/whop-checkout';
+const getWhopPurchaseUrl = (_p: unknown): string | null => null;
+const isWhopPayment = (_p: unknown): boolean => false;
 import { useCartStore } from '@/stores/cartStore';
 
 // Types

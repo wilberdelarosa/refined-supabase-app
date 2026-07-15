@@ -55,7 +55,7 @@ export function AdminLayout({ children, showSearch = true }: AdminLayoutProps) {
         { label: 'Facturas', icon: FileText, href: '/admin/invoices', visible: canManageOrders },
         { label: 'Categorías', icon: Tags, href: '/admin/categories', visible: canManageProducts },
         { label: 'Métodos de Pago', icon: CreditCard, href: '/admin/payment-methods', visible: isAdmin },
-        { label: 'Nutricionistas', icon: UserCheck, href: '/admin/nutritionists', visible: isAdmin },
+        
     ].filter(item => item.visible !== false);
 
     const isActive = (href: string, exact: boolean = false) => {
@@ -156,9 +156,6 @@ export function AdminLayout({ children, showSearch = true }: AdminLayoutProps) {
                             {/* Actions */}
                             <div className="flex items-center gap-3">
                                 <NotificationCenter isAdmin />
-                                <button className="p-2 rounded-lg hover:bg-slate-100 text-slate-500 transition-colors">
-                                    <Settings className="h-[22px] w-[22px]" />
-                                </button>
 
                                 {/* User Profile */}
                                 <div className="flex items-center gap-3 pl-2 border-l border-slate-200 ml-1">

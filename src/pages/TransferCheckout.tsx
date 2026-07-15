@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { WhopCheckoutEmbed } from '@whop/checkout/react';
+
 import { ArrowLeft, Copy, Check, Building2, Mail, Phone, User, MapPin, Tag, Truck, ShieldCheck, CreditCard, FileText, ExternalLink, Link2, LockKeyhole } from 'lucide-react';
 import { Layout } from '@/components/layout/Layout';
 import { Button } from '@/components/ui/button';
@@ -22,7 +22,10 @@ import { formatCurrency } from '@/lib/format-currency';
 import { Badge } from '@/components/ui/badge';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Switch } from '@/components/ui/switch';
-import { getWhopSessionId, isWhopPayment, loadWhopSession, saveWhopSession } from '@/lib/whop-checkout';
+const loadWhopSession = (_orderId: string): string | null => null;
+const saveWhopSession = (_orderId: string, _sessionId: string): void => {};
+const isWhopPayment = (_p: unknown): boolean => false;
+const getWhopSessionId = (_p: unknown): string | null => null;
 import {
   fetchActivePaymentGateways,
   getHostedProviderLabel,
@@ -52,8 +55,8 @@ interface WhopCheckoutResponse {
 
 type PaymentMode = 'whop' | 'transfer' | HostedPaymentProvider;
 
-const DEFAULT_WHOP_ENVIRONMENT = import.meta.env.VITE_WHOP_ENVIRONMENT === 'sandbox' ? 'sandbox' : 'production';
-const IS_WHOP_ENABLED = import.meta.env.VITE_ENABLE_WHOP_CHECKOUT !== 'false';
+const DEFAULT_WHOP_ENVIRONMENT: 'production' | 'sandbox' = 'sandbox';
+const IS_WHOP_ENABLED = false;
 
 export default function TransferCheckout() {
   const navigate = useNavigate();
@@ -831,53 +834,8 @@ export default function TransferCheckout() {
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 />
                             </div>
-                            {paymentMode === 'whop' && (
-                                <div className="space-y-4">
-                                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800 p-4 text-sm text-emerald-900 dark:text-emerald-200">
-                                         Tu pago se procesará de forma segura. La orden se confirmará automáticamente al completar el pago.
-                                     </div>
-
-                                    {whopSessionId ? (
-                                        <>
-                                            {whopOrderId && (
-                                                <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/20 px-4 py-3 text-sm">
-                                                    <Badge variant="secondary">Orden enlazada</Badge>
-                                                    <span className="font-mono text-muted-foreground">{whopOrderId.slice(0, 8).toUpperCase()}</span>
-                                                    <Button variant="link" size="sm" className="h-auto p-0" asChild>
-                                                        <Link to={`/order/${whopOrderId}?provider=whop`}>Ver orden pendiente</Link>
-                                                    </Button>
-                                                </div>
-                                            )}
-
-                                            <div className="rounded-xl border bg-background p-3">
-                                                <WhopCheckoutEmbed
-                                                    sessionId={whopSessionId}
-                                                    environment={whopEnvironment}
-                                                    skipRedirect
-                                                    hideAddressForm
-                                                    disableEmail={Boolean(formData.email)}
-                                                    returnUrl={whopReturnUrl}
-                                                    stateId={returnStateId}
-                                                    prefill={formData.email ? { email: formData.email } : undefined}
-                                                    onComplete={handleWhopComplete}
-                                                    fallback={
-                                                        <div className="flex min-h-[520px] items-center justify-center text-sm text-muted-foreground">
-                                                            Cargando checkout seguro...
-                                                        </div>
-                                                    }
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="rounded-xl border border-dashed bg-muted/10 p-6 text-sm text-muted-foreground">
-                                            Completa tus datos y pulsa el botón principal para crear la sesión de pago embebida.
-                                        </div>
-                                    )}
-
-                                     {restoringWhopSession && (
-                                         <p className="text-sm text-muted-foreground">Restaurando la sesión de pago...</p>
-                                     )}
-                                </div>
+                            {false && paymentMode === 'whop' && (
+                                <div className="hidden" />
                             )}
                             {isHostedPaymentProvider(paymentMode) && (
                                 <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100">

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { User, Menu, Settings, LogOut, ShoppingBag, Bell } from 'lucide-react';
+import { User, Menu, LogOut, ShoppingBag, Bell, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useRoles } from '@/hooks/useRoles';
@@ -180,7 +180,7 @@ export function Navbar() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild className="cursor-pointer rounded-lg px-3 py-2.5">
                       <Link to="/admin" className="flex items-center gap-3">
-                        <Settings className="h-4 w-4 text-muted-foreground" />
+                        <LayoutDashboard className="h-4 w-4 text-muted-foreground" />
                         <span className="font-bold">Panel Admin</span>
                       </Link>
                     </DropdownMenuItem>

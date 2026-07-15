@@ -42,14 +42,12 @@ import {
   Search,
   ArrowLeft,
   Package,
-  Beaker,
   Download,
   Upload
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { normalizeImageUrl } from '@/lib/image-url';
 import { Link } from 'react-router-dom';
-import ProductNutritionDialog from '@/components/admin/ProductNutritionDialog';
 
 interface Product {
   id: string;
@@ -102,8 +100,6 @@ export default function AdminProducts() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [lastEditedId, setLastEditedId] = useState<string | null>(null);
-  const [nutritionDialogOpen, setNutritionDialogOpen] = useState(false);
-  const [nutritionProduct, setNutritionProduct] = useState<Product | null>(null);
   const [seeding, setSeeding] = useState(false);
 
   async function handleExportJSON() {
@@ -627,18 +623,6 @@ export default function AdminProducts() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                              setNutritionProduct(product);
-                              setNutritionDialogOpen(true);
-                            }}
-                            className="hover:bg-green-500/10 h-9 w-9 text-slate-400 hover:text-green-600"
-                            title="Info Nutricional"
-                          >
-                            <Beaker className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
                             onClick={() => openEditDialog(product)}
                             className="hover:bg-blue-500/10 h-9 w-9 text-slate-400 hover:text-blue-600"
                           >
@@ -862,18 +846,6 @@ export default function AdminProducts() {
         </DialogContent>
       </Dialog>
 
-      {/* Nutrition Dialog - Pass props comfortably */}
-      {nutritionProduct && (
-        <ProductNutritionDialog
-          open={nutritionDialogOpen}
-          onOpenChange={setNutritionDialogOpen}
-          productId={nutritionProduct.id}
-          productName={nutritionProduct.name}
-          productCategory={nutritionProduct.category}
-          productDescription={nutritionProduct.description || undefined}
-          onSaved={() => { }}
-        />
-      )}
     </AdminLayout>
   );
 }

@@ -8,21 +8,19 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { useNativeProduct } from '@/hooks/useNativeProducts';
-import { useProductNutrition } from '@/hooks/useProductNutrition';
 import { useCartStore } from '@/stores/cartStore';
 import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/format-currency';
 import { FadeInUp } from '@/components/animations/ScrollAnimations';
 import ProductGallery from '@/components/product/ProductGallery';
-import NutritionTable from '@/components/product/NutritionTable';
 import AIRecommendation from '@/components/product/AIRecommendation';
 import RelatedProducts from '@/components/product/RelatedProducts';
 
 export default function ProductDetail() {
   const { handle } = useParams<{ handle: string }>();
   const { product, loading, error } = useNativeProduct(handle || '');
-  const { nutrition, loading: nutritionLoading } = useProductNutrition(product?.id);
+  
   const addItem = useCartStore(state => state.addItem);
   const { isInWishlist, toggleWishlist } = useNativeWishlist();
   const [quantity, setQuantity] = useState(1);
@@ -170,21 +168,9 @@ export default function ProductDetail() {
           </FadeInUp>
         </div>
 
-        {/* Nutrition & Details Section */}
-        <div className="mt-12 grid lg:grid-cols-2 gap-8">
-          {/* Left: Nutrition */}
-          <div>
-            {nutritionLoading ? (
-              <div className="flex justify-center py-8"><Spinner className="h-6 w-6" /></div>
-            ) : nutrition ? (
-              <NutritionTable nutrition={nutrition} usageInstructions={extProduct.usage_instructions} />
-            ) : null}
-          </div>
-
-          {/* Right: AI Recommendation */}
-          <div className="space-y-6">
-            <AIRecommendation productName={product.name} productCategory={product.category} />
-          </div>
+        {/* AI Recommendation Section */}
+        <div className="mt-12">
+          <AIRecommendation productName={product.name} productCategory={product.category} />
         </div>
 
         {/* Related Products */}

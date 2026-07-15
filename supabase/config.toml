@@ -3,12 +3,6 @@ project_id = "xuhvlomytegdbifziilf"
 [functions.send-order-email]
 verify_jwt = false
 
-[functions.create-whop-checkout]
-verify_jwt = false
-
-[functions.whop-webhook]
-verify_jwt = false
-
 [functions.create-hosted-payment]
 verify_jwt = false
 
