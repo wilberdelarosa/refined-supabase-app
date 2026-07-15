@@ -834,53 +834,8 @@ export default function TransferCheckout() {
                                     onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 />
                             </div>
-                            {paymentMode === 'whop' && (
-                                <div className="space-y-4">
-                                     <div className="rounded-xl border border-emerald-200 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-800 p-4 text-sm text-emerald-900 dark:text-emerald-200">
-                                         Tu pago se procesará de forma segura. La orden se confirmará automáticamente al completar el pago.
-                                     </div>
-
-                                    {whopSessionId ? (
-                                        <>
-                                            {whopOrderId && (
-                                                <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-muted/20 px-4 py-3 text-sm">
-                                                    <Badge variant="secondary">Orden enlazada</Badge>
-                                                    <span className="font-mono text-muted-foreground">{whopOrderId.slice(0, 8).toUpperCase()}</span>
-                                                    <Button variant="link" size="sm" className="h-auto p-0" asChild>
-                                                        <Link to={`/order/${whopOrderId}?provider=whop`}>Ver orden pendiente</Link>
-                                                    </Button>
-                                                </div>
-                                            )}
-
-                                            <div className="rounded-xl border bg-background p-3">
-                                                <WhopCheckoutEmbed
-                                                    sessionId={whopSessionId}
-                                                    environment={whopEnvironment}
-                                                    skipRedirect
-                                                    hideAddressForm
-                                                    disableEmail={Boolean(formData.email)}
-                                                    returnUrl={whopReturnUrl}
-                                                    stateId={returnStateId}
-                                                    prefill={formData.email ? { email: formData.email } : undefined}
-                                                    onComplete={handleWhopComplete}
-                                                    fallback={
-                                                        <div className="flex min-h-[520px] items-center justify-center text-sm text-muted-foreground">
-                                                            Cargando checkout seguro...
-                                                        </div>
-                                                    }
-                                                />
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="rounded-xl border border-dashed bg-muted/10 p-6 text-sm text-muted-foreground">
-                                            Completa tus datos y pulsa el botón principal para crear la sesión de pago embebida.
-                                        </div>
-                                    )}
-
-                                     {restoringWhopSession && (
-                                         <p className="text-sm text-muted-foreground">Restaurando la sesión de pago...</p>
-                                     )}
-                                </div>
+                            {false && paymentMode === 'whop' && (
+                                <div className="hidden" />
                             )}
                             {isHostedPaymentProvider(paymentMode) && (
                                 <div className="rounded-xl border border-sky-200 bg-sky-50 p-4 text-sm text-sky-950 dark:border-sky-900 dark:bg-sky-950/30 dark:text-sky-100">
