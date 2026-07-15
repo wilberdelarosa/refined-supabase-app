@@ -42,14 +42,12 @@ import {
   Search,
   ArrowLeft,
   Package,
-  Beaker,
   Download,
   Upload
 } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { normalizeImageUrl } from '@/lib/image-url';
 import { Link } from 'react-router-dom';
-import ProductNutritionDialog from '@/components/admin/ProductNutritionDialog';
 
 interface Product {
   id: string;
