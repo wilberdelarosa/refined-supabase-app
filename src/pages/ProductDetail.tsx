@@ -8,14 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { useNativeProduct } from '@/hooks/useNativeProducts';
-import { useProductNutrition } from '@/hooks/useProductNutrition';
 import { useCartStore } from '@/stores/cartStore';
 import { useNativeWishlist } from '@/hooks/useNativeWishlist';
 import { toast } from 'sonner';
 import { formatCurrency } from '@/lib/format-currency';
 import { FadeInUp } from '@/components/animations/ScrollAnimations';
 import ProductGallery from '@/components/product/ProductGallery';
-import NutritionTable from '@/components/product/NutritionTable';
 import AIRecommendation from '@/components/product/AIRecommendation';
 import RelatedProducts from '@/components/product/RelatedProducts';
 
